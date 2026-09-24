@@ -1,0 +1,164 @@
+.site-footer {
+    padding: 60px 6% 25px;
+
+    background: var(--brown);
+
+    color: var(--cream);
+}
+
+.footer-main {
+    max-width: 1300px;
+
+    margin: auto;
+
+    padding-bottom: 45px;
+
+    display: grid;
+
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+
+    gap: 60px;
+
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.footer-brand-logo {
+    width: fit-content;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+}
+
+.footer-brand-mark {
+    position: relative;
+
+    font-family: "Cormorant Garamond", serif;
+
+    font-size: 50px;
+
+    line-height: 35px;
+
+    letter-spacing: -5px;
+}
+
+.footer-brand-mark span {
+    position: absolute;
+
+    top: -6px;
+    right: -17px;
+
+    font-family: serif;
+
+    font-size: 24px;
+
+    transform: rotate(-20deg);
+}
+
+.footer-brand-tagline {
+    margin-top: 6px;
+
+    font-size: 7px;
+
+    letter-spacing: 1px;
+}
+
+.footer-brand-column>p {
+    max-width: 280px;
+
+    margin-top: 22px;
+
+    font-family: "Cormorant Garamond", serif;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+
+    opacity: 0.72;
+}
+
+.footer-column {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+.footer-column h3 {
+    margin-bottom: 8px;
+
+    font-size: 9px;
+
+    letter-spacing: 2px;
+}
+
+.footer-column a {
+    font-family: "Cormorant Garamond", serif;
+
+    font-size: 13px;
+
+    opacity: 0.72;
+
+    transition: opacity 0.2s ease;
+}
+
+.footer-column a:hover {
+    opacity: 1;
+}
+
+.footer-bottom {
+    max-width: 1300px;
+
+    margin: 20px auto 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    font-size: 8px;
+
+    opacity: 0.58;
+}
+
+.footer-bottom div {
+    display: flex;
+
+    gap: 20px;
+}
+
+@media (max-width: 800px) {
+    .footer-main {
+        grid-template-columns: 1fr 1fr;
+
+        gap: 40px;
+    }
+
+    .footer-brand-column {
+        grid-column: 1 / 3;
+    }
+}
+
+@media (max-width: 500px) {
+    .footer-main {
+        grid-template-columns: 1fr;
+
+        text-align: left;
+    }
+
+    .footer-brand-column {
+        grid-column: auto;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+
+        gap: 12px;
+
+        text-align: center;
+    }
+}
