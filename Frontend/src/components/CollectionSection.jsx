@@ -2,7 +2,7 @@ import "../style/CollectionSection.css";
 
 import creativeImage from "../assets/Ethical.png";
 import jwelImage from "../assets/jwel.png";
-import handImage from "../assets/Ethical.png";
+import handImage from "../assets/Hand.png";
 const collections = [
     {
         id: "ethnic",
