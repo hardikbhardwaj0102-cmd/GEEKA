@@ -1,23 +1,49 @@
+/* =========================================================
+   GEEKA HEADER
+========================================================= */
+
 .site-header {
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
     width: 100%;
     height: 76px;
 
     padding: 0 5.8%;
 
     display: grid;
+
     grid-template-columns: 1fr auto 1fr;
+
     align-items: center;
 
-    background: rgba(248, 241, 235, 0.98);
+    background:
+        rgba(248, 241, 235, 0.94);
 
-    border-bottom: 1px solid rgba(71, 43, 43, 0.08);
+    border-bottom:
+        1px solid rgba(71, 43, 43, 0.08);
 
-    position: relative;
-    z-index: 100;
+    box-shadow:
+        0 5px 22px rgba(71, 43, 43, 0.05);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    z-index: 1000;
 }
+
+
+/* =========================================================
+   LOGO
+========================================================= */
 
 .header-logo-link {
     justify-self: start;
+
+    text-decoration: none;
 }
 
 .brand-logo {
@@ -25,6 +51,7 @@
 
     display: flex;
     flex-direction: column;
+
     align-items: center;
 
     color: var(--brown);
@@ -34,7 +61,9 @@
     position: relative;
 
     font-family: "Cormorant Garamond", serif;
+
     font-size: 50px;
+
     font-weight: 500;
 
     line-height: 34px;
@@ -49,6 +78,7 @@
     right: -17px;
 
     font-family: serif;
+
     font-size: 24px;
 
     color: var(--brown);
@@ -61,18 +91,29 @@
 
     white-space: nowrap;
 
+    font-family: "DM Sans", sans-serif;
+
     font-size: 7px;
+
     letter-spacing: 1.15px;
+
     text-transform: uppercase;
 }
 
 .brand-logo-tagline span {
     margin: 0 4px;
+
     color: var(--rose);
 }
 
+
+/* =========================================================
+   MAIN NAVIGATION
+========================================================= */
+
 .main-navigation {
     display: flex;
+
     align-items: center;
 
     gap: 42px;
@@ -81,12 +122,18 @@
 .main-navigation a {
     position: relative;
 
+    font-family: "DM Sans", sans-serif;
+
     font-size: 12px;
+
     font-weight: 500;
 
     color: var(--brown);
 
-    transition: color 0.2s ease;
+    text-decoration: none;
+
+    transition:
+        color 0.2s ease;
 }
 
 .main-navigation a:hover {
@@ -110,20 +157,30 @@
 
 .navigation-shop {
     display: flex;
+
     align-items: center;
+
     gap: 5px;
 }
 
 .navigation-shop span {
     font-size: 14px;
+
     margin-top: -2px;
 }
+
+
+/* =========================================================
+   HEADER ACTIONS
+========================================================= */
 
 .header-actions {
     justify-self: end;
 
     display: flex;
+
     align-items: center;
+
     gap: 17px;
 }
 
@@ -134,8 +191,11 @@
     padding: 2px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
+
+    border: none;
 
     background: transparent;
 
@@ -144,6 +204,9 @@
     cursor: pointer;
 
     position: relative;
+
+    transition:
+        color 0.2s ease;
 }
 
 .header-actions svg {
@@ -151,14 +214,76 @@
     height: 20px;
 
     fill: none;
+
     stroke: currentColor;
+
     stroke-width: 1.25;
 
-    transition: color 0.2s ease;
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
 }
 
 .header-actions button:hover {
     color: var(--rose);
+}
+
+.header-actions button:hover svg {
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   ACCOUNT LINK
+========================================================= */
+
+.header-account-link {
+    width: 25px;
+    height: 25px;
+
+    padding: 2px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    color: var(--brown);
+
+    text-decoration: none;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.header-account-link svg {
+    width: 20px;
+    height: 20px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.25;
+
+    transition:
+        transform 0.2s ease;
+}
+
+.header-account-link:hover {
+    color: var(--rose);
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   BAG
+========================================================= */
+
+.header-bag {
+    position: relative;
 }
 
 .header-bag>span {
@@ -171,27 +296,73 @@
     height: 14px;
 
     display: flex;
+
     align-items: center;
     justify-content: center;
 
     border-radius: 50%;
 
     background: var(--brown);
+
     color: white;
 
+    font-family: "DM Sans", sans-serif;
+
     font-size: 7px;
+
+    line-height: 1;
 }
+
+
+/* =========================================================
+   MOBILE MENU
+========================================================= */
 
 .mobile-menu-button {
     display: none;
+
+    width: 30px;
+    height: 30px;
+
+    padding: 0;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    border: none;
+
+    background: transparent;
+
+    cursor: pointer;
 }
 
+.mobile-menu-button span {
+    width: 22px;
+    height: 1px;
+
+    background: var(--brown);
+
+    transition:
+        transform 0.2s ease;
+}
+
+
+/* =========================================================
+   TABLET / MOBILE
+========================================================= */
+
 @media (max-width: 800px) {
+
     .site-header {
         height: 72px;
 
         display: flex;
+
         align-items: center;
+
         justify-content: space-between;
 
         padding: 0 6%;
@@ -204,24 +375,50 @@
 
     .mobile-menu-button {
         display: flex;
+    }
+}
 
-        width: 30px;
-        height: 30px;
 
-        flex-direction: column;
-        justify-content: center;
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
 
-        gap: 5px;
+@media (max-width: 420px) {
 
-        background: transparent;
+    .site-header {
+        height: 68px;
 
-        cursor: pointer;
+        padding: 0 5%;
+    }
+
+    .brand-logo-mark {
+        font-size: 45px;
+
+        line-height: 31px;
+    }
+
+    .brand-logo-flower {
+        top: -5px;
+
+        right: -16px;
+
+        font-size: 22px;
+    }
+
+    .brand-logo-tagline {
+        margin-top: 6px;
+
+        font-size: 6px;
+
+        letter-spacing: 1px;
+    }
+
+    .mobile-menu-button {
+        width: 28px;
+        height: 28px;
     }
 
     .mobile-menu-button span {
-        width: 22px;
-        height: 1px;
-
-        background: var(--brown);
+        width: 21px;
     }
 }

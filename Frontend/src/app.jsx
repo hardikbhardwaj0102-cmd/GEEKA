@@ -8,7 +8,10 @@ import WhyChooseUs from "./components/WhyChooseUs";
 import Footer from "./components/Footer";
 import Login from "./components/Login";
 import Register from "./components/Register";
-import "./app.css";
+import NewArrivals from "./components/NewArrivals";
+import ProductCatalog from "./components/ProductCatalog";
+import Profile from "./components/Profile";
+import "./App.css";
 
 
 function HomePage() {
@@ -21,7 +24,12 @@ function HomePage() {
 
                 <CollectionSection />
 
+
+                <NewArrivals />
+                <ProductCatalog />
+
                 <BenefitsStrip />
+
 
                 <WhyChooseUs />
             </main>
@@ -50,6 +58,10 @@ function App() {
                 <Route
                     path="/register"
                     element={<Register />}
+                />
+                <Route
+                    path="/profile"
+                    element={<Profile />}
                 />
 
             </Routes>

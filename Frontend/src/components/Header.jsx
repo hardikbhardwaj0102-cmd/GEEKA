@@ -46,20 +46,38 @@ function BagIcon() {
 export default function Header() {
     return (
         <header className="site-header">
-            {/* LOGO */}
+
+            {/* =================================================
+                LOGO
+            ================================================= */}
+
             <Link to="/" className="header-logo-link">
                 <Logo />
             </Link>
 
-            {/* NAVIGATION */}
+
+            {/* =================================================
+                NAVIGATION
+            ================================================= */}
+
             <nav className="main-navigation">
-                <Link to="/" className="navigation-active">
+
+                <Link
+                    to="/"
+                    className="navigation-active"
+                >
                     Home
                 </Link>
 
-                <Link to="/shop" className="navigation-shop">
+                <Link
+                    to="/shop"
+                    className="navigation-shop"
+                >
                     Shop
-                    <span>⌄</span>
+
+                    <span>
+                        ⌄
+                    </span>
                 </Link>
 
                 <Link to="/about">
@@ -69,17 +87,28 @@ export default function Header() {
                 <Link to="/contact">
                     Contact
                 </Link>
+
             </nav>
 
-            {/* ACTIONS */}
+
+            {/* =================================================
+                ACTIONS
+            ================================================= */}
+
             <div className="header-actions">
 
                 {/* SEARCH */}
-                <button type="button" aria-label="Search">
+
+                <button
+                    type="button"
+                    aria-label="Search"
+                >
                     <SearchIcon />
                 </button>
 
-                {/* ACCOUNT → LOGIN */}
+
+                {/* ACCOUNT */}
+
                 <Link
                     to="/login"
                     className="header-account-link"
@@ -88,19 +117,28 @@ export default function Header() {
                     <AccountIcon />
                 </Link>
 
+
                 {/* BAG */}
+
                 <button
                     type="button"
                     className="header-bag"
                     aria-label="Shopping bag"
                 >
                     <BagIcon />
-                    <span>0</span>
+
+                    <span>
+                        0
+                    </span>
                 </button>
 
             </div>
 
-            {/* MOBILE MENU */}
+
+            {/* =================================================
+                MOBILE MENU
+            ================================================= */}
+
             <button
                 type="button"
                 className="mobile-menu-button"
@@ -110,6 +148,7 @@ export default function Header() {
                 <span />
                 <span />
             </button>
+
         </header>
     );
 }

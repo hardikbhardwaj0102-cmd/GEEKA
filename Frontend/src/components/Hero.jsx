@@ -1,10 +1,59 @@
+import { useEffect, useState } from "react";
 import "../style/Hero.css";
 
+import heroImage from "../assets/top-banner.jpg";
+
+const heroImages = [
+    heroImage,
+    heroImage,
+    heroImage,
+    heroImage,
+];
+
 export default function Hero() {
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
+
+    // Automatic sliding
+    useEffect(() => {
+        if (isPaused) return;
+
+        const interval = setInterval(() => {
+            setCurrentSlide((prev) =>
+                prev === heroImages.length - 1 ? 0 : prev + 1
+            );
+        }, 4000);
+
+        return () => clearInterval(interval);
+    }, [isPaused]);
+
+    // Next
+    const nextSlide = () => {
+        setCurrentSlide((prev) =>
+            prev === heroImages.length - 1 ? 0 : prev + 1
+        );
+    };
+
+    // Previous
+    const previousSlide = () => {
+        setCurrentSlide((prev) =>
+            prev === 0 ? heroImages.length - 1 : prev - 1
+        );
+    };
+
+    // Specific slide
+    const goToSlide = (index) => {
+        setCurrentSlide(index);
+    };
+
     return (
         <section className="hero-section" id="home">
+
             <div className="hero-content">
+
+                {/* LEFT CONTENT */}
                 <div className="hero-copy">
+
                     <div className="hero-script">
                         Three Expressions.
                     </div>
@@ -14,25 +63,119 @@ export default function Hero() {
                     </h1>
 
                     <p>
-                        From the timeless charm of Ethnic Wear, to the sparkle of
-                        Jewellery, and the warmth of Handcrafted Crochet, our collections
-                        are created for women who love to express themselves through
-                        fashion and creativity.
+                        From the timeless charm of Ethnic Wear, to the sparkle
+                        of Jewellery, and the warmth of Handcrafted Crochet,
+                        our collections are created for women who love to
+                        express themselves through fashion and creativity.
                     </p>
 
                     <a href="#collections" className="hero-cta">
                         <span>EXPLORE OUR COLLECTION</span>
                         <strong>→</strong>
                     </a>
+
                 </div>
 
-                <div className="hero-visual">
-                    <img
-                        src="/src/assets/top-banner.jpg"
-                        alt="Fashion collection"
-                    />
+
+                {/* RIGHT CAROUSEL */}
+                <div
+                    className="hero-visual"
+                    onMouseEnter={() => setIsPaused(true)}
+                    onMouseLeave={() => setIsPaused(false)}
+                >
+
+                    {/* SLIDES */}
+                    <div
+                        className="hero-slider-track"
+                        style={{
+                            transform: `translateX(-${currentSlide * 100}%)`,
+                        }}
+                    >
+
+                        {heroImages.map((image, index) => (
+                            <div
+                                className="hero-slide"
+                                key={index}
+                            >
+                                <img
+                                    src={image}
+                                    alt={`GEEKA collection ${index + 1}`}
+                                />
+                            </div>
+                        ))}
+
+                    </div>
+
+
+                    {/* PREVIOUS BUTTON */}
+                    <button
+                        type="button"
+                        className="hero-slider-arrow hero-slider-prev"
+                        onClick={previousSlide}
+                        aria-label="Previous slide"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M15 18L9 12L15 6"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        </svg>
+                    </button>
+
+
+                    {/* NEXT BUTTON */}
+                    <button
+                        type="button"
+                        className="hero-slider-arrow hero-slider-next"
+                        onClick={nextSlide}
+                        aria-label="Next slide"
+                    >
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                d="M9 18L15 12L9 6"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        </svg>
+                    </button>
+
+
+                    {/* DOTS */}
+                    <div className="hero-slider-dots">
+
+                        {heroImages.map((_, index) => (
+                            <button
+                                key={index}
+                                type="button"
+                                className={
+                                    currentSlide === index
+                                        ? "hero-slider-dot active"
+                                        : "hero-slider-dot"
+                                }
+                                onClick={() => goToSlide(index)}
+                                aria-label={`Go to slide ${index + 1}`}
+                            />
+                        ))}
+
+                    </div>
+
                 </div>
 
+
+                {/* FLORAL */}
                 <div className="hero-floral">
                     <svg
                         viewBox="0 0 150 230"
@@ -88,6 +231,7 @@ export default function Hero() {
                         />
                     </svg>
                 </div>
+
             </div>
         </section>
     );

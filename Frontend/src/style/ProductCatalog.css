@@ -1,0 +1,865 @@
+/* =========================================================
+   GEEKA PRODUCT CATALOG
+========================================================= */
+
+.catalog-section {
+    width: 100%;
+
+    padding: 95px 5% 100px;
+
+    background: #ffffff;
+
+    color: var(--brown);
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.catalog-header {
+    width: 100%;
+    max-width: 1380px;
+
+    margin: 0 auto 34px;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+
+    gap: 30px;
+}
+
+.catalog-heading {
+    min-width: 0;
+}
+
+.catalog-heading>span {
+    display: block;
+
+    margin-bottom: 9px;
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 8px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.26em;
+
+    color: #9a847a;
+}
+
+.catalog-heading h2 {
+    margin: 0;
+
+    font-family: "Cormorant Garamond", serif;
+
+    font-size: clamp(48px, 5.2vw, 70px);
+
+    font-weight: 500;
+
+    line-height: 0.88;
+
+    color: #42322d;
+}
+
+.catalog-heading p {
+    margin: 13px 0 0;
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 10px;
+
+    line-height: 1.6;
+
+    color: #907b72;
+}
+
+
+/* =========================================================
+   TOP VIEW ALL
+========================================================= */
+
+.catalog-view-all-top {
+    display: flex;
+
+    align-items: center;
+
+    gap: 11px;
+
+    padding: 0 0 7px;
+
+    border: none;
+
+    border-bottom: 1px solid rgba(66, 50, 45, 0.30);
+
+    background: transparent;
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 8px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.17em;
+
+    color: #42322d;
+
+    cursor: pointer;
+}
+
+.catalog-view-all-top span {
+    font-size: 14px;
+
+    transition:
+        transform 0.2s ease;
+}
+
+.catalog-view-all-top:hover span {
+    transform: translateX(4px);
+}
+
+
+/* =========================================================
+   CATEGORY BAR
+========================================================= */
+
+.catalog-category-bar {
+    width: 100%;
+    max-width: 1380px;
+
+    margin: 0 auto 30px;
+
+    border-top: 1px solid rgba(66, 50, 45, 0.11);
+
+    border-bottom: 1px solid rgba(66, 50, 45, 0.11);
+}
+
+.catalog-category-list {
+    min-height: 53px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 34px;
+
+    overflow-x: auto;
+
+    scrollbar-width: none;
+}
+
+.catalog-category-list::-webkit-scrollbar {
+    display: none;
+}
+
+.catalog-category-list button {
+    position: relative;
+
+    height: 53px;
+
+    flex-shrink: 0;
+
+    padding: 0;
+
+    border: none;
+
+    background: transparent;
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 8px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.14em;
+
+    color: #a08d84;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease;
+}
+
+.catalog-category-list button::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    bottom: -1px;
+
+    height: 2px;
+
+    background: #42322d;
+
+    transform: scaleX(0);
+
+    transform-origin: center;
+
+    transition:
+        transform 0.25s ease;
+}
+
+.catalog-category-list button:hover {
+    color: #42322d;
+}
+
+.catalog-category-list button.active {
+    color: #42322d;
+}
+
+.catalog-category-list button.active::after {
+    transform: scaleX(1);
+}
+
+
+/* =========================================================
+   PRODUCT GRID
+========================================================= */
+
+.catalog-grid {
+    width: 100%;
+    max-width: 1380px;
+
+    margin: 0 auto;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 22px 16px;
+}
+
+
+/* =========================================================
+   CARD
+========================================================= */
+
+.catalog-card {
+    min-width: 0;
+
+    background: #ffffff;
+
+    transition:
+        transform 0.3s ease;
+}
+
+.catalog-card:hover {
+    transform: translateY(-3px);
+}
+
+
+/* =========================================================
+   IMAGE
+========================================================= */
+
+.catalog-card-image {
+    position: relative;
+
+    width: 100%;
+
+    aspect-ratio: 0.79;
+
+    overflow: hidden;
+
+    background: #eee7e1;
+}
+
+.catalog-card-image img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+
+    transition:
+        transform 0.65s cubic-bezier(0.22,
+            0.61,
+            0.36,
+            1);
+}
+
+.catalog-card:hover .catalog-card-image img {
+    transform: scale(1.035);
+}
+
+
+/* =========================================================
+   BADGE
+========================================================= */
+
+.catalog-badge {
+    position: absolute;
+
+    top: 13px;
+    left: 13px;
+
+    padding: 6px 8px;
+
+    background: rgba(255, 255, 255, 0.92);
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 6px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.15em;
+
+    color: #42322d;
+}
+
+
+/* =========================================================
+   HEART
+========================================================= */
+
+.catalog-heart {
+    position: absolute;
+
+    top: 12px;
+    right: 12px;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(255, 255, 255, 0.60);
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.88);
+
+    font-family: sans-serif;
+
+    font-size: 18px;
+
+    line-height: 1;
+
+    color: #42322d;
+
+    cursor: pointer;
+
+    opacity: 0;
+
+    transform: translateY(-5px);
+
+    transition:
+        opacity 0.25s ease,
+        transform 0.25s ease;
+}
+
+.catalog-card:hover .catalog-heart {
+    opacity: 1;
+
+    transform: translateY(0);
+}
+
+
+/* =========================================================
+   HOVER OVERLAY
+========================================================= */
+
+.catalog-card-overlay {
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    padding: 13px;
+
+    display: flex;
+
+    justify-content: center;
+
+    background:
+        linear-gradient(to top,
+            rgba(48, 35, 30, 0.17),
+            transparent);
+
+    opacity: 0;
+
+    transform: translateY(6px);
+
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+
+.catalog-card:hover .catalog-card-overlay {
+    opacity: 1;
+
+    transform: translateY(0);
+}
+
+.catalog-card-overlay button {
+    width: 100%;
+
+    max-width: 240px;
+
+    height: 39px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    border: 1px solid rgba(255, 255, 255, 0.72);
+
+    background:
+        rgba(255, 255, 255, 0.93);
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.16em;
+
+    color: #42322d;
+
+    cursor: pointer;
+}
+
+.catalog-card-overlay button span {
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   PRODUCT INFO
+========================================================= */
+
+.catalog-card-info {
+    padding: 14px 2px 0;
+}
+
+.catalog-card-category {
+    margin-bottom: 6px;
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 500;
+
+    letter-spacing: 0.17em;
+
+    text-transform: uppercase;
+
+    color: #9a857b;
+}
+
+.catalog-card-info h3 {
+    min-height: 24px;
+
+    margin: 0;
+
+    font-family: "Cormorant Garamond", serif;
+
+    font-size: 22px;
+
+    font-weight: 500;
+
+    line-height: 1.05;
+
+    color: #42322d;
+}
+
+
+/* =========================================================
+   PRODUCT BOTTOM
+========================================================= */
+
+.catalog-card-bottom {
+    margin-top: 13px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 12px;
+}
+
+.catalog-card-bottom>span {
+    font-family: "Cormorant Garamond", serif;
+
+    font-size: 17px;
+
+    font-weight: 600;
+
+    color: #42322d;
+}
+
+.catalog-add-button {
+    padding: 0 0 5px;
+
+    border: none;
+
+    border-bottom: 1px solid rgba(66, 50, 45, 0.28);
+
+    background: transparent;
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.14em;
+
+    color: #42322d;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.2s ease;
+}
+
+.catalog-add-button:hover {
+    border-color: #42322d;
+}
+
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+.catalog-empty {
+    width: 100%;
+    max-width: 1380px;
+
+    min-height: 320px;
+
+    margin: 0 auto;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    flex-direction: column;
+
+    text-align: center;
+
+    border-top: 1px solid rgba(66, 50, 45, 0.10);
+
+    border-bottom: 1px solid rgba(66, 50, 45, 0.10);
+}
+
+.catalog-empty h3 {
+    margin: 0;
+
+    font-family: "Cormorant Garamond", serif;
+
+    font-size: 29px;
+
+    font-weight: 500;
+
+    color: #42322d;
+}
+
+.catalog-empty p {
+    margin: 8px 0 0;
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 9px;
+
+    color: #97837a;
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.catalog-footer {
+    width: 100%;
+    max-width: 1380px;
+
+    margin: 32px auto 0;
+
+    padding-top: 15px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    border-top: 1px solid rgba(66, 50, 45, 0.10);
+}
+
+.catalog-footer>span {
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 500;
+
+    letter-spacing: 0.14em;
+
+    color: #9b877e;
+}
+
+.catalog-footer-button {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 0 0 5px;
+
+    border: none;
+
+    border-bottom: 1px solid rgba(66, 50, 45, 0.28);
+
+    background: transparent;
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.15em;
+
+    color: #42322d;
+
+    cursor: pointer;
+}
+
+.catalog-footer-button span {
+    font-size: 13px;
+
+    transition:
+        transform 0.2s ease;
+}
+
+.catalog-footer-button:hover span {
+    transform: translateX(4px);
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    .catalog-grid {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+}
+
+
+/* =========================================================
+   SMALL DESKTOP / TABLET
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .catalog-section {
+        padding: 75px 5% 80px;
+    }
+
+    .catalog-header {
+        margin-bottom: 28px;
+    }
+
+    .catalog-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 25px 13px;
+    }
+
+    .catalog-card-info h3 {
+        font-size: 20px;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .catalog-section {
+        padding: 65px 5% 70px;
+    }
+
+    .catalog-header {
+        align-items: flex-start;
+
+        gap: 20px;
+    }
+
+    .catalog-heading h2 {
+        font-size: 47px;
+    }
+
+    .catalog-heading p {
+        font-size: 9px;
+    }
+
+    .catalog-view-all-top {
+        margin-top: 5px;
+
+        font-size: 7px;
+    }
+
+
+    /* CATEGORY */
+
+    .catalog-category-bar {
+        margin-bottom: 23px;
+    }
+
+    .catalog-category-list {
+        min-height: 48px;
+
+        gap: 22px;
+    }
+
+    .catalog-category-list button {
+        height: 48px;
+
+        font-size: 7px;
+    }
+
+
+    /* GRID */
+
+    .catalog-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 22px 10px;
+    }
+
+
+    /* IMAGE */
+
+    .catalog-card-image {
+        aspect-ratio: 0.76;
+    }
+
+    .catalog-badge {
+        top: 8px;
+        left: 8px;
+
+        padding: 5px 6px;
+
+        font-size: 5px;
+    }
+
+    .catalog-heart {
+        top: 7px;
+        right: 7px;
+
+        width: 29px;
+        height: 29px;
+
+        opacity: 1;
+
+        transform: none;
+
+        font-size: 16px;
+    }
+
+    .catalog-card-overlay {
+        display: none;
+    }
+
+
+    /* INFO */
+
+    .catalog-card-info {
+        padding-top: 10px;
+    }
+
+    .catalog-card-category {
+        margin-bottom: 5px;
+
+        font-size: 5.5px;
+    }
+
+    .catalog-card-info h3 {
+        min-height: 22px;
+
+        font-size: 17px;
+    }
+
+    .catalog-card-bottom {
+        margin-top: 9px;
+
+        gap: 5px;
+    }
+
+    .catalog-card-bottom>span {
+        font-size: 15px;
+    }
+
+    .catalog-add-button {
+        font-size: 5.8px;
+    }
+
+
+    /* FOOTER */
+
+    .catalog-footer {
+        margin-top: 25px;
+    }
+}
+
+
+/* =========================================================
+   VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 390px) {
+
+    .catalog-grid {
+        gap: 19px 8px;
+    }
+
+    .catalog-heading h2 {
+        font-size: 42px;
+    }
+
+    .catalog-card-info h3 {
+        font-size: 16px;
+    }
+
+    .catalog-card-bottom>span {
+        font-size: 14px;
+    }
+
+    .catalog-add-button {
+        font-size: 5.4px;
+    }
+}
