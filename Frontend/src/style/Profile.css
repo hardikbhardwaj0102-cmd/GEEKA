@@ -68,11 +68,15 @@
 
     z-index: 1;
 
+    /*
+     * Keep the image visible but slightly soften it so
+     * the glass panels have enough separation.
+     */
     background:
         linear-gradient(90deg,
-            rgba(248, 241, 235, 0.30) 0%,
-            rgba(248, 241, 235, 0.18) 45%,
-            rgba(248, 241, 235, 0.12) 100%);
+            rgba(248, 241, 235, 0.34) 0%,
+            rgba(248, 241, 235, 0.22) 45%,
+            rgba(248, 241, 235, 0.16) 100%);
 
     pointer-events: none;
 }
@@ -109,6 +113,7 @@
     margin-bottom: 6px;
 
     font-family: "DM Sans", sans-serif;
+
     font-size: 8px;
     font-weight: 600;
 
@@ -183,22 +188,28 @@
 
     overflow: hidden;
 
+    /*
+     * Stronger glass:
+     * The image remains visible through the panel,
+     * but the panel itself is clearly defined.
+     */
     background:
         linear-gradient(135deg,
-            rgba(255, 255, 255, 0.18),
-            rgba(255, 255, 255, 0.07));
+            rgba(255, 255, 255, 0.48),
+            rgba(255, 248, 242, 0.28));
 
-    border: 1px solid rgba(255, 255, 255, 0.42);
+    border: 1px solid rgba(255, 255, 255, 0.62);
 
     border-radius: 16px;
 
     box-shadow:
-        0 18px 42px rgba(55, 35, 30, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.52),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+        0 20px 46px rgba(55, 35, 30, 0.11),
+        0 4px 14px rgba(55, 35, 30, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.12);
 
-    backdrop-filter: blur(11px) saturate(118%);
-    -webkit-backdrop-filter: blur(11px) saturate(118%);
+    backdrop-filter: blur(15px) saturate(118%);
+    -webkit-backdrop-filter: blur(15px) saturate(118%);
 }
 
 
@@ -313,7 +324,7 @@
 
     color: var(--brown);
 
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.18);
 }
 
 .account-navigation button:hover strong,
@@ -402,22 +413,26 @@
 
     overflow: hidden;
 
+    /*
+     * Noticeably visible glass, but still transparent.
+     */
     background:
         linear-gradient(135deg,
-            rgba(255, 255, 255, 0.20),
-            rgba(255, 255, 255, 0.06));
+            rgba(255, 255, 255, 0.50),
+            rgba(255, 248, 242, 0.28));
 
-    border: 1px solid rgba(255, 255, 255, 0.44);
+    border: 1px solid rgba(255, 255, 255, 0.64);
 
     border-radius: 16px;
 
     box-shadow:
-        0 17px 40px rgba(55, 35, 30, 0.07),
-        inset 0 1px 0 rgba(255, 255, 255, 0.54),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+        0 18px 42px rgba(55, 35, 30, 0.10),
+        0 4px 14px rgba(55, 35, 30, 0.035),
+        inset 0 1px 0 rgba(255, 255, 255, 0.74),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.12);
 
-    backdrop-filter: blur(10px) saturate(118%);
-    -webkit-backdrop-filter: blur(10px) saturate(118%);
+    backdrop-filter: blur(15px) saturate(118%);
+    -webkit-backdrop-filter: blur(15px) saturate(118%);
 }
 
 
@@ -438,12 +453,13 @@
     border-radius: 50%;
 
     background:
-        rgba(255, 255, 255, 0.12);
+        rgba(255, 255, 255, 0.30);
 
-    border: 1px solid rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.62);
 
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.50);
+        inset 0 1px 0 rgba(255, 255, 255, 0.70),
+        0 4px 14px rgba(55, 35, 30, 0.05);
 
     font-family: "Cormorant Garamond", serif;
 
@@ -504,22 +520,28 @@
 
     overflow: hidden;
 
+    /*
+     * Main glass panel.
+     * More opaque than before, but background image
+     * remains visible through it.
+     */
     background:
         linear-gradient(135deg,
-            rgba(255, 255, 255, 0.20),
-            rgba(255, 255, 255, 0.06));
+            rgba(255, 255, 255, 0.46),
+            rgba(255, 248, 242, 0.25));
 
-    border: 1px solid rgba(255, 255, 255, 0.46);
+    border: 1px solid rgba(255, 255, 255, 0.66);
 
     border-radius: 16px;
 
     box-shadow:
-        0 20px 46px rgba(55, 35, 30, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.56),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.07);
+        0 22px 50px rgba(55, 35, 30, 0.11),
+        0 5px 16px rgba(55, 35, 30, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.76),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.11);
 
-    backdrop-filter: blur(11px) saturate(120%);
-    -webkit-backdrop-filter: blur(11px) saturate(120%);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
 }
 
 
@@ -765,14 +787,15 @@
 
     justify-content: center;
 
-    border: 1px solid rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.58);
 
     border-radius: 50%;
 
-    background: rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.24);
 
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.48);
+        inset 0 1px 0 rgba(255, 255, 255, 0.68),
+        0 4px 14px rgba(55, 35, 30, 0.04);
 
     font-family: "Cormorant Garamond", serif;
 
@@ -986,9 +1009,9 @@
     .account-background-overlay {
         background:
             linear-gradient(90deg,
-                rgba(248, 241, 235, 0.32) 0%,
-                rgba(248, 241, 235, 0.20) 55%,
-                rgba(248, 241, 235, 0.14) 100%);
+                rgba(248, 241, 235, 0.36) 0%,
+                rgba(248, 241, 235, 0.23) 55%,
+                rgba(248, 241, 235, 0.16) 100%);
     }
 }
 
@@ -1051,6 +1074,16 @@
         padding: 13px 15px;
 
         border-radius: 13px;
+
+        background:
+            linear-gradient(135deg,
+                rgba(255, 255, 255, 0.50),
+                rgba(255, 248, 242, 0.30));
+
+        border-color: rgba(255, 255, 255, 0.64);
+
+        backdrop-filter: blur(14px) saturate(118%);
+        -webkit-backdrop-filter: blur(14px) saturate(118%);
     }
 
     .account-sidebar-title {
@@ -1090,6 +1123,8 @@
     .account-navigation button:hover,
     .account-navigation button.active {
         padding-left: 0;
+
+        background: rgba(255, 255, 255, 0.20);
     }
 
     .account-logout {
@@ -1118,6 +1153,16 @@
         padding: 9px 13px;
 
         border-radius: 13px;
+
+        background:
+            linear-gradient(135deg,
+                rgba(255, 255, 255, 0.50),
+                rgba(255, 248, 242, 0.28));
+
+        border-color: rgba(255, 255, 255, 0.66);
+
+        backdrop-filter: blur(14px) saturate(118%);
+        -webkit-backdrop-filter: blur(14px) saturate(118%);
     }
 
     .account-avatar {
@@ -1125,6 +1170,8 @@
         height: 40px;
 
         font-size: 16px;
+
+        background: rgba(255, 255, 255, 0.30);
     }
 
     .account-welcome>div:last-child span {
@@ -1148,6 +1195,16 @@
         padding: 17px;
 
         border-radius: 13px;
+
+        background:
+            linear-gradient(135deg,
+                rgba(255, 255, 255, 0.48),
+                rgba(255, 248, 242, 0.26));
+
+        border-color: rgba(255, 255, 255, 0.66);
+
+        backdrop-filter: blur(14px) saturate(118%);
+        -webkit-backdrop-filter: blur(14px) saturate(118%);
     }
 
     .account-content-header {
@@ -1226,9 +1283,9 @@
     .account-background-overlay {
         background:
             linear-gradient(180deg,
-                rgba(248, 241, 235, 0.22) 0%,
-                rgba(248, 241, 235, 0.16) 55%,
-                rgba(248, 241, 235, 0.25) 100%);
+                rgba(248, 241, 235, 0.28) 0%,
+                rgba(248, 241, 235, 0.20) 55%,
+                rgba(248, 241, 235, 0.28) 100%);
     }
 }
 
