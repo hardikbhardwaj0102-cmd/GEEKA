@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import "../style/Login.css";
 
+import loginImage from "../assets/login.png";
+
 function Logo() {
     return (
         <Link to="/" className="login-logo">
@@ -127,6 +129,7 @@ export default function Login() {
                     <Logo />
 
                     <div className="login-heading">
+
                         <span className="login-eyebrow">
                             WELCOME BACK
                         </span>
@@ -141,6 +144,7 @@ export default function Login() {
                             Continue your journey with carefully curated
                             fashion, jewellery and handmade creations.
                         </p>
+
                     </div>
 
                     <form
@@ -151,6 +155,7 @@ export default function Login() {
                         {/* EMAIL */}
 
                         <div className="login-field">
+
                             <label htmlFor="login-email">
                                 Email Address
                             </label>
@@ -165,12 +170,15 @@ export default function Login() {
                                 autoComplete="email"
                                 required
                             />
+
                         </div>
 
                         {/* PASSWORD */}
 
                         <div className="login-field">
+
                             <div className="password-header">
+
                                 <label htmlFor="login-password">
                                     Password
                                 </label>
@@ -178,6 +186,7 @@ export default function Login() {
                                 <Link to="/forgot-password">
                                     Forgot password?
                                 </Link>
+
                             </div>
 
                             <div className="password-wrapper">
@@ -211,17 +220,21 @@ export default function Login() {
                                             : "Show password"
                                     }
                                 >
+
                                     <EyeIcon
                                         visible={showPassword}
                                     />
+
                                 </button>
 
                             </div>
+
                         </div>
 
-                        {/* REMEMBER */}
+                        {/* REMEMBER ME */}
 
                         <label className="remember-me">
+
                             <input
                                 type="checkbox"
                                 name="remember"
@@ -236,6 +249,7 @@ export default function Login() {
                             <span className="remember-text">
                                 Keep me signed in
                             </span>
+
                         </label>
 
                         {/* SUBMIT */}
@@ -244,11 +258,13 @@ export default function Login() {
                             type="submit"
                             className="login-submit"
                         >
+
                             <span>SIGN IN</span>
 
                             <span className="submit-arrow">
                                 <ArrowIcon />
                             </span>
+
                         </button>
 
                     </form>
@@ -256,9 +272,13 @@ export default function Login() {
                     {/* DIVIDER */}
 
                     <div className="login-divider">
+
                         <span />
+
                         <p>OR</p>
+
                         <span />
+
                     </div>
 
                     {/* GOOGLE */}
@@ -267,11 +287,13 @@ export default function Login() {
                         type="button"
                         className="google-login"
                     >
+
                         <GoogleIcon />
 
                         <span>
                             Continue with Google
                         </span>
+
                     </button>
 
                     {/* REGISTER */}
@@ -290,10 +312,19 @@ export default function Login() {
                     </div>
 
                     <div className="login-footer-note">
+
                         By continuing, you agree to our
-                        <span> Terms & Conditions </span>
+
+                        <span>
+                            {" "}Terms & Conditions{" "}
+                        </span>
+
                         and
-                        <span> Privacy Policy.</span>
+
+                        <span>
+                            {" "}Privacy Policy.
+                        </span>
+
                     </div>
 
                 </div>
@@ -308,15 +339,18 @@ export default function Login() {
             <section className="login-visual">
 
                 <img
-                    src="/src/assets/login.png"
+                    src={loginImage}
                     alt="GEEKA fashion collection"
                 />
 
                 <div className="login-visual-overlay" />
 
                 <div className="login-visual-top">
+
                     <span>GEEKA</span>
+
                     <span>EST. 2026</span>
+
                 </div>
 
                 <div className="login-visual-content">
@@ -341,11 +375,13 @@ export default function Login() {
                 </div>
 
                 <div className="login-floral">
+
                     <svg
                         viewBox="0 0 160 240"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                     >
+
                         <path
                             d="M20 237C34 184 63 132 111 94C130 79 140 52 143 19"
                             stroke="currentColor"
@@ -381,7 +417,9 @@ export default function Login() {
                             stroke="currentColor"
                             strokeWidth="1"
                         />
+
                     </svg>
+
                 </div>
 
             </section>
