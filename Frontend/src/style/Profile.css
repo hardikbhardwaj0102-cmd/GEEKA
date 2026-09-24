@@ -69,14 +69,14 @@
     z-index: 1;
 
     /*
-     * Keep the image visible but slightly soften it so
-     * the glass panels have enough separation.
+     * The image stays visible, but the overall page
+     * gets a warm editorial finish.
      */
     background:
         linear-gradient(90deg,
-            rgba(248, 241, 235, 0.34) 0%,
-            rgba(248, 241, 235, 0.22) 45%,
-            rgba(248, 241, 235, 0.16) 100%);
+            rgba(248, 241, 235, 0.30) 0%,
+            rgba(248, 241, 235, 0.18) 45%,
+            rgba(248, 241, 235, 0.12) 100%);
 
     pointer-events: none;
 }
@@ -172,7 +172,7 @@
 
 
 /* =========================================================
-   SIDEBAR — GLASSMORPHISM
+   SIDEBAR — STRONG GLASS
 ========================================================= */
 
 .account-sidebar {
@@ -189,27 +189,27 @@
     overflow: hidden;
 
     /*
-     * Stronger glass:
-     * The image remains visible through the panel,
-     * but the panel itself is clearly defined.
+     * Stronger frosted glass.
+     * Still translucent, but much easier to distinguish
+     * from the light background artwork.
      */
     background:
         linear-gradient(135deg,
-            rgba(255, 255, 255, 0.48),
-            rgba(255, 248, 242, 0.28));
+            rgba(255, 255, 255, 0.76) 0%,
+            rgba(250, 243, 237, 0.66) 100%);
 
-    border: 1px solid rgba(255, 255, 255, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.82);
 
     border-radius: 16px;
 
     box-shadow:
-        0 20px 46px rgba(55, 35, 30, 0.11),
-        0 4px 14px rgba(55, 35, 30, 0.04),
-        inset 0 1px 0 rgba(255, 255, 255, 0.72),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+        0 22px 50px rgba(55, 35, 30, 0.13),
+        0 5px 15px rgba(55, 35, 30, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.92),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.20);
 
-    backdrop-filter: blur(15px) saturate(118%);
-    -webkit-backdrop-filter: blur(15px) saturate(118%);
+    backdrop-filter: blur(21px) saturate(112%);
+    -webkit-backdrop-filter: blur(21px) saturate(112%);
 }
 
 
@@ -324,7 +324,8 @@
 
     color: var(--brown);
 
-    background: rgba(255, 255, 255, 0.18);
+    background:
+        rgba(255, 255, 255, 0.34);
 }
 
 .account-navigation button:hover strong,
@@ -394,7 +395,7 @@
 
 
 /* =========================================================
-   WELCOME CARD — GLASSMORPHISM
+   WELCOME CARD — STRONG GLASS
 ========================================================= */
 
 .account-welcome {
@@ -413,26 +414,23 @@
 
     overflow: hidden;
 
-    /*
-     * Noticeably visible glass, but still transparent.
-     */
     background:
         linear-gradient(135deg,
-            rgba(255, 255, 255, 0.50),
-            rgba(255, 248, 242, 0.28));
+            rgba(255, 255, 255, 0.78) 0%,
+            rgba(250, 243, 237, 0.67) 100%);
 
-    border: 1px solid rgba(255, 255, 255, 0.64);
+    border: 1px solid rgba(255, 255, 255, 0.86);
 
     border-radius: 16px;
 
     box-shadow:
-        0 18px 42px rgba(55, 35, 30, 0.10),
-        0 4px 14px rgba(55, 35, 30, 0.035),
-        inset 0 1px 0 rgba(255, 255, 255, 0.74),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+        0 20px 44px rgba(55, 35, 30, 0.12),
+        0 5px 14px rgba(55, 35, 30, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.94),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.18);
 
-    backdrop-filter: blur(15px) saturate(118%);
-    -webkit-backdrop-filter: blur(15px) saturate(118%);
+    backdrop-filter: blur(22px) saturate(112%);
+    -webkit-backdrop-filter: blur(22px) saturate(112%);
 }
 
 
@@ -453,13 +451,13 @@
     border-radius: 50%;
 
     background:
-        rgba(255, 255, 255, 0.30);
+        rgba(255, 255, 255, 0.48);
 
-    border: 1px solid rgba(255, 255, 255, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.82);
 
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.70),
-        0 4px 14px rgba(55, 35, 30, 0.05);
+        inset 0 1px 0 rgba(255, 255, 255, 0.90),
+        0 5px 15px rgba(55, 35, 30, 0.06);
 
     font-family: "Cormorant Garamond", serif;
 
@@ -504,7 +502,7 @@
 
 
 /* =========================================================
-   CONTENT PANEL — GLASSMORPHISM
+   CONTENT PANEL — STRONG GLASS
 ========================================================= */
 
 .account-content-panel {
@@ -521,27 +519,26 @@
     overflow: hidden;
 
     /*
-     * Main glass panel.
-     * More opaque than before, but background image
-     * remains visible through it.
+     * This is deliberately more opaque than the previous
+     * version because the source image is very light.
      */
     background:
         linear-gradient(135deg,
-            rgba(255, 255, 255, 0.46),
-            rgba(255, 248, 242, 0.25));
+            rgba(255, 255, 255, 0.80) 0%,
+            rgba(250, 243, 237, 0.70) 100%);
 
-    border: 1px solid rgba(255, 255, 255, 0.66);
+    border: 1px solid rgba(255, 255, 255, 0.88);
 
     border-radius: 16px;
 
     box-shadow:
-        0 22px 50px rgba(55, 35, 30, 0.11),
-        0 5px 16px rgba(55, 35, 30, 0.04),
-        inset 0 1px 0 rgba(255, 255, 255, 0.76),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.11);
+        0 24px 55px rgba(55, 35, 30, 0.13),
+        0 6px 18px rgba(55, 35, 30, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.96),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.18);
 
-    backdrop-filter: blur(16px) saturate(120%);
-    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    backdrop-filter: blur(24px) saturate(112%);
+    -webkit-backdrop-filter: blur(24px) saturate(112%);
 }
 
 
@@ -787,15 +784,15 @@
 
     justify-content: center;
 
-    border: 1px solid rgba(255, 255, 255, 0.58);
+    border: 1px solid rgba(255, 255, 255, 0.82);
 
     border-radius: 50%;
 
-    background: rgba(255, 255, 255, 0.24);
+    background: rgba(255, 255, 255, 0.42);
 
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.68),
-        0 4px 14px rgba(55, 35, 30, 0.04);
+        inset 0 1px 0 rgba(255, 255, 255, 0.90),
+        0 5px 15px rgba(55, 35, 30, 0.05);
 
     font-family: "Cormorant Garamond", serif;
 
@@ -1009,9 +1006,16 @@
     .account-background-overlay {
         background:
             linear-gradient(90deg,
-                rgba(248, 241, 235, 0.36) 0%,
-                rgba(248, 241, 235, 0.23) 55%,
-                rgba(248, 241, 235, 0.16) 100%);
+                rgba(248, 241, 235, 0.32) 0%,
+                rgba(248, 241, 235, 0.20) 55%,
+                rgba(248, 241, 235, 0.14) 100%);
+    }
+
+    .account-sidebar,
+    .account-welcome,
+    .account-content-panel {
+        backdrop-filter: blur(18px) saturate(112%);
+        -webkit-backdrop-filter: blur(18px) saturate(112%);
     }
 }
 
@@ -1077,13 +1081,13 @@
 
         background:
             linear-gradient(135deg,
-                rgba(255, 255, 255, 0.50),
-                rgba(255, 248, 242, 0.30));
+                rgba(255, 255, 255, 0.76),
+                rgba(250, 243, 237, 0.66));
 
-        border-color: rgba(255, 255, 255, 0.64);
+        border-color: rgba(255, 255, 255, 0.84);
 
-        backdrop-filter: blur(14px) saturate(118%);
-        -webkit-backdrop-filter: blur(14px) saturate(118%);
+        backdrop-filter: blur(18px) saturate(112%);
+        -webkit-backdrop-filter: blur(18px) saturate(112%);
     }
 
     .account-sidebar-title {
@@ -1124,7 +1128,7 @@
     .account-navigation button.active {
         padding-left: 0;
 
-        background: rgba(255, 255, 255, 0.20);
+        background: rgba(255, 255, 255, 0.32);
     }
 
     .account-logout {
@@ -1156,13 +1160,13 @@
 
         background:
             linear-gradient(135deg,
-                rgba(255, 255, 255, 0.50),
-                rgba(255, 248, 242, 0.28));
+                rgba(255, 255, 255, 0.78),
+                rgba(250, 243, 237, 0.67));
 
-        border-color: rgba(255, 255, 255, 0.66);
+        border-color: rgba(255, 255, 255, 0.86);
 
-        backdrop-filter: blur(14px) saturate(118%);
-        -webkit-backdrop-filter: blur(14px) saturate(118%);
+        backdrop-filter: blur(18px) saturate(112%);
+        -webkit-backdrop-filter: blur(18px) saturate(112%);
     }
 
     .account-avatar {
@@ -1171,7 +1175,7 @@
 
         font-size: 16px;
 
-        background: rgba(255, 255, 255, 0.30);
+        background: rgba(255, 255, 255, 0.45);
     }
 
     .account-welcome>div:last-child span {
@@ -1198,13 +1202,13 @@
 
         background:
             linear-gradient(135deg,
-                rgba(255, 255, 255, 0.48),
-                rgba(255, 248, 242, 0.26));
+                rgba(255, 255, 255, 0.80),
+                rgba(250, 243, 237, 0.69));
 
-        border-color: rgba(255, 255, 255, 0.66);
+        border-color: rgba(255, 255, 255, 0.88);
 
-        backdrop-filter: blur(14px) saturate(118%);
-        -webkit-backdrop-filter: blur(14px) saturate(118%);
+        backdrop-filter: blur(20px) saturate(112%);
+        -webkit-backdrop-filter: blur(20px) saturate(112%);
     }
 
     .account-content-header {
@@ -1283,9 +1287,9 @@
     .account-background-overlay {
         background:
             linear-gradient(180deg,
-                rgba(248, 241, 235, 0.28) 0%,
-                rgba(248, 241, 235, 0.20) 55%,
-                rgba(248, 241, 235, 0.28) 100%);
+                rgba(248, 241, 235, 0.24) 0%,
+                rgba(248, 241, 235, 0.18) 55%,
+                rgba(248, 241, 235, 0.27) 100%);
     }
 }
 
