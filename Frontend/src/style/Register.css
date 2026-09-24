@@ -46,9 +46,15 @@
 
     padding: 25px 64px;
 
+    display: flex;
+    flex-direction: column;
+
     background: #faf7f2;
 
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    border-right: 1px solid rgba(74, 48, 44, 0.07);
 }
 
 
@@ -56,26 +62,40 @@
    BACK TO STORE
 ========================================= */
 
+.register-top {
+    position: absolute;
+
+    top: 28px;
+    left: 64px;
+
+    z-index: 10;
+}
+
 .register-back {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
+
+    gap: 8px;
 
     color: #765f59;
 
-    font-size: 11px;
+    font-size: 12px;
+    font-weight: 500;
 
     text-decoration: none;
 
-    transition: color 0.2s ease;
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
 }
 
 .register-back:hover {
     color: #4a302c;
+    transform: translateX(-2px);
 }
 
 .register-back span {
-    font-size: 15px;
+    font-size: 17px;
     line-height: 1;
 }
 
@@ -86,9 +106,16 @@
 
 .register-content {
     width: 100%;
-    max-width: 460px;
+    max-width: 500px;
 
-    margin: 14px auto 0;
+    /*
+     * This is the main fix.
+     * The register content is vertically centered
+     * inside the left panel.
+     */
+    margin: auto;
+
+    padding: 25px 0 30px;
 }
 
 
@@ -121,7 +148,7 @@
 
     font-family: "Playfair Display", serif;
 
-    font-size: 45px;
+    font-size: 52px;
     font-weight: 500;
 
     line-height: 1;
@@ -130,22 +157,22 @@
 .register-logo-mark span {
     position: absolute;
 
-    top: -2px;
-    right: -12px;
+    top: -3px;
+    right: -14px;
 
     color: #76534b;
 
     font-family: serif;
 
-    font-size: 16px;
+    font-size: 19px;
 }
 
 .register-logo-tagline {
-    margin-top: 6px;
+    margin-top: 7px;
 
     color: #765f59;
 
-    font-size: 7px;
+    font-size: 8px;
 
     letter-spacing: 0.25em;
 
@@ -164,7 +191,7 @@
 ========================================= */
 
 .register-heading {
-    margin-top: 23px;
+    margin-top: 28px;
 
     text-align: center;
 }
@@ -172,14 +199,14 @@
 .register-eyebrow {
     display: block;
 
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 
     color: #a6786e;
 
-    font-size: 8px;
-    font-weight: 500;
+    font-size: 9px;
+    font-weight: 600;
 
-    letter-spacing: 0.25em;
+    letter-spacing: 0.28em;
 }
 
 .register-heading h1 {
@@ -189,27 +216,27 @@
 
     font-family: "Playfair Display", serif;
 
-    font-size: clamp(35px, 3.2vw, 48px);
+    font-size: clamp(42px, 3.5vw, 58px);
 
     font-weight: 400;
 
-    line-height: 0.97;
+    line-height: 0.96;
 
-    letter-spacing: -0.035em;
+    letter-spacing: -0.04em;
 }
 
 .register-heading p {
-    max-width: 400px;
+    max-width: 420px;
 
-    margin: 12px auto 0;
+    margin: 15px auto 0;
 
     color: #927a72;
 
     font-family: "Playfair Display", serif;
 
-    font-size: 11px;
+    font-size: 14px;
 
-    line-height: 1.5;
+    line-height: 1.52;
 }
 
 .register-heading strong {
@@ -226,34 +253,39 @@
 .register-form {
     width: 100%;
 
-    margin-top: 22px;
+    margin-top: 28px;
 }
 
 .register-field {
-    margin-bottom: 13px;
+    margin-bottom: 17px;
 }
 
 .register-field label {
     display: block;
 
-    margin-bottom: 6px;
+    margin-bottom: 8px;
 
     color: #654c46;
 
-    font-size: 8px;
-    font-weight: 500;
+    font-size: 10px;
+    font-weight: 600;
 
     letter-spacing: 0.15em;
 }
 
+
+/* =========================================
+   INPUTS
+========================================= */
+
 .register-field input {
     width: 100%;
-    height: 41px;
+    height: 47px;
 
-    padding: 0 13px;
+    padding: 0 15px;
 
     border: 1px solid #ded4cc;
-    border-radius: 0;
+    border-radius: 2px;
 
     outline: none;
 
@@ -261,21 +293,29 @@
 
     color: #4a302c;
 
-    font-size: 11px;
+    font-size: 13px;
 
     transition:
         border-color 0.2s ease,
-        background 0.2s ease;
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .register-field input::placeholder {
     color: #b7a9a1;
 }
 
+.register-field input:hover {
+    border-color: #cfc2ba;
+}
+
 .register-field input:focus {
     border-color: #a6786e;
 
     background: #fcfaf7;
+
+    box-shadow:
+        0 0 0 3px rgba(166, 120, 110, 0.06);
 }
 
 
@@ -284,20 +324,20 @@
 ========================================= */
 
 .register-otp-input {
-    height: 50px !important;
+    height: 55px !important;
 
     padding-left: 20px !important;
 
     text-align: center;
 
-    font-size: 20px !important;
+    font-size: 22px !important;
     font-weight: 500;
 
     letter-spacing: 0.45em;
 }
 
 .register-otp-input::placeholder {
-    font-size: 11px;
+    font-size: 12px;
 
     font-weight: 400;
 
@@ -311,7 +351,7 @@
 
 .register-verified-email {
     width: 100%;
-    min-height: 41px;
+    min-height: 47px;
 
     display: flex;
     align-items: center;
@@ -319,7 +359,7 @@
 
     gap: 10px;
 
-    padding: 0 13px;
+    padding: 0 15px;
 
     border: 1px solid #d9cec6;
 
@@ -327,7 +367,7 @@
 
     color: #60453e;
 
-    font-size: 11px;
+    font-size: 13px;
 }
 
 .verified-badge {
@@ -335,7 +375,7 @@
 
     color: #7c6259;
 
-    font-size: 7px;
+    font-size: 8px;
     font-weight: 600;
 
     letter-spacing: 0.12em;
@@ -351,7 +391,7 @@
 }
 
 .register-password-wrapper input {
-    padding-right: 45px;
+    padding-right: 48px;
 }
 
 .register-password-toggle {
@@ -360,10 +400,14 @@
     top: 50%;
     right: 11px;
 
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
 
     padding: 2px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     transform: translateY(-50%);
 
@@ -381,8 +425,8 @@
 }
 
 .register-password-toggle svg {
-    width: 15px;
-    height: 15px;
+    width: 17px;
+    height: 17px;
 
     fill: none;
 
@@ -403,15 +447,15 @@
     display: flex;
     align-items: flex-start;
 
-    gap: 7px;
+    gap: 8px;
 
-    margin: 8px 0 13px;
+    margin: 10px 0 16px;
 
     color: #88756e;
 
-    font-size: 8px;
+    font-size: 10px;
 
-    line-height: 1.4;
+    line-height: 1.45;
 
     cursor: pointer;
 }
@@ -421,8 +465,8 @@
 
     flex: 0 0 auto;
 
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
 
     margin: 0;
 
@@ -451,7 +495,7 @@
 
     color: white;
 
-    font-size: 9px;
+    font-size: 10px;
 }
 
 .register-terms a {
@@ -469,13 +513,13 @@
 
 .register-submit {
     width: 100%;
-    height: 42px;
+    height: 48px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    gap: 14px;
+    gap: 15px;
 
     border: 0;
 
@@ -483,7 +527,7 @@
 
     color: white;
 
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 600;
 
     letter-spacing: 0.2em;
@@ -492,11 +536,14 @@
 
     transition:
         background 0.2s ease,
-        opacity 0.2s ease;
+        opacity 0.2s ease,
+        transform 0.2s ease;
 }
 
 .register-submit:hover:not(:disabled) {
     background: #986663;
+
+    transform: translateY(-1px);
 }
 
 .register-submit:disabled {
@@ -507,13 +554,14 @@
 
 .register-submit-arrow {
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
 }
 
 .register-submit-arrow svg {
-    width: 15px;
-    height: 15px;
+    width: 17px;
+    height: 17px;
 
     fill: none;
 
@@ -535,7 +583,7 @@
     align-items: center;
     justify-content: space-between;
 
-    margin-top: 15px;
+    margin-top: 17px;
 }
 
 .register-resend,
@@ -546,7 +594,7 @@
 
     background: transparent;
 
-    font-size: 8px;
+    font-size: 10px;
 
     cursor: pointer;
 }
@@ -591,9 +639,9 @@
     align-items: center;
     justify-content: space-between;
 
-    margin: 4px 0 12px;
+    margin: 5px 0 14px;
 
-    padding: 9px 12px;
+    padding: 11px 13px;
 
     border: 1px dashed #d9cec6;
 
@@ -601,7 +649,7 @@
 
     color: #927a72;
 
-    font-size: 8px;
+    font-size: 10px;
 
     letter-spacing: 0.08em;
 }
@@ -609,7 +657,7 @@
 .register-demo-note strong {
     color: #60453e;
 
-    font-size: 12px;
+    font-size: 13px;
 
     letter-spacing: 0.18em;
 }
@@ -620,11 +668,11 @@
 ========================================= */
 
 .register-message {
-    margin: 8px 0 12px;
+    margin: 9px 0 13px;
 
-    font-size: 9px;
+    font-size: 10px;
 
-    line-height: 1.4;
+    line-height: 1.45;
 }
 
 .register-message.register-error {
@@ -645,13 +693,13 @@
     align-items: center;
     justify-content: center;
 
-    gap: 10px;
+    gap: 11px;
 
-    margin-top: 22px;
+    margin-top: 25px;
 
     color: #806d66;
 
-    font-size: 12px;
+    font-size: 13px;
 
     line-height: 1.5;
 }
@@ -659,18 +707,18 @@
 .register-login>span {
     color: #806d66;
 
-    font-size: 12px;
+    font-size: 13px;
 }
 
 .register-login a {
     display: inline-flex;
     align-items: center;
 
-    gap: 6px;
+    gap: 7px;
 
     color: #5f4038;
 
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
 
     text-decoration: none;
@@ -683,12 +731,12 @@
 .register-login a:hover {
     color: #3f2924;
 
-    gap: 9px;
+    gap: 10px;
 }
 
 .register-login a svg {
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
 
     fill: none;
 
@@ -706,11 +754,11 @@
 ========================================= */
 
 .register-footer-note {
-    margin-top: 18px;
+    margin-top: 19px;
 
     color: #9d8d86;
 
-    font-size: 9px;
+    font-size: 10px;
 
     line-height: 1.6;
 
@@ -839,11 +887,11 @@
 .register-visual-eyebrow {
     display: block;
 
-    margin-bottom: 11px;
+    margin-bottom: 12px;
 
     color: rgba(255, 255, 255, 0.92);
 
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 500;
 
     letter-spacing: 0.3em;
@@ -856,7 +904,7 @@
 
     font-family: "Playfair Display", serif;
 
-    font-size: clamp(43px, 4.3vw, 68px);
+    font-size: clamp(48px, 4.5vw, 72px);
 
     font-weight: 400;
 
@@ -870,24 +918,24 @@
 }
 
 .register-visual-content p {
-    max-width: 340px;
+    max-width: 360px;
 
-    margin: 17px 0 0;
+    margin: 18px 0 0;
 
     color: white;
 
     font-family: "Playfair Display", serif;
 
-    font-size: 12px;
+    font-size: 14px;
 
     line-height: 1.5;
 }
 
 .register-visual-line {
-    width: 55px;
+    width: 58px;
     height: 1px;
 
-    margin-top: 20px;
+    margin-top: 22px;
 
     background: rgba(255, 255, 255, 0.8);
 }
@@ -936,50 +984,55 @@
         padding-bottom: 18px;
     }
 
+    /*
+     * Do NOT push the content toward the top.
+     * Keep vertical centering.
+     */
     .register-content {
-        margin-top: 8px;
+        margin: auto;
+        padding-top: 18px;
+        padding-bottom: 18px;
     }
 
     .register-logo-mark {
-        font-size: 38px;
+        font-size: 45px;
     }
 
     .register-heading {
-        margin-top: 16px;
+        margin-top: 20px;
     }
 
     .register-heading h1 {
-        font-size: 37px;
+        font-size: 44px;
     }
 
     .register-heading p {
-        margin-top: 7px;
-
-        font-size: 10px;
+        margin-top: 10px;
+        font-size: 12px;
     }
 
     .register-form {
-        margin-top: 13px;
+        margin-top: 20px;
     }
 
     .register-field {
-        margin-bottom: 8px;
+        margin-bottom: 11px;
     }
 
     .register-field input {
-        height: 35px;
+        height: 40px;
     }
 
     .register-otp-input {
-        height: 43px !important;
+        height: 46px !important;
     }
 
     .register-submit {
-        height: 36px;
+        height: 40px;
     }
 
     .register-login {
-        margin-top: 12px;
+        margin-top: 14px;
     }
 
     .register-footer-note {
@@ -1003,6 +1056,7 @@
         min-height: 100vh;
 
         display: grid;
+
         grid-template-columns: 1fr;
 
         overflow: visible;
@@ -1014,7 +1068,13 @@
 
         padding: 25px 35px;
 
-        overflow: visible;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .register-top {
+        top: 25px;
+        left: 35px;
     }
 
     .register-visual {
@@ -1022,7 +1082,12 @@
     }
 
     .register-content {
-        max-width: 500px;
+        max-width: 540px;
+
+        margin: auto;
+
+        padding-top: 35px;
+        padding-bottom: 35px;
     }
 }
 
@@ -1037,40 +1102,60 @@
         padding: 22px;
     }
 
+    .register-top {
+        top: 22px;
+        left: 22px;
+    }
+
+    .register-content {
+        padding-top: 32px;
+        padding-bottom: 30px;
+    }
+
+    .register-logo-mark {
+        font-size: 47px;
+    }
+
+    .register-logo-tagline {
+        font-size: 7px;
+    }
+
     .register-heading {
-        margin-top: 30px;
+        margin-top: 24px;
     }
 
     .register-heading h1 {
-        font-size: 39px;
+        font-size: 42px;
     }
 
     .register-heading p {
-        font-size: 11px;
+        font-size: 13px;
     }
 
     .register-form {
-        margin-top: 25px;
+        margin-top: 24px;
     }
 
     .register-field input {
-        height: 44px;
+        height: 46px;
 
-        font-size: 12px;
+        font-size: 13px;
     }
 
     .register-otp-input {
-        height: 50px !important;
+        height: 52px !important;
 
-        font-size: 19px !important;
+        font-size: 20px !important;
     }
 
     .register-submit {
-        height: 45px;
+        height: 46px;
+
+        font-size: 9px;
     }
 
     .register-login {
-        margin-top: 18px;
+        margin-top: 20px;
 
         font-size: 12px;
     }
@@ -1084,7 +1169,7 @@
     }
 
     .register-footer-note {
-        font-size: 8px;
+        font-size: 9px;
     }
 }
 
@@ -1099,12 +1184,25 @@
         padding: 18px;
     }
 
+    .register-top {
+        top: 18px;
+        left: 18px;
+    }
+
+    .register-content {
+        padding-top: 30px;
+    }
+
     .register-logo-mark {
-        font-size: 40px;
+        font-size: 43px;
     }
 
     .register-heading h1 {
-        font-size: 34px;
+        font-size: 37px;
+    }
+
+    .register-heading p {
+        font-size: 12px;
     }
 
     .register-login {
