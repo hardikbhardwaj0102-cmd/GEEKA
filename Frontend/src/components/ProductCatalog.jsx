@@ -3,7 +3,7 @@ import "../style/ProductCatalog.css";
 
 import ethnicImage from "../assets/Ethical.png";
 import jewelleryImage from "../assets/jwel.png";
-import creativeImage from "../assets/hand.png";
+import creativeImage from "../assets/Ethical.png";
 
 
 /* =========================================================
