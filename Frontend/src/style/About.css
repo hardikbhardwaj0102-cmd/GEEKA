@@ -886,7 +886,7 @@
 }
 
 .about-cta-button:hover {
-    background: var(rose);
+    background: var(--rose);
 
     transform: translateY(-3px);
 }
