@@ -11,6 +11,9 @@ import Register from "./components/Register";
 import NewArrivals from "./components/NewArrivals";
 import ProductCatalog from "./components/ProductCatalog";
 import Profile from "./components/Profile";
+import Shop from "./components/Shop";
+import About from "./components/About";
+
 import "./App.css";
 
 
@@ -62,6 +65,14 @@ function App() {
                 <Route
                     path="/profile"
                     element={<Profile />}
+                />
+                <Route
+                    path="/shop"
+                    element={<Shop />}
+                />
+                <Route
+                    path="/About"
+                    element={<About />}
                 />
 
             </Routes>

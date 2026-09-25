@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import "../style/Hero.css";
 
-import heroImage from "../assets/top-banner.jpg";
-
+import heroImage1 from "../assets/top-banner.jpg";
+import heroImage2 from "../assets/top-banner-3.jpg";
+import heroImage3 from "../assets/top-banner-4.jpg";
+import heroImage4 from "../assets/top-banner-5.jpg";
 const heroImages = [
-    heroImage,
-    heroImage,
-    heroImage,
-    heroImage,
+    heroImage1,
+    heroImage2,
+    heroImage3,
+    heroImage4,
 ];
 
 export default function Hero() {

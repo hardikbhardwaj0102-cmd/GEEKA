@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "../style/Header.css";
 
 function Logo() {
@@ -44,6 +44,24 @@ function BagIcon() {
 }
 
 export default function Header() {
+    const location = useLocation();
+
+    const isHome =
+        location.pathname === "/" ||
+        location.pathname === "";
+
+    const isShop =
+        location.pathname === "/shop" ||
+        location.pathname.startsWith("/shop/");
+
+    const isAbout =
+        location.pathname === "/about" ||
+        location.pathname.startsWith("/about/");
+
+    const isContact =
+        location.pathname === "/contact" ||
+        location.pathname.startsWith("/contact/");
+
     return (
         <header className="site-header">
 
@@ -51,7 +69,11 @@ export default function Header() {
                 LOGO
             ================================================= */}
 
-            <Link to="/" className="header-logo-link">
+            <Link
+                to="/"
+                className="header-logo-link"
+                aria-label="Go to Geeka home"
+            >
                 <Logo />
             </Link>
 
@@ -64,27 +86,34 @@ export default function Header() {
 
                 <Link
                     to="/"
-                    className="navigation-active"
+                    className={isHome ? "navigation-active" : ""}
                 >
                     Home
                 </Link>
 
+
                 <Link
                     to="/shop"
-                    className="navigation-shop"
+                    className={`navigation-shop ${isShop ? "navigation-active" : ""
+                        }`}
                 >
-                    Shop
-
-                    <span>
-                        ⌄
-                    </span>
+                    <span>Shop</span>
+                    <span className="navigation-arrow">⌄</span>
                 </Link>
 
-                <Link to="/about">
+
+                <Link
+                    to="/about"
+                    className={isAbout ? "navigation-active" : ""}
+                >
                     About Us
                 </Link>
 
-                <Link to="/contact">
+
+                <Link
+                    to="/contact"
+                    className={isContact ? "navigation-active" : ""}
+                >
                     Contact
                 </Link>
 
@@ -127,7 +156,7 @@ export default function Header() {
                 >
                     <BagIcon />
 
-                    <span>
+                    <span className="header-bag-count">
                         0
                     </span>
                 </button>
