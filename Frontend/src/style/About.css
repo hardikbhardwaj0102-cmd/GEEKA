@@ -846,8 +846,8 @@
 
     padding: 13px 20px;
 
-    background: var(--brown);
-    color: #fff9f5;
+    background: var(--white);
+    color: #ffffff;
 
     font-family: "DM Sans", sans-serif;
 
@@ -886,7 +886,7 @@
 }
 
 .about-cta-button:hover {
-    background: var(--brown-dark);
+    background: var(rose);
 
     transform: translateY(-3px);
 }
