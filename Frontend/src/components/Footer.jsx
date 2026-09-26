@@ -1,19 +1,16 @@
 import "../style/Footer.css";
+import geekaLogo from "../assets/logo.png";
 
 function Logo() {
     return (
         <div className="footer-brand-logo">
-            <div className="footer-brand-mark">
-                G
-                <span>❧</span>
-            </div>
-
-            <div className="footer-brand-tagline">
-                FASHION · JEWELLERY · CROCHET
-            </div>
+            <img
+                src={geekaLogo}
+                alt="Geeka"
+                className="footer-brand-logo-image"
+            />
         </div>
     );
-
 }
 
 function InstagramIcon() {
@@ -66,9 +63,7 @@ export default function Footer() {
                 </div>
             </div>
 
-
             <div className="footer-divider" />
-
 
             <div className="footer-main">
 
@@ -100,7 +95,6 @@ export default function Footer() {
 
                 </div>
 
-
                 <div className="footer-column">
 
                     <h3>SHOP</h3>
@@ -112,7 +106,6 @@ export default function Footer() {
 
                 </div>
 
-
                 <div className="footer-column">
 
                     <h3>HELP</h3>
@@ -123,7 +116,6 @@ export default function Footer() {
                     <a href="#faq">FAQs</a>
 
                 </div>
-
 
                 <div className="footer-column">
 
@@ -137,7 +129,6 @@ export default function Footer() {
                 </div>
 
             </div>
-
 
             <div className="footer-bottom">
 
@@ -154,5 +145,4 @@ export default function Footer() {
 
         </footer>
     );
-
 }

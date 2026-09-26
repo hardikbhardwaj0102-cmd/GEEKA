@@ -119,6 +119,14 @@
     gap: 42px;
 }
 
+.brand-logo-image {
+    display: block;
+    width: 72px;
+    height: auto;
+    max-height: 58px;
+    object-fit: contain;
+}
+
 .main-navigation a {
     position: relative;
 
@@ -421,4 +429,17 @@
     .mobile-menu-button span {
         width: 21px;
     }
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+}
+
+.brand-logo-image {
+    display: block;
+    width: 72px;
+    height: auto;
+    max-height: 58px;
+    object-fit: contain;
 }

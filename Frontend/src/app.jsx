@@ -13,7 +13,7 @@ import ProductCatalog from "./components/ProductCatalog";
 import Profile from "./components/Profile";
 import Shop from "./components/Shop";
 import About from "./components/About";
-
+import Contact from "./components/Contact";
 import "./App.css";
 
 
@@ -73,6 +73,10 @@ function App() {
                 <Route
                     path="/About"
                     element={<About />}
+                />
+                <Route
+                    path="/contact"
+                    element={<Contact />}
                 />
 
             </Routes>

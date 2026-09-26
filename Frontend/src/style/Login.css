@@ -5,15 +5,11 @@
 .login-page {
     width: 100%;
     min-height: 100vh;
-
     display: grid;
     grid-template-columns: 44% 56%;
-
     background: #f6efe8;
-
     overflow: hidden;
 }
-
 
 /* =========================================================
    LEFT PANEL
@@ -21,25 +17,19 @@
 
 .login-panel {
     position: relative;
-
     width: 100%;
     min-height: 100vh;
-
     display: flex;
     flex-direction: column;
-
     background:
         radial-gradient(circle at 20% 10%,
             rgba(255, 255, 255, 0.65),
             transparent 34%),
         #f6efe8;
-
     overflow-y: auto;
     overflow-x: hidden;
-
     border-right: 1px solid rgba(71, 43, 43, 0.08);
 }
-
 
 /* =========================================================
    TOP NAV
@@ -47,10 +37,8 @@
 
 .login-top {
     position: absolute;
-
     top: 28px;
     left: 8%;
-
     z-index: 10;
 }
 
@@ -58,17 +46,12 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-
     color: #806b67;
-
     font-family: "Inter", sans-serif;
     font-size: 10px;
     font-weight: 500;
-
     letter-spacing: 0.6px;
-
     text-decoration: none;
-
     transition:
         color 0.25s ease,
         transform 0.25s ease;
@@ -84,7 +67,6 @@
     line-height: 1;
 }
 
-
 /* =========================================================
    MAIN CONTAINER
    ========================================================= */
@@ -92,135 +74,76 @@
 .login-container {
     width: 100%;
     max-width: 500px;
-
     margin: auto;
-
     padding: 76px 10% 42px;
-}
-
-
-/* =========================================================
-   LOGO
-   ========================================================= */
-
-.login-logo {
-    width: fit-content;
-
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-sizing: border-box;
+}
 
-    margin: 0 auto 40px;
+/* =========================================================
+   GEEKA LOGO
+   ========================================================= */
 
-    color: #4d3331;
-
+.login-logo {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 34px;
+    padding: 0;
     text-decoration: none;
+    line-height: 0;
 }
 
-.login-logo-mark {
-    position: relative;
-
-    font-family: "Cormorant Garamond", serif;
-    font-size: 57px;
-    line-height: 40px;
-
-    font-weight: 500;
-
-    letter-spacing: -6px;
+.login-logo-image {
+    display: block;
+    width: 108px;
+    height: 108px;
+    max-width: 100%;
+    object-fit: contain;
+    margin: 0 auto;
 }
-
-.login-logo-flower {
-    position: absolute;
-
-    top: -7px;
-    right: -20px;
-
-    font-family: serif;
-    font-size: 26px;
-
-    color: #9c625d;
-
-    transform: rotate(-20deg);
-}
-
-.login-logo-tagline {
-    margin-top: 8px;
-
-    font-family: "Inter", sans-serif;
-
-    font-size: 7px;
-    font-weight: 500;
-
-    letter-spacing: 1.2px;
-
-    text-transform: uppercase;
-
-    white-space: nowrap;
-
-    color: #806b67;
-}
-
-.login-logo-tagline span {
-    margin: 0 5px;
-
-    color: #b47770;
-}
-
 
 /* =========================================================
    HEADING
    ========================================================= */
 
 .login-heading {
+    width: 100%;
     text-align: center;
-
     margin-bottom: 31px;
 }
 
 .login-eyebrow {
     display: block;
-
     margin-bottom: 12px;
-
     font-family: "Inter", sans-serif;
-
     font-size: 8px;
     font-weight: 600;
-
     letter-spacing: 3.2px;
-
     color: #a56862;
 }
 
 .login-heading h1 {
     margin: 0 0 17px;
-
     font-family: "Cormorant Garamond", serif;
-
     font-size: clamp(48px, 5vw, 65px);
-
     line-height: 0.86;
-
     font-weight: 500;
-
     letter-spacing: -2px;
-
     color: #4d3331;
 }
 
 .login-heading p {
     max-width: 350px;
-
     margin: 0 auto;
-
     font-family: "Cormorant Garamond", serif;
-
     font-size: 15px;
     line-height: 1.48;
-
     color: #806b67;
 }
-
 
 /* =========================================================
    FORM
@@ -237,21 +160,14 @@
 .login-field label,
 .password-header label {
     display: block;
-
     margin-bottom: 8px;
-
     font-family: "Inter", sans-serif;
-
     font-size: 9px;
     font-weight: 600;
-
     letter-spacing: 1.15px;
-
     text-transform: uppercase;
-
     color: #4d3331;
 }
-
 
 /* =========================================================
    INPUTS
@@ -260,21 +176,15 @@
 .login-field input {
     width: 100%;
     height: 49px;
-
     padding: 0 15px;
-
+    box-sizing: border-box;
     border: 1px solid rgba(77, 51, 49, 0.16);
     border-radius: 3px;
-
     outline: none;
-
     background: rgba(255, 255, 255, 0.38);
-
     color: #4d3331;
-
     font-family: "Inter", sans-serif;
     font-size: 13px;
-
     transition:
         border-color 0.25s ease,
         background 0.25s ease,
@@ -291,13 +201,10 @@
 
 .login-field input:focus {
     border-color: #a56862;
-
     background: rgba(255, 255, 255, 0.72);
-
     box-shadow:
         0 0 0 3px rgba(165, 104, 98, 0.07);
 }
-
 
 /* =========================================================
    PASSWORD
@@ -307,7 +214,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     margin-bottom: 8px;
 }
 
@@ -317,16 +223,11 @@
 
 .password-header a {
     font-family: "Inter", sans-serif;
-
     font-size: 8px;
     font-weight: 500;
-
     letter-spacing: 0.3px;
-
     color: #806b67;
-
     text-decoration: none;
-
     transition: color 0.2s ease;
 }
 
@@ -336,7 +237,6 @@
 
 .password-wrapper {
     position: relative;
-
     width: 100%;
 }
 
@@ -346,28 +246,19 @@
 
 .password-toggle {
     position: absolute;
-
     top: 50%;
     right: 10px;
-
     width: 30px;
     height: 30px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     transform: translateY(-50%);
-
     border: 0;
     border-radius: 50%;
-
     background: transparent;
-
     color: #806b67;
-
     cursor: pointer;
-
     transition:
         background 0.2s ease,
         color 0.2s ease;
@@ -381,16 +272,12 @@
 .password-toggle svg {
     width: 17px;
     height: 17px;
-
     fill: none;
-
     stroke: currentColor;
     stroke-width: 1.25;
-
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-
 
 /* =========================================================
    REMEMBER ME
@@ -398,41 +285,30 @@
 
 .remember-me {
     position: relative;
-
     display: flex;
     align-items: center;
-
     gap: 8px;
-
     margin: 2px 0 21px;
-
     cursor: pointer;
 }
 
 .remember-me input {
     position: absolute;
-
     width: 1px;
     height: 1px;
-
     opacity: 0;
-
     pointer-events: none;
 }
 
 .custom-checkbox {
     width: 13px;
     height: 13px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     border: 1px solid rgba(77, 51, 49, 0.25);
     border-radius: 2px;
-
     background: rgba(255, 255, 255, 0.4);
-
     transition:
         background 0.2s ease,
         border-color 0.2s ease;
@@ -441,11 +317,8 @@
 .custom-checkbox span {
     width: 5px;
     height: 5px;
-
     border-radius: 1px;
-
     background: transparent;
-
     transition: background 0.2s ease;
 }
 
@@ -460,12 +333,9 @@
 
 .remember-text {
     font-family: "Inter", sans-serif;
-
     font-size: 9px;
-
     color: #806b67;
 }
-
 
 /* =========================================================
    SIGN IN BUTTON
@@ -473,32 +343,21 @@
 
 .login-submit {
     position: relative;
-
     width: 100%;
     height: 49px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     border: 1px solid #9c625d;
     border-radius: 3px;
-
     background: #9c625d;
-
     color: #fff;
-
     cursor: pointer;
-
     font-family: "Inter", sans-serif;
-
     font-size: 9px;
     font-weight: 600;
-
     letter-spacing: 1.8px;
-
     overflow: hidden;
-
     transition:
         background 0.3s ease,
         border-color 0.3s ease,
@@ -508,15 +367,10 @@
 
 .login-submit::before {
     content: "";
-
     position: absolute;
-
     inset: 0;
-
     background: #4d3331;
-
     transform: translateX(-101%);
-
     transition: transform 0.35s ease;
 }
 
@@ -526,9 +380,7 @@
 
 .login-submit:hover {
     border-color: #4d3331;
-
     transform: translateY(-1px);
-
     box-shadow:
         0 8px 22px rgba(77, 51, 49, 0.12);
 }
@@ -545,9 +397,7 @@
 
 .submit-arrow {
     position: absolute !important;
-
     right: 18px;
-
     display: flex;
     align-items: center;
 }
@@ -555,16 +405,12 @@
 .submit-arrow svg {
     width: 17px;
     height: 17px;
-
     fill: none;
-
     stroke: currentColor;
     stroke-width: 1.3;
-
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-
 
 /* =========================================================
    DIVIDER
@@ -572,36 +418,26 @@
 
 .login-divider {
     width: 100%;
-
     display: flex;
     align-items: center;
-
     gap: 13px;
-
     margin: 25px 0 19px;
 }
 
 .login-divider span {
     flex: 1;
-
     height: 1px;
-
     background: rgba(77, 51, 49, 0.11);
 }
 
 .login-divider p {
     margin: 0;
-
     font-family: "Inter", sans-serif;
-
     font-size: 7px;
     font-weight: 500;
-
     letter-spacing: 1.8px;
-
     color: #a08c87;
 }
-
 
 /* =========================================================
    GOOGLE
@@ -610,27 +446,18 @@
 .google-login {
     width: 100%;
     height: 47px;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     gap: 10px;
-
     border: 1px solid rgba(77, 51, 49, 0.15);
     border-radius: 3px;
-
     background: rgba(255, 255, 255, 0.28);
-
     color: #4d3331;
-
     cursor: pointer;
-
     font-family: "Inter", sans-serif;
-
     font-size: 10px;
     font-weight: 500;
-
     transition:
         background 0.25s ease,
         border-color 0.25s ease,
@@ -639,19 +466,15 @@
 
 .google-login:hover {
     background: rgba(255, 255, 255, 0.68);
-
     border-color: rgba(77, 51, 49, 0.28);
-
     transform: translateY(-1px);
 }
 
 .google-icon {
     width: 16px;
     height: 16px;
-
     color: #4d3331;
 }
-
 
 /* =========================================================
    REGISTER
@@ -661,34 +484,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
-
     gap: 6px;
-
     margin-top: 24px;
-
     font-family: "Inter", sans-serif;
-
     font-size: 9px;
-
     color: #806b67;
 }
 
 .login-register a {
     display: inline-flex;
     align-items: center;
-
     gap: 5px;
-
     padding-bottom: 3px;
-
     border-bottom: 1px solid rgba(77, 51, 49, 0.35);
-
     color: #4d3331;
-
     font-weight: 600;
-
     text-decoration: none;
-
     transition:
         color 0.2s ease,
         border-color 0.2s ease;
@@ -702,35 +513,26 @@
 .login-register svg {
     width: 13px;
     height: 13px;
-
     fill: none;
-
     stroke: currentColor;
     stroke-width: 1.3;
-
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-
 
 /* =========================================================
    LEGAL NOTE
    ========================================================= */
 
 .login-footer-note {
+    width: 100%;
     margin: 19px auto 0;
-
     max-width: 320px;
-
     text-align: center;
-
     font-family: "Inter", sans-serif;
-
     font-size: 7px;
     line-height: 1.6;
-
     letter-spacing: 0.15px;
-
     color: #aa9994;
 }
 
@@ -738,35 +540,26 @@
     color: #806b67;
 }
 
-
 /* =========================================================
    RIGHT VISUAL
    ========================================================= */
 
 .login-visual {
     position: relative;
-
     width: 100%;
     min-height: 100vh;
-
     overflow: hidden;
-
     background: #5d4140;
 }
 
 .login-visual>img {
     width: 100%;
     height: 100%;
-
     display: block;
-
     object-fit: cover;
     object-position: center;
-
     filter: saturate(0.78);
-
     transform: scale(1.015);
-
     transition: transform 1.2s ease;
 }
 
@@ -774,26 +567,21 @@
     transform: scale(1.025);
 }
 
-
 /* =========================================================
    IMAGE OVERLAY
    ========================================================= */
 
 .login-visual-overlay {
     position: absolute;
-
     inset: 0;
-
     background:
         linear-gradient(180deg,
             rgba(45, 27, 27, 0.18) 0%,
             rgba(45, 27, 27, 0.02) 34%,
             rgba(45, 27, 27, 0.18) 58%,
             rgba(45, 27, 27, 0.82) 100%);
-
     z-index: 1;
 }
-
 
 /* =========================================================
    VISUAL TOP
@@ -801,33 +589,24 @@
 
 .login-visual-top {
     position: absolute;
-
     top: 30px;
     left: 8%;
     right: 8%;
-
     z-index: 5;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     color: rgba(255, 255, 255, 0.84);
-
     font-family: "Inter", sans-serif;
-
     font-size: 8px;
     font-weight: 500;
-
     letter-spacing: 2.5px;
 }
 
 .login-visual-top span:last-child {
     opacity: 0.7;
-
     letter-spacing: 1.5px;
 }
-
 
 /* =========================================================
    VISUAL CONTENT
@@ -835,43 +614,29 @@
 
 .login-visual-content {
     position: absolute;
-
     left: 8%;
     bottom: 10%;
-
     z-index: 4;
-
     max-width: 510px;
-
     color: #fff;
 }
 
 .visual-eyebrow {
     display: block;
-
     margin-bottom: 13px;
-
     font-family: "Inter", sans-serif;
-
     font-size: 8px;
     font-weight: 500;
-
     letter-spacing: 3.4px;
-
     opacity: 0.78;
 }
 
 .login-visual-content h2 {
     margin: 0 0 22px;
-
     font-family: "Cormorant Garamond", serif;
-
     font-size: clamp(65px, 7vw, 104px);
-
     line-height: 0.78;
-
     font-weight: 500;
-
     letter-spacing: -4px;
 }
 
@@ -882,26 +647,19 @@
 
 .login-visual-content p {
     max-width: 365px;
-
     margin: 0;
-
     font-family: "Cormorant Garamond", serif;
-
     font-size: 17px;
     line-height: 1.45;
-
     color: rgba(255, 255, 255, 0.86);
 }
 
 .login-visual-line {
     width: 68px;
     height: 1px;
-
     margin-top: 24px;
-
     background: rgba(255, 255, 255, 0.72);
 }
-
 
 /* =========================================================
    FLORAL
@@ -909,17 +667,12 @@
 
 .login-floral {
     position: absolute;
-
     right: -5px;
     bottom: -28px;
-
     z-index: 5;
-
     width: 165px;
     height: 245px;
-
     color: rgba(255, 235, 229, 0.64);
-
     pointer-events: none;
 }
 
@@ -928,13 +681,11 @@
     height: 100%;
 }
 
-
 /* =========================================================
    TABLET
    ========================================================= */
 
 @media (max-width: 1100px) {
-
     .login-page {
         grid-template-columns: 48% 52%;
     }
@@ -957,24 +708,19 @@
     }
 }
 
-
 /* =========================================================
    MOBILE
    ========================================================= */
 
 @media (max-width: 800px) {
-
     .login-page {
         display: block;
-
         min-height: 100vh;
-
         overflow: visible;
     }
 
     .login-panel {
         min-height: 100vh;
-
         border-right: 0;
     }
 
@@ -984,13 +730,20 @@
     }
 
     .login-container {
+        width: 100%;
         max-width: 560px;
-
         padding: 78px 8% 42px;
+        margin: 0 auto;
     }
 
     .login-logo {
-        margin-bottom: 36px;
+        width: 100%;
+        margin-bottom: 34px;
+    }
+
+    .login-logo-image {
+        width: 108px;
+        height: 108px;
     }
 
     .login-heading h1 {
@@ -1002,27 +755,28 @@
     }
 }
 
-
 /* =========================================================
    SMALL MOBILE
    ========================================================= */
 
 @media (max-width: 500px) {
-
     .login-top {
         left: 7%;
     }
 
     .login-container {
+        width: 100%;
         padding: 76px 7% 38px;
     }
 
-    .login-logo-mark {
-        font-size: 50px;
+    .login-logo {
+        width: 100%;
+        margin-bottom: 30px;
     }
 
-    .login-logo-tagline {
-        font-size: 6px;
+    .login-logo-image {
+        width: 96px;
+        height: 96px;
     }
 
     .login-heading {
@@ -1031,7 +785,6 @@
 
     .login-heading h1 {
         font-size: 49px;
-
         letter-spacing: -1.4px;
     }
 
@@ -1049,7 +802,6 @@
 
     .login-register {
         flex-direction: column;
-
         gap: 7px;
     }
 

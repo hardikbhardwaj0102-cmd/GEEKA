@@ -1,17 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
 import "../style/Header.css";
+import geekaLogo from "../assets/logo.png";
 
 function Logo() {
     return (
         <div className="brand-logo">
-            <div className="brand-logo-mark">
-                G
-                <span className="brand-logo-flower">❧</span>
-            </div>
-
-            <div className="brand-logo-tagline">
-                Fashion <span>·</span> Jewellery <span>·</span> Crochet
-            </div>
+            <img
+                src={geekaLogo}
+                alt="Geeka"
+                className="brand-logo-image"
+            />
         </div>
     );
 }

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-
 import "../style/Register.css";
-import registerBackground from "../assets/register.png";
 
+import registerBackground from "../assets/register.png";
+import geekaLogo from "../assets/logo.png";
 
 /* =========================================================
    TEMPORARY FRONTEND OTP
@@ -12,7 +12,6 @@ import registerBackground from "../assets/register.png";
 
 const DEMO_OTP = "123456";
 
-
 /* =========================================================
    LOGO
    ========================================================= */
@@ -20,18 +19,14 @@ const DEMO_OTP = "123456";
 function Logo() {
     return (
         <div className="register-logo">
-            <div className="register-logo-mark">
-                G
-                <span>❧</span>
-            </div>
-
-            <div className="register-logo-tagline">
-                Fashion <span>·</span> Jewellery <span>·</span> Crochet
-            </div>
+            <img
+                src={geekaLogo}
+                alt="Geeka"
+                className="register-logo-image"
+            />
         </div>
     );
 }
-
 
 /* =========================================================
    EYE ICON
@@ -46,6 +41,7 @@ function EyeIcon({ visible }) {
             {visible ? (
                 <>
                     <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+
                     <circle
                         cx="12"
                         cy="12"
@@ -65,7 +61,6 @@ function EyeIcon({ visible }) {
     );
 }
 
-
 /* =========================================================
    ARROW ICON
    ========================================================= */
@@ -82,13 +77,11 @@ function ArrowIcon() {
     );
 }
 
-
 /* =========================================================
    MAIN REGISTER
    ========================================================= */
 
 export default function Register() {
-
     const navigate = useNavigate();
 
     const [step, setStep] = useState("email");
@@ -111,21 +104,17 @@ export default function Register() {
 
     const [resendTimer, setResendTimer] = useState(0);
 
-
     /* =====================================================
        RESEND TIMER
-    ===================================================== */
+       ===================================================== */
 
     useEffect(() => {
-
         if (resendTimer <= 0) {
             return;
         }
 
         const timer = setInterval(() => {
-
             setResendTimer((current) => {
-
                 if (current <= 1) {
                     clearInterval(timer);
                     return 0;
@@ -133,74 +122,58 @@ export default function Register() {
 
                 return current - 1;
             });
-
         }, 1000);
 
         return () => clearInterval(timer);
-
     }, [resendTimer]);
-
 
     /* =====================================================
        CLEAR MESSAGES
-    ===================================================== */
+       ===================================================== */
 
     const clearMessages = () => {
         setError("");
         setMessage("");
     };
 
-
     /* =====================================================
        EMAIL VALIDATION
-    ===================================================== */
+       ===================================================== */
 
     const isValidEmail = (value) => {
-
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
             value.trim()
         );
     };
 
-
     /* =====================================================
        SEND OTP
-    ===================================================== */
+       ===================================================== */
 
     const handleEmailSubmit = async (event) => {
-
         event.preventDefault();
 
         clearMessages();
 
         const cleanEmail = email.trim().toLowerCase();
 
-
         if (!cleanEmail) {
-
             setError(
                 "Please enter your email address."
             );
-
             return;
         }
 
-
         if (!isValidEmail(cleanEmail)) {
-
             setError(
                 "Please enter a valid email address."
             );
-
             return;
         }
 
-
         setLoading(true);
 
-
         try {
-
             /*
              * TEMPORARY FRONTEND FLOW
              *
@@ -213,66 +186,49 @@ export default function Register() {
                 setTimeout(resolve, 700)
             );
 
-
+            setEmail(cleanEmail);
             setStep("otp");
-
             setOtp("");
-
             setResendTimer(60);
 
             setMessage(
                 "We've sent a verification code to your email."
             );
-
         } catch {
-
             setError(
                 "Something went wrong. Please try again."
             );
-
         } finally {
-
             setLoading(false);
         }
     };
 
-
     /* =====================================================
        VERIFY OTP
-    ===================================================== */
+       ===================================================== */
 
     const handleOtpSubmit = async (event) => {
-
         event.preventDefault();
 
         clearMessages();
 
-
         if (!otp.trim()) {
-
             setError(
                 "Please enter the verification code."
             );
-
             return;
         }
 
-
         if (!/^\d{6}$/.test(otp.trim())) {
-
             setError(
                 "Enter the 6-digit verification code."
             );
-
             return;
         }
 
-
         setLoading(true);
 
-
         try {
-
             /*
              * TEMPORARY OTP
              *
@@ -284,41 +240,32 @@ export default function Register() {
                 setTimeout(resolve, 500)
             );
 
-
             if (otp !== DEMO_OTP) {
-
                 throw new Error(
                     "Invalid verification code."
                 );
             }
-
 
             setStep("details");
 
             setMessage(
                 "Email verified successfully."
             );
-
         } catch (err) {
-
             setError(
                 err.message ||
                 "Unable to verify the code."
             );
-
         } finally {
-
             setLoading(false);
         }
     };
 
-
     /* =====================================================
        RESEND OTP
-    ===================================================== */
+       ===================================================== */
 
     const handleResendOtp = async () => {
-
         if (
             resendTimer > 0 ||
             loading
@@ -326,86 +273,62 @@ export default function Register() {
             return;
         }
 
-
         clearMessages();
-
         setLoading(true);
 
-
         try {
-
             await new Promise((resolve) =>
                 setTimeout(resolve, 600)
             );
 
-
             setOtp("");
-
             setResendTimer(60);
 
             setMessage(
                 "A new verification code has been sent."
             );
-
         } catch {
-
             setError(
                 "Unable to resend the code."
             );
-
         } finally {
-
             setLoading(false);
         }
     };
 
-
     /* =====================================================
        CREATE ACCOUNT
-    ===================================================== */
+       ===================================================== */
 
     const handleRegister = async (event) => {
-
         event.preventDefault();
 
         clearMessages();
 
-
         if (!name.trim()) {
-
             setError(
                 "Please enter your full name."
             );
-
             return;
         }
 
-
         if (password.length < 8) {
-
             setError(
                 "Password must contain at least 8 characters."
             );
-
             return;
         }
 
-
         if (password !== confirmPassword) {
-
             setError(
                 "Passwords do not match."
             );
-
             return;
         }
 
-
         setLoading(true);
 
-
         try {
-
             /*
              * TEMPORARY FRONTEND FLOW
              *
@@ -418,49 +341,39 @@ export default function Register() {
                 setTimeout(resolve, 900)
             );
 
-
             navigate("/login", {
                 state: {
                     message:
                         "Account created successfully. Please sign in.",
                 },
             });
-
         } catch {
-
             setError(
                 "Unable to create your account."
             );
-
         } finally {
-
             setLoading(false);
         }
     };
 
-
     /* =====================================================
        CHANGE EMAIL
-    ===================================================== */
+       ===================================================== */
 
     const handleChangeEmail = () => {
-
         clearMessages();
 
         setOtp("");
-
         setResendTimer(0);
 
         setStep("email");
     };
 
-
     /* =====================================================
        RENDER
-    ===================================================== */
+       ===================================================== */
 
     return (
-
         <main className="register-page">
 
             {/* =================================================
@@ -470,7 +383,6 @@ export default function Register() {
             <section className="register-panel">
 
                 <div className="register-top">
-
                     <Link
                         to="/"
                         className="register-back"
@@ -478,30 +390,28 @@ export default function Register() {
                         <span>←</span>
                         Back to Store
                     </Link>
-
                 </div>
-
 
                 <div className="register-content">
 
-                    {/* LOGO */}
+                    {/* =================================================
+                        GEEKA LOGO
+                    ================================================= */}
 
                     <Link
                         to="/"
                         className="register-brand-link"
+                        aria-label="Go to Geeka home"
                     >
                         <Logo />
                     </Link>
-
 
                     {/* =================================================
                         STEP 1 — EMAIL
                     ================================================= */}
 
                     {step === "email" && (
-
                         <>
-
                             <div className="register-heading">
 
                                 <span className="register-eyebrow">
@@ -521,7 +431,6 @@ export default function Register() {
                                 </p>
 
                             </div>
-
 
                             <form
                                 className="register-form"
@@ -551,15 +460,11 @@ export default function Register() {
 
                                 </div>
 
-
                                 {error && (
-
                                     <div className="register-message register-error">
                                         {error}
                                     </div>
-
                                 )}
-
 
                                 <button
                                     type="submit"
@@ -582,20 +487,15 @@ export default function Register() {
                                 </button>
 
                             </form>
-
                         </>
-
                     )}
-
 
                     {/* =================================================
                         STEP 2 — OTP
                     ================================================= */}
 
                     {step === "otp" && (
-
                         <>
-
                             <div className="register-heading">
 
                                 <span className="register-eyebrow">
@@ -619,7 +519,6 @@ export default function Register() {
 
                             </div>
 
-
                             <form
                                 className="register-form"
                                 onSubmit={handleOtpSubmit}
@@ -638,7 +537,6 @@ export default function Register() {
                                         maxLength={6}
                                         value={otp}
                                         onChange={(event) => {
-
                                             const value =
                                                 event.target.value
                                                     .replace(
@@ -657,30 +555,22 @@ export default function Register() {
 
                                 </div>
 
-
                                 <div className="register-demo-note">
                                     Demo verification code:
                                     <strong> 123456</strong>
                                 </div>
 
-
                                 {message && (
-
                                     <div className="register-message register-success">
                                         {message}
                                     </div>
-
                                 )}
 
-
                                 {error && (
-
                                     <div className="register-message register-error">
                                         {error}
                                     </div>
-
                                 )}
-
 
                                 <button
                                     type="submit"
@@ -702,7 +592,6 @@ export default function Register() {
 
                                 </button>
 
-
                                 <div className="register-otp-actions">
 
                                     <button
@@ -719,7 +608,6 @@ export default function Register() {
                                             : "Resend code"}
                                     </button>
 
-
                                     <button
                                         type="button"
                                         onClick={handleChangeEmail}
@@ -731,20 +619,15 @@ export default function Register() {
                                 </div>
 
                             </form>
-
                         </>
-
                     )}
-
 
                     {/* =================================================
                         STEP 3 — DETAILS
                     ================================================= */}
 
                     {step === "details" && (
-
                         <>
-
                             <div className="register-heading">
 
                                 <span className="register-eyebrow">
@@ -763,7 +646,6 @@ export default function Register() {
                                 </p>
 
                             </div>
-
 
                             <form
                                 className="register-form register-details-form"
@@ -795,7 +677,6 @@ export default function Register() {
 
                                 </div>
 
-
                                 {/* VERIFIED EMAIL */}
 
                                 <div className="register-field">
@@ -817,7 +698,6 @@ export default function Register() {
                                     </div>
 
                                 </div>
-
 
                                 {/* PASSWORD */}
 
@@ -862,19 +742,16 @@ export default function Register() {
                                                     : "Show password"
                                             }
                                         >
-
                                             <EyeIcon
                                                 visible={
                                                     showPassword
                                                 }
                                             />
-
                                         </button>
 
                                     </div>
 
                                 </div>
-
 
                                 {/* CONFIRM PASSWORD */}
 
@@ -921,19 +798,16 @@ export default function Register() {
                                                     : "Show password"
                                             }
                                         >
-
                                             <EyeIcon
                                                 visible={
                                                     showConfirmPassword
                                                 }
                                             />
-
                                         </button>
 
                                     </div>
 
                                 </div>
-
 
                                 {/* TERMS */}
 
@@ -949,7 +823,6 @@ export default function Register() {
                                     </span>
 
                                     <span className="register-terms-text">
-
                                         I agree to the{" "}
 
                                         <a href="#terms">
@@ -961,22 +834,16 @@ export default function Register() {
                                         <a href="#privacy">
                                             Privacy Policy
                                         </a>
-
                                         .
-
                                     </span>
 
                                 </label>
 
-
                                 {error && (
-
                                     <div className="register-message register-error">
                                         {error}
                                     </div>
-
                                 )}
-
 
                                 <button
                                     type="submit"
@@ -999,11 +866,8 @@ export default function Register() {
                                 </button>
 
                             </form>
-
                         </>
-
                     )}
-
 
                     {/* =================================================
                         LOGIN LINK
@@ -1016,38 +880,26 @@ export default function Register() {
                         </span>
 
                         <Link to="/login">
-
                             Sign in
-
                             <ArrowIcon />
-
                         </Link>
 
                     </div>
 
-
                     <div className="register-footer-note">
-
                         By continuing, you agree to our{" "}
-
                         <span>
                             Terms & Conditions
                         </span>
-
                         {" "}and{" "}
-
                         <span>
                             Privacy Policy
                         </span>
-
                         .
-
                     </div>
 
                 </div>
-
             </section>
-
 
             {/* =================================================
                 RIGHT VISUAL
@@ -1061,9 +913,7 @@ export default function Register() {
                     className="register-visual-image"
                 />
 
-
                 <div className="register-visual-overlay" />
-
 
                 <div className="register-visual-top">
 
@@ -1076,7 +926,6 @@ export default function Register() {
                     </span>
 
                 </div>
-
 
                 <div className="register-visual-content">
 
@@ -1098,7 +947,6 @@ export default function Register() {
                     <div className="register-visual-line" />
 
                 </div>
-
 
                 <div className="register-floral">
 
