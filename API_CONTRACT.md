@@ -198,3 +198,60 @@ Returns a CSRF token required for state-changing authenticated/session requests.
 {
   "csrfToken": "csrf-token-value"
 }
+``` 
+
+## 1.5 Current User
+
+Returns information about the currently authenticated customer.
+
+### Request
+
+- **Method:** `GET`
+- **Endpoint:** `/api/v1/auth/me/`
+- **Authentication:** Required
+- **CSRF:** Not required
+
+### Success Response — `200 OK`
+
+```json
+{
+  "user": {
+    "id": "user-uuid",
+    "email": "customer@example.com",
+    "full_name": "Aarav Sharma",
+    "email_verified": true
+  }
+}  
+```
+### Unauthenticated Response — `401 Unauthorized`
+The endpoint requires an authenticated Django session.
+
+## 1.6 Logout
+
+Logs out the currently authenticated customer and destroys the Django session.
+
+### Request
+
+- **Method:** `POST`
+- **Endpoint:** /api/v1/auth/logout/
+- **Authentication:** Required
+- **CSRF:** Not required
+- **Content-Type:** application/json
+
+**Request body**
+No request body is required.
+
+### Success Response — `200 OK`
+```json
+{
+    "message": "Logout successful."
+}
+```
+
+### Unauthenticated Response — `401 Unauthorized`
+The endpoint requires an authenticated Django session.
+
+Behavior
+1. Validate the authenticated session.
+2. Destroy the current Django session.
+3. Return a successful logout response.

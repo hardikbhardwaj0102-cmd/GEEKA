@@ -9,6 +9,22 @@ from apps.users.services import verify_email_otp
 from django.contrib.auth import login
 from django.middleware.csrf import get_token
 from rest_framework.permissions import AllowAny
+from django.contrib.auth import logout
+from rest_framework.permissions import IsAuthenticated
+
+
+
+
+class CSRFTokenView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response(
+            {
+                "csrfToken": get_token(request),
+            }
+        )
+
 
 
 class RegisterView(APIView):
@@ -108,12 +124,34 @@ class LoginView(APIView):
 
 
 
-class CSRFTokenView(APIView):
-    permission_classes = [AllowAny]
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        user = request.user
+
         return Response(
             {
-                "csrfToken": get_token(request),
-            }
+                "user": {
+                    "id": str(user.id),
+                    "email": user.email,
+                    "full_name": user.full_name,
+                    "email_verified": user.email_verified,
+                }
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        logout(request)
+
+        return Response(
+            {
+                "message": "Logout successful."
+            },
+            status=status.HTTP_200_OK,
         )
