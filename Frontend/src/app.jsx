@@ -14,72 +14,123 @@ import Profile from "./components/Profile";
 import Shop from "./components/Shop";
 import About from "./components/About";
 import Contact from "./components/Contact";
+import Cart from "./components/Cart";
+import ForgotPassword from "./components/ForgotPassword";
+
 import "./App.css";
 
 
 function HomePage() {
     return (
         <div className="store-app">
+
             <Header />
 
             <main className="store-main">
+
                 <Hero />
 
                 <CollectionSection />
 
-
                 <NewArrivals />
+
                 <ProductCatalog />
 
                 <BenefitsStrip />
 
-
                 <WhyChooseUs />
+
             </main>
 
             <Footer />
+
         </div>
     );
 }
 
+
 function App() {
     return (
         <BrowserRouter>
+
             <Routes>
 
-                {/* HOME */}
+                {/* ================================
+                    HOME
+                ================================= */}
+
                 <Route
                     path="/"
                     element={<HomePage />}
                 />
 
-                {/* LOGIN */}
+
+                {/* ================================
+                    AUTH
+                ================================= */}
+
                 <Route
                     path="/login"
                     element={<Login />}
                 />
+
                 <Route
                     path="/register"
                     element={<Register />}
                 />
+
+
+                {/* ================================
+                    ACCOUNT
+                ================================= */}
+
                 <Route
                     path="/profile"
                     element={<Profile />}
                 />
+
+
+                {/* ================================
+                    SHOP
+                ================================= */}
+
                 <Route
                     path="/shop"
                     element={<Shop />}
                 />
+
+
+                {/* ================================
+                    ABOUT
+                ================================= */}
+
                 <Route
-                    path="/About"
+                    path="/about"
                     element={<About />}
                 />
+
+
+                {/* ================================
+                    CONTACT
+                ================================= */}
+
                 <Route
                     path="/contact"
                     element={<Contact />}
                 />
 
+
+                {/* ================================
+                    CART
+                ================================= */}
+
+                <Route
+                    path="/cart"
+                    element={<Cart />}
+                />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
             </Routes>
+
         </BrowserRouter>
     );
 }

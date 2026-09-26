@@ -60,12 +60,15 @@ export default function Header() {
         location.pathname === "/contact" ||
         location.pathname.startsWith("/contact/");
 
+    const isCart =
+        location.pathname === "/cart";
+
     return (
         <header className="site-header">
 
-            {/* =================================================
+            {/* ================================
                 LOGO
-            ================================================= */}
+            ================================= */}
 
             <Link
                 to="/"
@@ -76,9 +79,9 @@ export default function Header() {
             </Link>
 
 
-            {/* =================================================
+            {/* ================================
                 NAVIGATION
-            ================================================= */}
+            ================================= */}
 
             <nav className="main-navigation">
 
@@ -118,9 +121,9 @@ export default function Header() {
             </nav>
 
 
-            {/* =================================================
+            {/* ================================
                 ACTIONS
-            ================================================= */}
+            ================================= */}
 
             <div className="header-actions">
 
@@ -128,6 +131,7 @@ export default function Header() {
 
                 <button
                     type="button"
+                    className="header-search-button"
                     aria-label="Search"
                 >
                     <SearchIcon />
@@ -145,11 +149,12 @@ export default function Header() {
                 </Link>
 
 
-                {/* BAG */}
+                {/* CART */}
 
-                <button
-                    type="button"
-                    className="header-bag"
+                <Link
+                    to="/cart"
+                    className={`header-bag ${isCart ? "header-bag-active" : ""
+                        }`}
                     aria-label="Shopping bag"
                 >
                     <BagIcon />
@@ -157,14 +162,14 @@ export default function Header() {
                     <span className="header-bag-count">
                         0
                     </span>
-                </button>
+                </Link>
 
             </div>
 
 
-            {/* =================================================
+            {/* ================================
                 MOBILE MENU
-            ================================================= */}
+            ================================= */}
 
             <button
                 type="button"

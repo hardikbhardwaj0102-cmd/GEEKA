@@ -9,30 +9,22 @@
     box-sizing: border-box;
 }
 
-
 /* =========================================================
    MAIN PAGE
 ========================================================= */
 
 .account-page {
     position: relative;
-
     width: 100%;
     height: 100vh;
     height: 100dvh;
-
     min-height: 0;
-
     padding: 42px 5% 34px;
-
     display: flex;
     flex-direction: column;
-
     overflow: hidden;
-
     color: var(--brown);
 }
-
 
 /* =========================================================
    BACKGROUND IMAGE
@@ -40,22 +32,15 @@
 
 .account-background-image {
     position: absolute;
-
     inset: 0;
-
     z-index: 0;
-
     background-image: var(--profile-background);
-
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
-
     transform: scale(1.01);
-
     pointer-events: none;
 }
-
 
 /* =========================================================
    BACKGROUND OVERLAY
@@ -63,24 +48,17 @@
 
 .account-background-overlay {
     position: absolute;
-
     inset: 0;
-
     z-index: 1;
 
-    /*
-     * The image stays visible, but the overall page
-     * gets a warm editorial finish.
-     */
     background:
         linear-gradient(90deg,
-            rgba(248, 241, 235, 0.30) 0%,
-            rgba(248, 241, 235, 0.18) 45%,
-            rgba(248, 241, 235, 0.12) 100%);
+            rgba(248, 241, 235, 0.38) 0%,
+            rgba(248, 241, 235, 0.27) 45%,
+            rgba(248, 241, 235, 0.20) 100%);
 
     pointer-events: none;
 }
-
 
 /* =========================================================
    CONTENT ABOVE BACKGROUND
@@ -89,10 +67,8 @@
 .account-page>*:not(.account-background-image,
     .account-background-overlay) {
     position: relative;
-
     z-index: 2;
 }
-
 
 /* =========================================================
    PAGE HEADER
@@ -101,53 +77,36 @@
 .account-page-header {
     width: 100%;
     max-width: 1380px;
-
     flex-shrink: 0;
-
     margin: 0 auto 19px;
 }
 
 .account-page-header>span {
     display: block;
-
     margin-bottom: 6px;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 8px;
     font-weight: 600;
-
     letter-spacing: 0.28em;
-
     color: var(--brown-muted);
 }
 
 .account-page-header h1 {
     margin: 0;
-
     font-family: "Cormorant Garamond", serif;
-
     font-size: clamp(48px, 5vw, 70px);
-
     font-weight: 500;
-
     line-height: 0.88;
-
     color: var(--brown);
 }
 
 .account-page-header p {
     margin: 9px 0 0;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 11px;
-
     line-height: 1.5;
-
     color: var(--brown-muted);
 }
-
 
 /* =========================================================
    MAIN LAYOUT
@@ -156,62 +115,44 @@
 .account-layout {
     width: 100%;
     max-width: 1380px;
-
     flex: 1;
-
     min-height: 0;
-
     margin: 0 auto;
-
     display: grid;
-
     grid-template-columns: 230px minmax(0, 1fr);
-
     gap: 18px;
 }
 
-
 /* =========================================================
-   SIDEBAR — STRONG GLASS
+   SIDEBAR — DARKER GLASS
 ========================================================= */
 
 .account-sidebar {
     min-width: 0;
     min-height: 0;
-
     height: 100%;
-
     padding: 23px 20px;
-
     display: flex;
     flex-direction: column;
-
     overflow: hidden;
 
-    /*
-     * Stronger frosted glass.
-     * Still translucent, but much easier to distinguish
-     * from the light background artwork.
-     */
     background:
         linear-gradient(135deg,
-            rgba(255, 255, 255, 0.76) 0%,
-            rgba(250, 243, 237, 0.66) 100%);
+            rgba(255, 249, 244, 0.90) 0%,
+            rgba(236, 218, 211, 0.86) 100%);
 
-    border: 1px solid rgba(255, 255, 255, 0.82);
-
+    border: 1px solid rgba(255, 255, 255, 0.88);
     border-radius: 16px;
 
     box-shadow:
-        0 22px 50px rgba(55, 35, 30, 0.13),
-        0 5px 15px rgba(55, 35, 30, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.92),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.20);
+        0 22px 50px rgba(55, 35, 30, 0.18),
+        0 5px 15px rgba(55, 35, 30, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.30);
 
-    backdrop-filter: blur(21px) saturate(112%);
-    -webkit-backdrop-filter: blur(21px) saturate(112%);
+    backdrop-filter: blur(24px) saturate(110%);
+    -webkit-backdrop-filter: blur(24px) saturate(110%);
 }
-
 
 /* =========================================================
    SIDEBAR BRAND
@@ -219,40 +160,27 @@
 
 .account-sidebar-title {
     flex-shrink: 0;
-
     padding-bottom: 19px;
-
-    border-bottom: 1px solid rgba(93, 62, 53, 0.15);
+    border-bottom: 1px solid rgba(93, 62, 53, 0.18);
 }
 
 .account-sidebar-title span {
     display: block;
-
     font-family: "Cormorant Garamond", serif;
-
     font-size: 25px;
-
     font-weight: 500;
-
     letter-spacing: 0.08em;
-
     color: var(--brown);
 }
 
 .account-sidebar-title small {
     display: block;
-
     margin-top: 2px;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 7px;
-
     letter-spacing: 0.22em;
-
     color: var(--brown-muted);
 }
-
 
 /* =========================================================
    SIDEBAR NAVIGATION
@@ -260,44 +188,28 @@
 
 .account-navigation {
     margin-top: 14px;
-
     display: flex;
     flex-direction: column;
-
     overflow: hidden;
 }
 
 .account-navigation button {
     width: 100%;
-
     min-height: 42px;
-
     padding: 9px 2px;
-
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     border: none;
-
-    border-bottom: 1px solid rgba(93, 62, 53, 0.10);
-
+    border-bottom: 1px solid rgba(93, 62, 53, 0.13);
     background: transparent;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 9.5px;
-
     font-weight: 500;
-
     letter-spacing: 0.07em;
-
     text-align: left;
-
     color: var(--brown-muted);
-
     cursor: pointer;
-
     transition:
         color 0.2s ease,
         background 0.2s ease,
@@ -306,13 +218,9 @@
 
 .account-navigation button strong {
     opacity: 0;
-
     font-size: 14px;
-
     font-weight: 400;
-
     transform: translateX(-3px);
-
     transition:
         opacity 0.2s ease,
         transform 0.2s ease;
@@ -321,20 +229,15 @@
 .account-navigation button:hover,
 .account-navigation button.active {
     padding-left: 7px;
-
     color: var(--brown);
-
-    background:
-        rgba(255, 255, 255, 0.34);
+    background: rgba(255, 255, 255, 0.48);
 }
 
 .account-navigation button:hover strong,
 .account-navigation button.active strong {
     opacity: 1;
-
     transform: translateX(0);
 }
-
 
 /* =========================================================
    LOGOUT
@@ -342,29 +245,17 @@
 
 .account-logout {
     margin-top: auto;
-
     align-self: flex-start;
-
     padding: 0 0 6px;
-
     border: none;
-
-    border-bottom: 1px solid rgba(93, 62, 53, 0.30);
-
+    border-bottom: 1px solid rgba(93, 62, 53, 0.35);
     background: transparent;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 8px;
-
     font-weight: 600;
-
     letter-spacing: 0.17em;
-
     color: var(--brown-muted);
-
     cursor: pointer;
-
     transition:
         color 0.2s ease,
         border-color 0.2s ease;
@@ -372,10 +263,8 @@
 
 .account-logout:hover {
     color: var(--brown);
-
     border-color: var(--brown);
 }
-
 
 /* =========================================================
    MAIN CONTENT
@@ -384,55 +273,43 @@
 .account-main {
     min-width: 0;
     min-height: 0;
-
     height: 100%;
-
     display: flex;
     flex-direction: column;
-
     overflow: hidden;
 }
 
-
 /* =========================================================
-   WELCOME CARD — STRONG GLASS
+   WELCOME CARD — DARKER GLASS
 ========================================================= */
 
 .account-welcome {
     width: 100%;
-
     height: 84px;
-
     flex-shrink: 0;
-
     padding: 15px 22px;
-
     display: flex;
     align-items: center;
-
     gap: 16px;
-
     overflow: hidden;
 
     background:
         linear-gradient(135deg,
-            rgba(255, 255, 255, 0.78) 0%,
-            rgba(250, 243, 237, 0.67) 100%);
+            rgba(255, 249, 244, 0.92) 0%,
+            rgba(235, 216, 208, 0.87) 100%);
 
-    border: 1px solid rgba(255, 255, 255, 0.86);
-
+    border: 1px solid rgba(255, 255, 255, 0.92);
     border-radius: 16px;
 
     box-shadow:
-        0 20px 44px rgba(55, 35, 30, 0.12),
-        0 5px 14px rgba(55, 35, 30, 0.04),
-        inset 0 1px 0 rgba(255, 255, 255, 0.94),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.18);
+        0 20px 44px rgba(55, 35, 30, 0.17),
+        0 5px 14px rgba(55, 35, 30, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.96),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.25);
 
-    backdrop-filter: blur(22px) saturate(112%);
-    -webkit-backdrop-filter: blur(22px) saturate(112%);
+    backdrop-filter: blur(25px) saturate(110%);
+    -webkit-backdrop-filter: blur(25px) saturate(110%);
 }
-
 
 /* =========================================================
    AVATAR
@@ -441,28 +318,21 @@
 .account-avatar {
     width: 52px;
     height: 52px;
-
     flex-shrink: 0;
-
     display: flex;
     align-items: center;
     justify-content: center;
-
     border-radius: 50%;
 
-    background:
-        rgba(255, 255, 255, 0.48);
-
-    border: 1px solid rgba(255, 255, 255, 0.82);
+    background: rgba(255, 255, 255, 0.58);
+    border: 1px solid rgba(255, 255, 255, 0.88);
 
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.90),
-        0 5px 15px rgba(55, 35, 30, 0.06);
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 5px 15px rgba(55, 35, 30, 0.09);
 
     font-family: "Cormorant Garamond", serif;
-
     font-size: 20px;
-
     color: var(--brown);
 }
 
@@ -472,75 +342,52 @@
 
 .account-welcome>div:last-child span {
     display: block;
-
     margin-bottom: 3px;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 7px;
-
     letter-spacing: 0.19em;
-
     color: var(--brown-muted);
 }
 
 .account-welcome h2 {
     min-height: 24px;
-
     margin: 0;
-
     font-family: "Cormorant Garamond", serif;
-
     font-size: 27px;
-
     font-weight: 500;
-
     color: var(--brown);
-
     overflow-wrap: anywhere;
 }
 
-
 /* =========================================================
-   CONTENT PANEL — STRONG GLASS
+   CONTENT PANEL — DARKER GLASS
 ========================================================= */
 
 .account-content-panel {
     width: 100%;
-
     flex: 1;
-
     min-height: 0;
-
     margin-top: 14px;
-
     padding: 25px;
-
     overflow: hidden;
 
-    /*
-     * This is deliberately more opaque than the previous
-     * version because the source image is very light.
-     */
     background:
         linear-gradient(135deg,
-            rgba(255, 255, 255, 0.80) 0%,
-            rgba(250, 243, 237, 0.70) 100%);
+            rgba(255, 249, 244, 0.94) 0%,
+            rgba(232, 213, 205, 0.89) 100%);
 
-    border: 1px solid rgba(255, 255, 255, 0.88);
-
+    border: 1px solid rgba(255, 255, 255, 0.94);
     border-radius: 16px;
 
     box-shadow:
-        0 24px 55px rgba(55, 35, 30, 0.13),
-        0 6px 18px rgba(55, 35, 30, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.96),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.18);
+        0 24px 55px rgba(55, 35, 30, 0.18),
+        0 6px 18px rgba(55, 35, 30, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.98),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.25);
 
-    backdrop-filter: blur(24px) saturate(112%);
-    -webkit-backdrop-filter: blur(24px) saturate(112%);
+    backdrop-filter: blur(27px) saturate(110%);
+    -webkit-backdrop-filter: blur(27px) saturate(110%);
 }
-
 
 /* =========================================================
    CONTENT HEADER
@@ -548,16 +395,12 @@
 
 .account-content-header {
     min-height: 48px;
-
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-
     gap: 15px;
-
     padding-bottom: 16px;
-
-    border-bottom: 1px solid rgba(93, 62, 53, 0.11);
+    border-bottom: 1px solid rgba(93, 62, 53, 0.15);
 }
 
 .account-content-header>div {
@@ -566,32 +409,21 @@
 
 .account-content-header>div span {
     display: block;
-
     margin-bottom: 5px;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 7px;
-
     font-weight: 600;
-
     letter-spacing: 0.20em;
-
     color: var(--brown-muted);
 }
 
 .account-content-header h2 {
     margin: 0;
-
     font-family: "Cormorant Garamond", serif;
-
     font-size: 31px;
-
     font-weight: 500;
-
     color: var(--brown);
 }
-
 
 /* =========================================================
    HEADER BUTTONS
@@ -601,36 +433,23 @@
 .account-content-header>button:not(.account-outline-button) {
     display: flex;
     align-items: center;
-
     gap: 8px;
-
     flex-shrink: 0;
-
     padding: 0 0 6px;
-
     border: none;
-
-    border-bottom: 1px solid rgba(93, 62, 53, 0.34);
-
+    border-bottom: 1px solid rgba(93, 62, 53, 0.38);
     background: transparent;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 8px;
-
     font-weight: 600;
-
     letter-spacing: 0.14em;
-
     color: var(--brown);
-
     cursor: pointer;
 }
 
 .account-outline-button span,
 .account-content-header>button span {
     font-size: 14px;
-
     transition: transform 0.2s ease;
 }
 
@@ -639,29 +458,22 @@
     transform: translateX(4px);
 }
 
-
 /* =========================================================
    PROFILE DETAILS
 ========================================================= */
 
 .profile-details {
     width: 100%;
-
     margin-top: 23px;
-
     display: grid;
-
     grid-template-columns: repeat(3, 1fr);
 }
 
 .profile-detail {
     min-width: 0;
-
     min-height: 82px;
-
     padding-right: 23px;
-
-    border-right: 1px solid rgba(93, 62, 53, 0.10);
+    border-right: 1px solid rgba(93, 62, 53, 0.13);
 }
 
 .profile-detail:not(:first-child) {
@@ -674,36 +486,23 @@
 
 .profile-detail span {
     display: block;
-
     margin-bottom: 8px;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 7px;
-
     font-weight: 600;
-
     letter-spacing: 0.18em;
-
     color: var(--brown-muted);
 }
 
 .profile-detail p {
     min-height: 22px;
-
     margin: 0;
-
     font-family: "Cormorant Garamond", serif;
-
     font-size: 21px;
-
     font-weight: 500;
-
     color: var(--brown);
-
     overflow-wrap: anywhere;
 }
-
 
 /* =========================================================
    ACCOUNT NOTE
@@ -711,42 +510,28 @@
 
 .profile-account-note {
     margin-top: 22px;
-
     padding-top: 18px;
-
-    border-top: 1px solid rgba(93, 62, 53, 0.10);
+    border-top: 1px solid rgba(93, 62, 53, 0.13);
 }
 
 .profile-account-note span {
     display: block;
-
     margin-bottom: 6px;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 7px;
-
     font-weight: 600;
-
     letter-spacing: 0.19em;
-
     color: var(--brown-muted);
 }
 
 .profile-account-note p {
     max-width: 560px;
-
     margin: 0;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 10px;
-
     line-height: 1.65;
-
     color: var(--brown-muted);
 }
-
 
 /* =========================================================
    EMPTY STATE
@@ -754,117 +539,78 @@
 
 .account-empty-state {
     width: 100%;
-
     height: calc(100% - 64px);
-
     min-height: 0;
-
     padding: 25px;
-
     display: flex;
-
     align-items: center;
-
     justify-content: center;
-
     flex-direction: column;
-
     text-align: center;
 }
 
 .account-empty-mark {
     width: 50px;
     height: 50px;
-
     margin-bottom: 14px;
-
     display: flex;
-
     align-items: center;
-
     justify-content: center;
 
-    border: 1px solid rgba(255, 255, 255, 0.82);
-
+    border: 1px solid rgba(255, 255, 255, 0.88);
     border-radius: 50%;
-
-    background: rgba(255, 255, 255, 0.42);
+    background: rgba(255, 255, 255, 0.56);
 
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.90),
-        0 5px 15px rgba(55, 35, 30, 0.05);
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 5px 15px rgba(55, 35, 30, 0.08);
 
     font-family: "Cormorant Garamond", serif;
-
     font-size: 21px;
-
     color: var(--brown);
 }
 
 .account-empty-state h3 {
     margin: 0;
-
     font-family: "Cormorant Garamond", serif;
-
     font-size: 27px;
-
     font-weight: 500;
-
     color: var(--brown);
 }
 
 .account-empty-state p {
     max-width: 370px;
-
     margin: 7px 0 18px;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 10px;
-
     line-height: 1.65;
-
     color: var(--brown-muted);
 }
 
 .account-empty-state button {
     display: flex;
-
     align-items: center;
-
     gap: 9px;
-
     padding: 0 0 6px;
-
     border: none;
-
-    border-bottom: 1px solid rgba(93, 62, 53, 0.34);
-
+    border-bottom: 1px solid rgba(93, 62, 53, 0.38);
     background: transparent;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 8px;
-
     font-weight: 600;
-
     letter-spacing: 0.15em;
-
     color: var(--brown);
-
     cursor: pointer;
 }
 
 .account-empty-state button span {
     font-size: 14px;
-
     transition: transform 0.2s ease;
 }
 
 .account-empty-state button:hover span {
     transform: translateX(4px);
 }
-
 
 /* =========================================================
    SETTINGS
@@ -876,27 +622,16 @@
 
 .account-settings-list button {
     width: 100%;
-
     min-height: 68px;
-
     padding: 14px 0;
-
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
-
     border: none;
-
-    border-bottom: 1px solid rgba(93, 62, 53, 0.09);
-
+    border-bottom: 1px solid rgba(93, 62, 53, 0.12);
     background: transparent;
-
     text-align: left;
-
     color: var(--brown);
-
     cursor: pointer;
 }
 
@@ -910,40 +645,29 @@
 
 .account-settings-list button div span {
     display: block;
-
     margin-bottom: 5px;
-
     font-family: "DM Sans", sans-serif;
-
     font-size: 7px;
-
     letter-spacing: 0.17em;
-
     color: var(--brown-muted);
 }
 
 .account-settings-list button div strong {
     font-family: "Cormorant Garamond", serif;
-
     font-size: 21px;
-
     font-weight: 500;
-
     color: var(--brown);
 }
 
 .account-settings-list button>span {
     flex-shrink: 0;
-
     font-size: 16px;
-
     transition: transform 0.2s ease;
 }
 
 .account-settings-list button:hover>span {
     transform: translateX(4px);
 }
-
 
 /* =========================================================
    TABLET
@@ -965,7 +689,6 @@
 
     .account-layout {
         grid-template-columns: 195px minmax(0, 1fr);
-
         gap: 14px;
     }
 
@@ -983,42 +706,36 @@
 
     .profile-detail {
         min-height: auto;
-
         padding: 0 0 15px;
-
         border-right: none;
-
-        border-bottom: 1px solid rgba(93, 62, 53, 0.09);
+        border-bottom: 1px solid rgba(93, 62, 53, 0.12);
     }
 
     .profile-detail:not(:first-child) {
         padding-left: 0;
-
         padding-top: 15px;
     }
 
     .profile-detail:last-child {
         padding-bottom: 0;
-
         border-bottom: none;
     }
 
     .account-background-overlay {
         background:
             linear-gradient(90deg,
-                rgba(248, 241, 235, 0.32) 0%,
-                rgba(248, 241, 235, 0.20) 55%,
-                rgba(248, 241, 235, 0.14) 100%);
+                rgba(248, 241, 235, 0.40) 0%,
+                rgba(248, 241, 235, 0.28) 55%,
+                rgba(248, 241, 235, 0.20) 100%);
     }
 
     .account-sidebar,
     .account-welcome,
     .account-content-panel {
-        backdrop-filter: blur(18px) saturate(112%);
-        -webkit-backdrop-filter: blur(18px) saturate(112%);
+        backdrop-filter: blur(22px) saturate(110%);
+        -webkit-backdrop-filter: blur(22px) saturate(110%);
     }
 }
-
 
 /* =========================================================
    MOBILE
@@ -1028,7 +745,6 @@
 
     .account-page {
         height: 100dvh;
-
         padding: 25px 4% 22px;
     }
 
@@ -1048,19 +764,15 @@
         font-size: 8px;
     }
 
-
     /* =====================================================
        LAYOUT
     ===================================================== */
 
     .account-layout {
         display: flex;
-
         flex-direction: column;
-
         gap: 10px;
     }
-
 
     /* =====================================================
        SIDEBAR
@@ -1068,26 +780,21 @@
 
     .account-sidebar {
         width: 100%;
-
         height: auto;
-
         min-height: 0;
-
         flex-shrink: 0;
-
         padding: 13px 15px;
-
         border-radius: 13px;
 
         background:
             linear-gradient(135deg,
-                rgba(255, 255, 255, 0.76),
-                rgba(250, 243, 237, 0.66));
+                rgba(255, 249, 244, 0.91),
+                rgba(235, 216, 208, 0.87));
 
-        border-color: rgba(255, 255, 255, 0.84);
+        border-color: rgba(255, 255, 255, 0.90);
 
-        backdrop-filter: blur(18px) saturate(112%);
-        -webkit-backdrop-filter: blur(18px) saturate(112%);
+        backdrop-filter: blur(20px) saturate(110%);
+        -webkit-backdrop-filter: blur(20px) saturate(110%);
     }
 
     .account-sidebar-title {
@@ -1104,19 +811,14 @@
 
     .account-navigation {
         margin-top: 5px;
-
         display: grid;
-
         grid-template-columns: repeat(3, 1fr);
-
         gap: 0 8px;
     }
 
     .account-navigation button {
         min-height: 29px;
-
         padding: 6px 0;
-
         font-size: 6.8px;
     }
 
@@ -1127,14 +829,12 @@
     .account-navigation button:hover,
     .account-navigation button.active {
         padding-left: 0;
-
-        background: rgba(255, 255, 255, 0.32);
+        background: rgba(255, 255, 255, 0.48);
     }
 
     .account-logout {
         margin-top: 8px;
     }
-
 
     /* =====================================================
        MAIN
@@ -1142,10 +842,8 @@
 
     .account-main {
         flex: 1;
-
         min-height: 0;
     }
-
 
     /* =====================================================
        WELCOME
@@ -1153,29 +851,25 @@
 
     .account-welcome {
         height: 61px;
-
         padding: 9px 13px;
-
         border-radius: 13px;
 
         background:
             linear-gradient(135deg,
-                rgba(255, 255, 255, 0.78),
-                rgba(250, 243, 237, 0.67));
+                rgba(255, 249, 244, 0.93),
+                rgba(235, 216, 208, 0.88));
 
-        border-color: rgba(255, 255, 255, 0.86);
+        border-color: rgba(255, 255, 255, 0.92);
 
-        backdrop-filter: blur(18px) saturate(112%);
-        -webkit-backdrop-filter: blur(18px) saturate(112%);
+        backdrop-filter: blur(21px) saturate(110%);
+        -webkit-backdrop-filter: blur(21px) saturate(110%);
     }
 
     .account-avatar {
         width: 40px;
         height: 40px;
-
         font-size: 16px;
-
-        background: rgba(255, 255, 255, 0.45);
+        background: rgba(255, 255, 255, 0.60);
     }
 
     .account-welcome>div:last-child span {
@@ -1186,34 +880,29 @@
         font-size: 22px;
     }
 
-
     /* =====================================================
        CONTENT PANEL
     ===================================================== */
 
     .account-content-panel {
         height: calc(100% - 71px);
-
         margin-top: 9px;
-
         padding: 17px;
-
         border-radius: 13px;
 
         background:
             linear-gradient(135deg,
-                rgba(255, 255, 255, 0.80),
-                rgba(250, 243, 237, 0.69));
+                rgba(255, 249, 244, 0.95),
+                rgba(232, 213, 205, 0.90));
 
-        border-color: rgba(255, 255, 255, 0.88);
+        border-color: rgba(255, 255, 255, 0.94);
 
-        backdrop-filter: blur(20px) saturate(112%);
-        -webkit-backdrop-filter: blur(20px) saturate(112%);
+        backdrop-filter: blur(23px) saturate(110%);
+        -webkit-backdrop-filter: blur(23px) saturate(110%);
     }
 
     .account-content-header {
         min-height: 41px;
-
         padding-bottom: 11px;
     }
 
@@ -1229,7 +918,6 @@
     .account-outline-button {
         font-size: 6.2px;
     }
-
 
     /* =====================================================
        PROFILE DETAILS
@@ -1255,14 +943,12 @@
         font-size: 18px;
     }
 
-
     /* =====================================================
        EMPTY STATE
     ===================================================== */
 
     .account-empty-state {
         height: calc(100% - 53px);
-
         padding: 20px 10px;
     }
 
@@ -1279,7 +965,6 @@
         font-size: 8px;
     }
 
-
     /* =====================================================
        BACKGROUND
     ===================================================== */
@@ -1287,12 +972,11 @@
     .account-background-overlay {
         background:
             linear-gradient(180deg,
-                rgba(248, 241, 235, 0.24) 0%,
-                rgba(248, 241, 235, 0.18) 55%,
-                rgba(248, 241, 235, 0.27) 100%);
+                rgba(248, 241, 235, 0.30) 0%,
+                rgba(248, 241, 235, 0.24) 55%,
+                rgba(248, 241, 235, 0.32) 100%);
     }
 }
-
 
 /* =========================================================
    SMALL MOBILE
@@ -1318,7 +1002,6 @@
 
     .account-content-header {
         align-items: flex-start;
-
         flex-direction: column;
     }
 
