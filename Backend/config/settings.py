@@ -36,6 +36,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     "apps.users",
+    "apps.authentication",
 
     "rest_framework",
     "corsheaders",

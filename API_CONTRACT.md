@@ -76,3 +76,43 @@ The `errors` object may contain field-specific messages for invalid email, missi
 * Do not store or send the customer's password back in the response.
 * The account is not yet email-verified after registration.
 * This contract documents the current registration endpoint. If implementation behavior or response fields change, update this section to match.
+
+
+### 1.2 Verify Email
+
+Verifies the customer's email using the OTP sent during registration.
+
+- **Method:** `POST`
+- **Endpoint:** `/api/v1/auth/verify-email/`
+- **Authentication:** Not required
+- **Content-Type:** `application/json`
+
+**Request body**
+
+```json
+{
+  "email": "aditya.test.geeka@gmail.com",
+  "otp": "123456"
+}
+```
+
+**Success response — `200 OK`**
+```json
+{
+  "message": "Email verified successfully.",
+  "user": {
+    "id": "user-uuid",
+    "email": "aditya.test.geeka@gmail.com",
+    "full_name": "Aditya Gupta",
+    "email_verified": true
+  }
+}
+```
+
+**Error response — `400 Bad Request`**
+```json
+{
+  "error": "Invalid verification code."
+}
+```
+Other possible errors include an expired OTP, no active verification code, or maximum verification attempts exceeded.
