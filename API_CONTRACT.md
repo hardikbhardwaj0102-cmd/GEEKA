@@ -116,3 +116,85 @@ Verifies the customer's email using the OTP sent during registration.
 }
 ```
 Other possible errors include an expired OTP, no active verification code, or maximum verification attempts exceeded.
+
+
+### 1.3 Login
+
+Authenticates a verified customer and creates a Django session.
+
+- **Method:** `POST`
+- **Endpoint:** `/api/v1/auth/login/`
+- **Authentication:** Not required
+- **CSRF:** Required
+- **Content-Type:** `application/json`
+
+**Request body**
+
+```json
+{
+  "email": "customer@example.com",
+  "password": "ExamplePass123!"
+}
+```
+
+**Success response — `200 OK`**
+
+```json
+{
+  "message": "Login successful.",
+  "user": {
+    "id": "user-uuid",
+    "email": "customer@example.com",
+    "full_name": "Aarav Sharma",
+    "email_verified": true
+  }
+}
+```
+
+**Error response — `400 Bad Request`**
+Invalid credentials:
+```json
+{
+  "errors": {
+    "error": [
+      "Invalid email or password."
+    ]
+  }
+}
+```
+
+Unverified email:
+```json
+{
+  "errors": {
+    "error": [
+      "Invalid email or password."
+    ]
+  }
+}
+```
+Inactive account:
+```json
+{
+  "errors": {
+    "error": [
+      "This account is inactive."
+    ]
+  }
+}
+```
+
+### 1.4 CSRF Token
+
+Returns a CSRF token required for state-changing authenticated/session requests.
+
+- **Method:** `GET`
+- **Endpoint:** `/api/v1/auth/csrf/`
+- **Authentication:** Not required
+
+**Success response — `200 OK`**
+
+```json
+{
+  "csrfToken": "csrf-token-value"
+}

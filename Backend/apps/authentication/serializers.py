@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 from apps.users.email_service import send_verification_email
 from apps.users.services import create_email_verification
+from django.contrib.auth import authenticate
 
 
 User = get_user_model()
@@ -69,4 +70,42 @@ class VerifyEmailSerializer(serializers.Serializer):
             )
 
         attrs["user"] = user
+        return attrs
+
+
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(
+        write_only=True,
+        trim_whitespace=False,
+    )
+
+    def validate(self, attrs):
+        email = attrs["email"].lower().strip()
+        password = attrs["password"]
+
+        user = authenticate(
+            username=email,
+            password=password,
+        )
+
+        if user is None:
+            raise serializers.ValidationError(
+                {"error": "Invalid email or password."}
+            )
+
+        if not user.email_verified:
+            raise serializers.ValidationError(
+                {"error": "Please verify your email before logging in."}
+            )
+
+        if not user.is_active:
+            raise serializers.ValidationError(
+                {"error": "This account is inactive."}
+            )
+
+        attrs["user"] = user
+
         return attrs
