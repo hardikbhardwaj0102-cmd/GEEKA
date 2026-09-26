@@ -46,3 +46,42 @@ def send_verification_email(email, otp):
             )
         ],
     )
+
+
+
+
+def send_password_reset_email(email, otp):
+    client = Brevo(api_key=settings.BREVO_API_KEY)
+
+    client.transactional_emails.send_transac_email(
+        subject="Reset your GEEKA password",
+        html_content=f"""
+        <html>
+            <body>
+                <h2>Reset your GEEKA password</h2>
+
+                <p>Your password reset code is:</p>
+
+                <h1>{otp}</h1>
+
+                <p>This code will expire in 10 minutes.</p>
+
+                <p>
+                    If you did not request a password reset,
+                    you can safely ignore this email.
+                </p>
+
+                <p>Regards,<br>GEEKA</p>
+            </body>
+        </html>
+        """,
+        sender=SendTransacEmailRequestSender(
+            name=SENDER_NAME,
+            email=SENDER_EMAIL,
+        ),
+        to=[
+            SendTransacEmailRequestToItem(
+                email=email,
+            )
+        ],
+    )

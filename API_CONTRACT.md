@@ -255,3 +255,207 @@ Behavior
 1. Validate the authenticated session.
 2. Destroy the current Django session.
 3. Return a successful logout response.
+
+
+## 1.7 Password Reset Request
+
+Requests a password reset code for a customer account.
+
+### Request
+
+- **Method:** `POST`
+- **Endpoint:** `/api/v1/auth/password-reset/request/`
+- **Authentication:** Not required
+- **CSRF:** Required
+- **Content-Type:** `application/json`
+
+### Request Body
+
+```json
+{
+  "email": "customer@example.com"
+}
+```
+
+### Success Response — `200 OK`
+
+The same response is returned whether or not an account exists with the provided email. This prevents account/email enumeration.
+
+```json
+{
+  "message": "If an account exists with this email, a password reset code has been sent."
+}
+```
+
+### Validation Error — `400 Bad Request`
+
+```json
+{
+  "errors": {
+    "email": [
+      "Enter a valid email address."
+    ]
+  }
+}
+```
+
+### Behavior
+
+1. Normalize the provided email address.
+2. Check whether an active account exists.
+3. If the account exists, invalidate any previous unused password reset code.
+4. Generate a new 6-digit password reset code.
+5. Store only the hashed code.
+6. Set the code expiry to 10 minutes.
+7. Send the code to the registered email through Brevo.
+8. Return the same generic success message regardless of account existence.
+
+---
+
+## 1.8 Password Reset OTP Verification
+
+Verifies that the password reset code is valid before allowing the customer to reset their password.
+
+### Request
+
+- **Method:** `POST`
+- **Endpoint:** `/api/v1/auth/password-reset/verify/`
+- **Authentication:** Not required
+- **CSRF:** Required
+- **Content-Type:** `application/json`
+
+### Request Body
+
+```json
+{
+  "email": "customer@example.com",
+  "otp": "123456"
+}
+```
+
+### Success Response — `200 OK`
+
+```json
+{
+  "message": "Verification code is valid."
+}
+```
+
+### Invalid or Expired Code — `400 Bad Request`
+
+```json
+{
+  "error": "Invalid verification code."
+}
+```
+
+or:
+
+```json
+{
+  "error": "Password reset code has expired."
+}
+```
+
+### Attempt Limit
+
+A maximum of 5 verification attempts is allowed for a password reset code.
+
+After the maximum number of attempts is reached:
+
+```json
+{
+  "error": "Maximum verification attempts exceeded."
+}
+```
+
+### Behavior
+
+1. Find the latest unused password reset code for the provided account.
+2. Check whether the code has expired.
+3. Check whether the maximum number of attempts has been reached.
+4. Increment the attempt counter.
+5. Compare the submitted OTP with the stored hash.
+6. Return success if the OTP is valid.
+7. The OTP remains available for the password reset confirmation step until it is used or expires.
+
+---
+
+## 1.9 Password Reset Confirmation
+
+Sets a new password after validating the password reset code.
+
+### Request
+
+- **Method:** `POST`
+- **Endpoint:** `/api/v1/auth/password-reset/confirm/`
+- **Authentication:** Not required
+- **CSRF:** Required
+- **Content-Type:** `application/json`
+
+### Request Body
+
+```json
+{
+  "email": "customer@example.com",
+  "otp": "123456",
+  "password": "NewPassword123!",
+  "password_confirm": "NewPassword123!"
+}
+```
+
+### Success Response — `200 OK`
+
+```json
+{
+  "message": "Password reset successful. Please log in with your new password."
+}
+```
+
+### Validation Error — `400 Bad Request`
+
+```json
+{
+  "errors": {
+    "password_confirm": [
+      "Passwords do not match."
+    ]
+  }
+}
+```
+
+### Invalid or Expired Code — `400 Bad Request`
+
+```json
+{
+  "error": "Invalid verification code."
+}
+```
+
+or:
+
+```json
+{
+  "error": "Password reset code has expired."
+}
+```
+
+### Behavior
+
+1. Validate the request data.
+2. Find the latest unused password reset code for the account.
+3. Validate the OTP, expiry, and attempt limit.
+4. Hash and store the new password using Django's password hashing system.
+5. Mark the password reset code as used.
+6. Prevent the same OTP from being reused.
+7. Return a successful password reset response.
+
+### Security Requirements
+
+- Passwords must never be stored in plaintext.
+- Password reset codes must never be stored in plaintext.
+- Password reset codes expire after 10 minutes.
+- A maximum of 5 OTP attempts is allowed.
+- Requesting a new reset code invalidates the previous unused code.
+- A successfully used reset code cannot be reused.
+- Password reset must not reveal whether an email address is registered.

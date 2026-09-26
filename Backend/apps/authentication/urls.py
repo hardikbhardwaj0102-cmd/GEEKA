@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import RegisterView, VerifyEmailView, LoginView , CSRFTokenView, MeView, LogoutView
+from .views import RegisterView, VerifyEmailView, LoginView , CSRFTokenView, MeView, LogoutView, PasswordResetVerifyView, PasswordResetConfirmView, PasswordResetRequestView
 
 urlpatterns = [
     path("csrf/", CSRFTokenView.as_view(), name="csrf-token"),
@@ -9,4 +9,7 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
     path("me/",MeView.as_view(),name="me"),
     path("logout/",LogoutView.as_view(),name="logout"),
+    path("password-reset/request/",PasswordResetRequestView.as_view(),name="password-reset-request"),
+    path("password-reset/verify/",PasswordResetVerifyView.as_view(),name="password-reset-verify"),
+    path("password-reset/confirm/",PasswordResetConfirmView.as_view(),name="password-reset-confirm"),
 ]

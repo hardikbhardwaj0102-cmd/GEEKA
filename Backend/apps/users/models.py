@@ -108,7 +108,6 @@ class EmailVerification(models.Model):
     )
 
     expires_at = models.DateTimeField()
-
     attempts = models.PositiveSmallIntegerField(
         default=0,
     )
@@ -124,3 +123,27 @@ class EmailVerification(models.Model):
 
     def __str__(self):
         return f"Email verification for {self.user.email}"
+
+
+
+class PasswordResetVerification(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="password_reset_verifications",
+    )
+
+    otp_hash = models.CharField(max_length=128)
+    expires_at = models.DateTimeField()
+    attempts = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Password reset for {self.user.email}"
