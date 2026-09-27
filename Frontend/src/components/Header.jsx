@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import "../style/Header.css";
 import geekaLogo from "../assets/logo.png";
+import { useCart } from "../hooks/useCart";
 
 function Logo() {
     return (
@@ -43,6 +44,8 @@ function BagIcon() {
 
 export default function Header() {
     const location = useLocation();
+
+    const { cartCount } = useCart();
 
     const isHome =
         location.pathname === "/" ||
@@ -160,7 +163,7 @@ export default function Header() {
                     <BagIcon />
 
                     <span className="header-bag-count">
-                        0
+                        {cartCount}
                     </span>
                 </Link>
 

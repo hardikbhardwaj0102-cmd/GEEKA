@@ -3,178 +3,10 @@ import { Link } from "react-router-dom";
 import "../style/Shop.css";
 
 import Header from "./Header";
+import { useCart } from "../hooks/useCart";
+import { getProducts } from "../services/productService";
 
 import shopBanner from "../assets/top-banner.jpg";
-import ethnicImage from "../assets/Ethical.png";
-import jewelleryImage from "../assets/jwel.png";
-import creativeImage from "../assets/Hand.png";
-
-const PRODUCTS = [
-    {
-        id: 1,
-        name: "Floral Ethnic Set",
-        category: "Ethnic Wear",
-        price: 1499,
-        oldPrice: 1799,
-        image: ethnicImage,
-        isNew: true,
-        inStock: true,
-        featured: true,
-        description:
-            "A graceful ethnic set with delicate floral detailing and an effortless silhouette.",
-    },
-    {
-        id: 2,
-        name: "Pearl Drop Earrings",
-        category: "Jewellery",
-        price: 799,
-        oldPrice: 999,
-        image: jewelleryImage,
-        isNew: true,
-        inStock: true,
-        featured: true,
-        description:
-            "Elegant pearl-inspired drop earrings designed for everyday and festive styling.",
-    },
-    {
-        id: 3,
-        name: "Handwoven Crochet Blanket",
-        category: "Creative",
-        price: 799,
-        oldPrice: 999,
-        image: creativeImage,
-        isNew: true,
-        inStock: true,
-        featured: true,
-        description:
-            "A handmade crochet creation with a soft texture and warm handcrafted character.",
-    },
-    {
-        id: 4,
-        name: "Classic Kurti Set",
-        category: "Ethnic Wear",
-        price: 1699,
-        oldPrice: 1999,
-        image: ethnicImage,
-        isNew: false,
-        inStock: true,
-        featured: true,
-        description:
-            "A timeless kurti set balancing comfort, simplicity and traditional charm.",
-    },
-    {
-        id: 5,
-        name: "Silver Filigree Earrings",
-        category: "Jewellery",
-        price: 699,
-        oldPrice: 899,
-        image: jewelleryImage,
-        isNew: true,
-        inStock: true,
-        featured: false,
-        description:
-            "Detailed earrings inspired by delicate traditional filigree craftsmanship.",
-    },
-    {
-        id: 6,
-        name: "Handmade Crochet Bag",
-        category: "Creative",
-        price: 1199,
-        oldPrice: 1399,
-        image: creativeImage,
-        isNew: false,
-        inStock: true,
-        featured: true,
-        description:
-            "A handmade everyday bag crafted with a soft crochet texture and practical shape.",
-    },
-    {
-        id: 7,
-        name: "Printed Everyday Kurti",
-        category: "Ethnic Wear",
-        price: 1099,
-        oldPrice: 1299,
-        image: ethnicImage,
-        isNew: false,
-        inStock: true,
-        featured: false,
-        description:
-            "An easy everyday kurti with relaxed styling and subtle traditional detailing.",
-    },
-    {
-        id: 8,
-        name: "Pearl Layer Necklace",
-        category: "Jewellery",
-        price: 1299,
-        oldPrice: 1499,
-        image: jewelleryImage,
-        isNew: true,
-        inStock: true,
-        featured: true,
-        description:
-            "A layered pearl-inspired necklace made for elegant festive styling.",
-    },
-    {
-        id: 9,
-        name: "Crochet Mini Pouch",
-        category: "Creative",
-        price: 599,
-        oldPrice: 699,
-        image: creativeImage,
-        isNew: true,
-        inStock: true,
-        featured: false,
-        description:
-            "A compact handmade pouch for your everyday essentials.",
-    },
-    {
-        id: 10,
-        name: "Embroidered Ethnic Set",
-        category: "Ethnic Wear",
-        price: 1899,
-        oldPrice: 2199,
-        image: ethnicImage,
-        isNew: true,
-        inStock: true,
-        featured: true,
-        description:
-            "A refined ethnic ensemble featuring detailed embroidery and festive styling.",
-    },
-    {
-        id: 11,
-        name: "Delicate Pearl Bracelet",
-        category: "Jewellery",
-        price: 549,
-        oldPrice: null,
-        image: jewelleryImage,
-        isNew: false,
-        inStock: true,
-        featured: false,
-        description:
-            "A subtle bracelet designed to complement both ethnic and contemporary looks.",
-    },
-    {
-        id: 12,
-        name: "Crochet Hair Accessory Set",
-        category: "Creative",
-        price: 449,
-        oldPrice: 549,
-        image: creativeImage,
-        isNew: true,
-        inStock: true,
-        featured: false,
-        description:
-            "A playful handmade accessory set created with soft crochet detailing.",
-    },
-];
-
-const CATEGORIES = [
-    "All",
-    "Ethnic Wear",
-    "Jewellery",
-    "Creative",
-];
-
 function formatPrice(price) {
     return `₹${price.toLocaleString("en-IN")}`;
 }
@@ -357,17 +189,6 @@ export default function Shop() {
         }
     });
 
-    const [cart, setCart] = useState(() => {
-        try {
-            const saved =
-                localStorage.getItem("geeka-cart");
-
-            return saved ? JSON.parse(saved) : [];
-        } catch {
-            return [];
-        }
-    });
-
     const [quickView, setQuickView] = useState(null);
 
     const [mobileFilters, setMobileFilters] =
@@ -375,6 +196,46 @@ export default function Shop() {
 
     const [cartMessage, setCartMessage] =
         useState(false);
+
+    const { addItem, cartCount } = useCart();
+
+    const [products, setProducts] = useState([]);
+
+    useEffect(() => {
+        let active = true;
+
+        async function loadProducts() {
+            try {
+                const items = await getProducts();
+
+                if (active) {
+                    setProducts(Array.isArray(items) ? items : []);
+                }
+            } catch {
+                if (active) {
+                    setProducts([]);
+                }
+            }
+        }
+
+        loadProducts();
+
+        return () => {
+            active = false;
+        };
+    }, []);
+
+    const categories = useMemo(() => {
+        const uniqueCategories = [
+            ...new Set(
+                products
+                    .map((product) => product.category)
+                    .filter(Boolean)
+            ),
+        ];
+
+        return ["All", ...uniqueCategories];
+    }, [products]);
 
 
     useEffect(() => {
@@ -384,13 +245,6 @@ export default function Shop() {
         );
     }, [wishlist]);
 
-
-    useEffect(() => {
-        localStorage.setItem(
-            "geeka-cart",
-            JSON.stringify(cart)
-        );
-    }, [cart]);
 
 
     useEffect(() => {
@@ -426,7 +280,7 @@ export default function Shop() {
             .trim()
             .toLowerCase();
 
-        const results = PRODUCTS.filter(
+        const results = products.filter(
             (product) => {
 
                 const matchesCategory =
@@ -510,14 +364,8 @@ export default function Shop() {
         newOnly,
         stockOnly,
         sortBy,
+        products,
     ]);
-
-
-    const cartCount = cart.reduce(
-        (total, item) =>
-            total + item.quantity,
-        0
-    );
 
 
     const clearFilters = () => {
@@ -554,46 +402,7 @@ export default function Shop() {
 
 
     const addToCart = (product) => {
-
-        setCart((current) => {
-
-            const existing =
-                current.find(
-                    (item) =>
-                        item.id === product.id
-                );
-
-            if (existing) {
-
-                return current.map(
-                    (item) =>
-                        item.id === product.id
-                            ? {
-                                ...item,
-                                quantity:
-                                    item.quantity +
-                                    1,
-                            }
-                            : item
-                );
-
-            }
-
-            return [
-                ...current,
-                {
-                    id: product.id,
-                    name: product.name,
-                    category:
-                        product.category,
-                    price: product.price,
-                    image: product.image,
-                    quantity: 1,
-                },
-            ];
-
-        });
-
+        addItem(product);
         setCartMessage(true);
     };
 
@@ -603,10 +412,10 @@ export default function Shop() {
     ) => {
 
         if (selectedCategory === "All") {
-            return PRODUCTS.length;
+            return products.length;
         }
 
-        return PRODUCTS.filter(
+        return products.filter(
             (product) =>
                 product.category ===
                 selectedCategory
@@ -743,7 +552,7 @@ export default function Shop() {
                                     filteredProducts.length
                                 }{" "}
                                 of{" "}
-                                {PRODUCTS.length}{" "}
+                                {products.length}{" "}
                                 products
 
                             </span>
@@ -937,7 +746,7 @@ export default function Shop() {
 
                                 <div className="filter-category-list">
 
-                                    {CATEGORIES.map(
+                                    {categories.map(
                                         (item) => (
 
                                             <button
@@ -1286,7 +1095,7 @@ export default function Shop() {
 
                                     <div className="filter-category-list">
 
-                                        {CATEGORIES.map(
+                                        {categories.map(
                                             (item) => (
 
                                                 <button
@@ -1501,7 +1310,7 @@ export default function Shop() {
                                     {
                                         filteredProducts.length
                                     }{" "}
-                                    PRODUCTS
+                                    products
                                 </button>
 
                             </div>
