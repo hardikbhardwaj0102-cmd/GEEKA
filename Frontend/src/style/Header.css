@@ -443,3 +443,384 @@
     max-height: 58px;
     object-fit: contain;
 }
+
+/* =========================================================
+   EXPANDING HEADER SEARCH
+========================================================= */
+
+.header-search-wrapper {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+
+    width: 38px;
+    height: 38px;
+
+    transition:
+        width 0.28s ease;
+}
+
+.header-search-wrapper.search-expanded {
+    width: 250px;
+}
+
+
+/* =========================================================
+   NORMAL SEARCH BUTTON
+========================================================= */
+
+.header-search-button {
+    width: 38px;
+    height: 38px;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    background: transparent;
+
+    color: inherit;
+
+    cursor: pointer;
+}
+
+.header-search-button svg {
+    width: 19px;
+    height: 19px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.45;
+}
+
+
+/* =========================================================
+   EXPANDED SEARCH
+========================================================= */
+
+.header-search-expanded {
+    width: 100%;
+    height: 38px;
+
+    padding: 0 9px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.20);
+
+    border-radius: 20px;
+
+    background:
+        rgba(255, 255, 255, 0.72);
+
+    box-shadow:
+        0 7px 20px rgba(55, 35, 30, 0.08);
+
+    backdrop-filter:
+        blur(12px);
+
+    -webkit-backdrop-filter:
+        blur(12px);
+
+    animation:
+        header-search-open 0.25s ease both;
+}
+
+@keyframes header-search-open {
+
+    from {
+        opacity: 0;
+
+        transform:
+            scaleX(0.82);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            scaleX(1);
+    }
+}
+
+.header-search-expanded>svg {
+    width: 17px;
+    height: 17px;
+
+    flex-shrink: 0;
+
+    fill: none;
+
+    stroke: var(--brown);
+
+    stroke-width: 1.45;
+}
+
+.header-search-expanded input {
+    width: 100%;
+    min-width: 0;
+
+    height: 100%;
+
+    padding: 0;
+
+    border: none;
+
+    outline: none;
+
+    background: transparent;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 11px;
+
+    color: var(--brown);
+}
+
+.header-search-expanded input::placeholder {
+    color:
+        rgba(93, 62, 53, 0.45);
+}
+
+
+/* Remove browser search decoration */
+
+.header-search-expanded input::-webkit-search-decoration,
+.header-search-expanded input::-webkit-search-cancel-button,
+.header-search-expanded input::-webkit-search-results-button,
+.header-search-expanded input::-webkit-search-results-decoration {
+    display: none;
+}
+
+
+/* =========================================================
+   SEARCH CLEAR
+========================================================= */
+
+.header-search-clear {
+    width: 25px;
+    height: 25px;
+
+    flex-shrink: 0;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background:
+        rgba(93, 62, 53, 0.07);
+
+    color: var(--brown);
+
+    cursor: pointer;
+}
+
+.header-search-clear svg {
+    width: 13px;
+    height: 13px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.4;
+}
+
+
+/* =========================================================
+   WISHLIST
+========================================================= */
+
+.header-wishlist {
+    position: relative;
+
+    width: 38px;
+    height: 38px;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    background: transparent;
+
+    color: inherit;
+
+    cursor: pointer;
+}
+
+.header-wishlist svg {
+    width: 19px;
+    height: 19px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.35;
+
+    transition:
+        transform 0.2s ease,
+        stroke-width 0.2s ease;
+}
+
+.header-wishlist:hover svg {
+    transform:
+        translateY(-1px);
+
+    stroke-width: 1.7;
+}
+
+.header-wishlist-active svg {
+    stroke-width: 1.8;
+}
+
+
+/* =========================================================
+   WISHLIST COUNT
+========================================================= */
+
+.header-wishlist-count {
+    position: absolute;
+
+    top: 3px;
+    right: 1px;
+
+    min-width: 14px;
+    height: 14px;
+
+    padding: 0 3px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 20px;
+
+    background:
+        var(--brown);
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 7px;
+    font-weight: 700;
+
+    color: #fff9f4;
+
+    line-height: 1;
+}
+
+
+/* =========================================================
+   EXISTING CART COUNT IMPROVEMENT
+========================================================= */
+
+.header-bag {
+    position: relative;
+}
+
+.header-bag-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 15px;
+    height: 15px;
+
+    padding: 0 3px;
+
+    border-radius: 20px;
+
+    background:
+        var(--brown);
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 7px;
+    font-weight: 700;
+
+    color: #fff9f4;
+
+    line-height: 1;
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .header-search-wrapper.search-expanded {
+        width: 190px;
+    }
+
+    .header-search-expanded {
+        height: 34px;
+    }
+
+    .header-search-wrapper {
+        width: 34px;
+        height: 34px;
+    }
+
+    .header-search-button,
+    .header-wishlist {
+        width: 34px;
+        height: 34px;
+    }
+
+    .header-search-expanded input {
+        font-size: 10px;
+    }
+}
+
+
+@media (max-width: 430px) {
+
+    .header-search-wrapper.search-expanded {
+        position: absolute;
+
+        top: 50%;
+        right: 50px;
+
+        width: calc(100vw - 100px);
+
+        transform:
+            translateY(-50%);
+    }
+
+    .header-actions {
+        position: relative;
+    }
+
+    .header-search-expanded {
+        width: 100%;
+    }
+}

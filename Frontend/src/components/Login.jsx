@@ -98,7 +98,10 @@ export default function Login() {
 
         setFormData((current) => ({
             ...current,
-            [name]: type === "checkbox" ? checked : value,
+            [name]:
+                type === "checkbox"
+                    ? checked
+                    : value,
         }));
     }
 
@@ -111,12 +114,23 @@ export default function Login() {
         });
     }
 
+    function handleGoogleLogin() {
+        window.location.href =
+            "http://127.0.0.1:8000/api/v1/auth/google/login/";
+    }
+
     return (
         <main className="login-page">
             <section className="login-panel">
                 <div className="login-top">
-                    <Link to="/" className="login-back-link">
-                        <span className="back-arrow">←</span>
+                    <Link
+                        to="/"
+                        className="login-back-link"
+                    >
+                        <span className="back-arrow">
+                            ←
+                        </span>
+
                         Back to Store
                     </Link>
                 </div>
@@ -136,8 +150,10 @@ export default function Login() {
                         </h1>
 
                         <p>
-                            Continue your journey with carefully curated
-                            fashion, jewellery and handmade creations.
+                            Continue your journey with
+                            carefully curated fashion,
+                            jewellery and handmade
+                            creations.
                         </p>
                     </div>
 
@@ -182,7 +198,9 @@ export default function Login() {
                                             : "password"
                                     }
                                     name="password"
-                                    value={formData.password}
+                                    value={
+                                        formData.password
+                                    }
                                     onChange={handleChange}
                                     placeholder="Enter your password"
                                     autoComplete="current-password"
@@ -194,7 +212,8 @@ export default function Login() {
                                     className="password-toggle"
                                     onClick={() =>
                                         setShowPassword(
-                                            (current) => !current
+                                            (current) =>
+                                                !current
                                         )
                                     }
                                     aria-label={
@@ -204,7 +223,9 @@ export default function Login() {
                                     }
                                 >
                                     <EyeIcon
-                                        visible={showPassword}
+                                        visible={
+                                            showPassword
+                                        }
                                     />
                                 </button>
                             </div>
@@ -214,7 +235,9 @@ export default function Login() {
                             <input
                                 type="checkbox"
                                 name="remember"
-                                checked={formData.remember}
+                                checked={
+                                    formData.remember
+                                }
                                 onChange={handleChange}
                             />
 
@@ -231,7 +254,9 @@ export default function Login() {
                             type="submit"
                             className="login-submit"
                         >
-                            <span>SIGN IN</span>
+                            <span>
+                                SIGN IN
+                            </span>
 
                             <span className="submit-arrow">
                                 <ArrowIcon />
@@ -245,9 +270,13 @@ export default function Login() {
                         <span />
                     </div>
 
+                    {/* GOOGLE LOGIN */}
                     <button
                         type="button"
                         className="google-login"
+                        onClick={
+                            handleGoogleLogin
+                        }
                     >
                         <GoogleIcon />
 
@@ -263,16 +292,20 @@ export default function Login() {
 
                         <Link to="/register">
                             Create an account
+
                             <ArrowIcon />
                         </Link>
                     </div>
 
                     <div className="login-footer-note">
                         By continuing, you agree to our
+
                         <span>
                             {" "}Terms & Conditions{" "}
                         </span>
+
                         and
+
                         <span>
                             {" "}Privacy Policy.
                         </span>
@@ -289,8 +322,13 @@ export default function Login() {
                 <div className="login-visual-overlay" />
 
                 <div className="login-visual-top">
-                    <span>GEEKA</span>
-                    <span>EST. 2026</span>
+                    <span>
+                        GEEKA
+                    </span>
+
+                    <span>
+                        EST. 2026
+                    </span>
                 </div>
 
                 <div className="login-visual-content">
@@ -305,8 +343,10 @@ export default function Login() {
                     </h2>
 
                     <p>
-                        Fashion, jewellery and handcrafted pieces
-                        made for the way you express yourself.
+                        Fashion, jewellery and
+                        handcrafted pieces made
+                        for the way you express
+                        yourself.
                     </p>
 
                     <div className="login-visual-line" />

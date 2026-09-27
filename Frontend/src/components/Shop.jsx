@@ -243,6 +243,10 @@ export default function Shop() {
             "geeka-wishlist",
             JSON.stringify(wishlist)
         );
+
+        window.dispatchEvent(
+            new Event("geeka-wishlist-updated")
+        );
     }, [wishlist]);
 
 

@@ -1,5 +1,5 @@
 /* =========================================================
-   GEEKA PROFILE PAGE
+   GEEKA PROFILE / ACCOUNT PAGE
 ========================================================= */
 
 .account-page,
@@ -9,22 +9,30 @@
     box-sizing: border-box;
 }
 
+
 /* =========================================================
    MAIN PAGE
 ========================================================= */
 
 .account-page {
     position: relative;
+
     width: 100%;
     height: 100vh;
     height: 100dvh;
+
     min-height: 0;
+
     padding: 42px 5% 34px;
+
     display: flex;
     flex-direction: column;
+
     overflow: hidden;
+
     color: var(--brown);
 }
+
 
 /* =========================================================
    BACKGROUND IMAGE
@@ -33,14 +41,19 @@
 .account-background-image {
     position: absolute;
     inset: 0;
+
     z-index: 0;
+
     background-image: var(--profile-background);
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
+
     transform: scale(1.01);
+
     pointer-events: none;
 }
+
 
 /* =========================================================
    BACKGROUND OVERLAY
@@ -49,6 +62,7 @@
 .account-background-overlay {
     position: absolute;
     inset: 0;
+
     z-index: 1;
 
     background:
@@ -60,6 +74,7 @@
     pointer-events: none;
 }
 
+
 /* =========================================================
    CONTENT ABOVE BACKGROUND
 ========================================================= */
@@ -70,6 +85,7 @@
     z-index: 2;
 }
 
+
 /* =========================================================
    PAGE HEADER
 ========================================================= */
@@ -77,36 +93,47 @@
 .account-page-header {
     width: 100%;
     max-width: 1380px;
+
     flex-shrink: 0;
-    margin: 0 auto 19px;
+
+    margin: 0 auto 20px;
 }
 
 .account-page-header>span {
     display: block;
-    margin-bottom: 6px;
+
+    margin-bottom: 7px;
+
     font-family: "DM Sans", sans-serif;
-    font-size: 8px;
-    font-weight: 600;
-    letter-spacing: 0.28em;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+
     color: var(--brown-muted);
 }
 
 .account-page-header h1 {
     margin: 0;
+
     font-family: "Cormorant Garamond", serif;
-    font-size: clamp(48px, 5vw, 70px);
+    font-size: clamp(56px, 5vw, 76px);
     font-weight: 500;
-    line-height: 0.88;
+
+    line-height: 0.9;
+
     color: var(--brown);
 }
 
 .account-page-header p {
-    margin: 9px 0 0;
+    margin: 11px 0 0;
+
     font-family: "DM Sans", sans-serif;
-    font-size: 11px;
-    line-height: 1.5;
+    font-size: 14px;
+    line-height: 1.55;
+
     color: var(--brown-muted);
 }
+
 
 /* =========================================================
    MAIN LAYOUT
@@ -115,25 +142,36 @@
 .account-layout {
     width: 100%;
     max-width: 1380px;
+
     flex: 1;
     min-height: 0;
+
     margin: 0 auto;
+
     display: grid;
-    grid-template-columns: 230px minmax(0, 1fr);
-    gap: 18px;
+
+    grid-template-columns:
+        240px minmax(0, 1fr);
+
+    gap: 19px;
 }
 
+
 /* =========================================================
-   SIDEBAR — DARKER GLASS
+   SIDEBAR
 ========================================================= */
 
 .account-sidebar {
     min-width: 0;
     min-height: 0;
+
     height: 100%;
-    padding: 23px 20px;
+
+    padding: 25px 21px;
+
     display: flex;
     flex-direction: column;
+
     overflow: hidden;
 
     background:
@@ -141,8 +179,10 @@
             rgba(255, 249, 244, 0.90) 0%,
             rgba(236, 218, 211, 0.86) 100%);
 
-    border: 1px solid rgba(255, 255, 255, 0.88);
-    border-radius: 16px;
+    border:
+        1px solid rgba(255, 255, 255, 0.88);
+
+    border-radius: 17px;
 
     box-shadow:
         0 22px 50px rgba(55, 35, 30, 0.18),
@@ -150,9 +190,13 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.95),
         inset 0 -1px 0 rgba(255, 255, 255, 0.30);
 
-    backdrop-filter: blur(24px) saturate(110%);
-    -webkit-backdrop-filter: blur(24px) saturate(110%);
+    backdrop-filter:
+        blur(24px) saturate(110%);
+
+    -webkit-backdrop-filter:
+        blur(24px) saturate(110%);
 }
+
 
 /* =========================================================
    SIDEBAR BRAND
@@ -160,56 +204,90 @@
 
 .account-sidebar-title {
     flex-shrink: 0;
-    padding-bottom: 19px;
-    border-bottom: 1px solid rgba(93, 62, 53, 0.18);
+
+    padding-bottom: 20px;
+
+    border-bottom:
+        1px solid rgba(93, 62, 53, 0.18);
 }
 
 .account-sidebar-title span {
     display: block;
-    font-family: "Cormorant Garamond", serif;
-    font-size: 25px;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 29px;
     font-weight: 500;
+
     letter-spacing: 0.08em;
+
     color: var(--brown);
 }
 
 .account-sidebar-title small {
     display: block;
-    margin-top: 2px;
-    font-family: "DM Sans", sans-serif;
-    font-size: 7px;
-    letter-spacing: 0.22em;
+
+    margin-top: 3px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 9px;
+    letter-spacing: 0.21em;
+
     color: var(--brown-muted);
 }
+
 
 /* =========================================================
    SIDEBAR NAVIGATION
 ========================================================= */
 
 .account-navigation {
-    margin-top: 14px;
+    margin-top: 15px;
+
     display: flex;
     flex-direction: column;
+
     overflow: hidden;
 }
 
 .account-navigation button {
     width: 100%;
-    min-height: 42px;
-    padding: 9px 2px;
+
+    min-height: 47px;
+
+    padding: 10px 2px;
+
     display: flex;
     align-items: center;
     justify-content: space-between;
+
     border: none;
-    border-bottom: 1px solid rgba(93, 62, 53, 0.13);
+
+    border-bottom:
+        1px solid rgba(93, 62, 53, 0.13);
+
     background: transparent;
-    font-family: "DM Sans", sans-serif;
-    font-size: 9.5px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 11px;
     font-weight: 500;
-    letter-spacing: 0.07em;
+
+    letter-spacing: 0.06em;
+
     text-align: left;
+
     color: var(--brown-muted);
+
     cursor: pointer;
+
     transition:
         color 0.2s ease,
         background 0.2s ease,
@@ -218,9 +296,12 @@
 
 .account-navigation button strong {
     opacity: 0;
-    font-size: 14px;
+
+    font-size: 16px;
     font-weight: 400;
+
     transform: translateX(-3px);
+
     transition:
         opacity 0.2s ease,
         transform 0.2s ease;
@@ -228,16 +309,21 @@
 
 .account-navigation button:hover,
 .account-navigation button.active {
-    padding-left: 7px;
+    padding-left: 8px;
+
     color: var(--brown);
-    background: rgba(255, 255, 255, 0.48);
+
+    background:
+        rgba(255, 255, 255, 0.48);
 }
 
 .account-navigation button:hover strong,
 .account-navigation button.active strong {
     opacity: 1;
+
     transform: translateX(0);
 }
+
 
 /* =========================================================
    LOGOUT
@@ -245,17 +331,31 @@
 
 .account-logout {
     margin-top: auto;
+
     align-self: flex-start;
-    padding: 0 0 6px;
+
+    padding: 0 0 7px;
+
     border: none;
-    border-bottom: 1px solid rgba(93, 62, 53, 0.35);
+
+    border-bottom:
+        1px solid rgba(93, 62, 53, 0.35);
+
     background: transparent;
-    font-family: "DM Sans", sans-serif;
-    font-size: 8px;
-    font-weight: 600;
-    letter-spacing: 0.17em;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 9px;
+    font-weight: 700;
+
+    letter-spacing: 0.16em;
+
     color: var(--brown-muted);
+
     cursor: pointer;
+
     transition:
         color 0.2s ease,
         border-color 0.2s ease;
@@ -263,8 +363,10 @@
 
 .account-logout:hover {
     color: var(--brown);
+
     border-color: var(--brown);
 }
+
 
 /* =========================================================
    MAIN CONTENT
@@ -273,24 +375,34 @@
 .account-main {
     min-width: 0;
     min-height: 0;
+
     height: 100%;
+
     display: flex;
     flex-direction: column;
+
     overflow: hidden;
 }
 
+
 /* =========================================================
-   WELCOME CARD — DARKER GLASS
+   WELCOME
 ========================================================= */
 
 .account-welcome {
     width: 100%;
-    height: 84px;
+
+    min-height: 94px;
+
     flex-shrink: 0;
-    padding: 15px 22px;
+
+    padding: 17px 24px;
+
     display: flex;
     align-items: center;
-    gap: 16px;
+
+    gap: 18px;
+
     overflow: hidden;
 
     background:
@@ -298,8 +410,10 @@
             rgba(255, 249, 244, 0.92) 0%,
             rgba(235, 216, 208, 0.87) 100%);
 
-    border: 1px solid rgba(255, 255, 255, 0.92);
-    border-radius: 16px;
+    border:
+        1px solid rgba(255, 255, 255, 0.92);
+
+    border-radius: 17px;
 
     box-shadow:
         0 20px 44px rgba(55, 35, 30, 0.17),
@@ -307,77 +421,117 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.96),
         inset 0 -1px 0 rgba(255, 255, 255, 0.25);
 
-    backdrop-filter: blur(25px) saturate(110%);
-    -webkit-backdrop-filter: blur(25px) saturate(110%);
+    backdrop-filter:
+        blur(25px) saturate(110%);
+
+    -webkit-backdrop-filter:
+        blur(25px) saturate(110%);
 }
+
 
 /* =========================================================
    AVATAR
 ========================================================= */
 
 .account-avatar {
-    width: 52px;
-    height: 52px;
+    width: 59px;
+    height: 59px;
+
     flex-shrink: 0;
+
     display: flex;
     align-items: center;
     justify-content: center;
+
     border-radius: 50%;
 
-    background: rgba(255, 255, 255, 0.58);
-    border: 1px solid rgba(255, 255, 255, 0.88);
+    background:
+        rgba(255, 255, 255, 0.58);
+
+    border:
+        1px solid rgba(255, 255, 255, 0.88);
 
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.95),
         0 5px 15px rgba(55, 35, 30, 0.09);
 
-    font-family: "Cormorant Garamond", serif;
-    font-size: 20px;
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 23px;
+
     color: var(--brown);
 }
 
-.account-welcome>div:last-child {
+.account-welcome-content {
     min-width: 0;
 }
 
-.account-welcome>div:last-child span {
+.account-welcome-content>span {
     display: block;
-    margin-bottom: 3px;
-    font-family: "DM Sans", sans-serif;
-    font-size: 7px;
-    letter-spacing: 0.19em;
+
+    margin-bottom: 4px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 9px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.17em;
+
     color: var(--brown-muted);
 }
 
 .account-welcome h2 {
-    min-height: 24px;
     margin: 0;
-    font-family: "Cormorant Garamond", serif;
-    font-size: 27px;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 32px;
+
     font-weight: 500;
+
+    line-height: 1;
+
     color: var(--brown);
+
     overflow-wrap: anywhere;
 }
 
+
 /* =========================================================
-   CONTENT PANEL — DARKER GLASS
+   CONTENT PANEL
 ========================================================= */
 
 .account-content-panel {
     width: 100%;
+
     flex: 1;
+
     min-height: 0;
+
     margin-top: 14px;
-    padding: 25px;
-    overflow: hidden;
+
+    padding: 27px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
 
     background:
         linear-gradient(135deg,
             rgba(255, 249, 244, 0.94) 0%,
             rgba(232, 213, 205, 0.89) 100%);
 
-    border: 1px solid rgba(255, 255, 255, 0.94);
-    border-radius: 16px;
+    border:
+        1px solid rgba(255, 255, 255, 0.94);
+
+    border-radius: 17px;
 
     box-shadow:
         0 24px 55px rgba(55, 35, 30, 0.18),
@@ -385,22 +539,52 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.98),
         inset 0 -1px 0 rgba(255, 255, 255, 0.25);
 
-    backdrop-filter: blur(27px) saturate(110%);
-    -webkit-backdrop-filter: blur(27px) saturate(110%);
+    backdrop-filter:
+        blur(27px) saturate(110%);
+
+    -webkit-backdrop-filter:
+        blur(27px) saturate(110%);
+
+    scrollbar-width: thin;
+
+    scrollbar-color:
+        rgba(93, 62, 53, 0.25) transparent;
 }
+
+.account-content-panel::-webkit-scrollbar {
+    width: 5px;
+}
+
+.account-content-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.account-content-panel::-webkit-scrollbar-thumb {
+    background:
+        rgba(93, 62, 53, 0.22);
+
+    border-radius: 20px;
+}
+
 
 /* =========================================================
    CONTENT HEADER
 ========================================================= */
 
 .account-content-header {
-    min-height: 48px;
+    min-height: 52px;
+
     display: flex;
     align-items: flex-end;
+
     justify-content: space-between;
-    gap: 15px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid rgba(93, 62, 53, 0.15);
+
+    gap: 18px;
+
+    padding-bottom: 17px;
+
+    border-bottom:
+        1px solid rgba(93, 62, 53, 0.15);
 }
 
 .account-content-header>div {
@@ -409,21 +593,38 @@
 
 .account-content-header>div span {
     display: block;
-    margin-bottom: 5px;
-    font-family: "DM Sans", sans-serif;
-    font-size: 7px;
+
+    margin-bottom: 6px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 9px;
+
     font-weight: 600;
-    letter-spacing: 0.20em;
+
+    letter-spacing: 0.18em;
+
     color: var(--brown-muted);
 }
 
 .account-content-header h2 {
     margin: 0;
-    font-family: "Cormorant Garamond", serif;
-    font-size: 31px;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 36px;
+
     font-weight: 500;
+
+    line-height: 1;
+
     color: var(--brown);
 }
+
 
 /* =========================================================
    HEADER BUTTONS
@@ -431,32 +632,234 @@
 
 .account-outline-button,
 .account-content-header>button:not(.account-outline-button) {
-    display: flex;
+    display: inline-flex;
+
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+
+    gap: 9px;
+
     flex-shrink: 0;
-    padding: 0 0 6px;
+
+    padding: 0 0 7px;
+
     border: none;
-    border-bottom: 1px solid rgba(93, 62, 53, 0.38);
+
+    border-bottom:
+        1px solid rgba(93, 62, 53, 0.38);
+
     background: transparent;
-    font-family: "DM Sans", sans-serif;
-    font-size: 8px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.12em;
+
     color: var(--brown);
+
+    text-decoration: none;
+
     cursor: pointer;
 }
 
-.account-outline-button span,
-.account-content-header>button span {
-    font-size: 14px;
-    transition: transform 0.2s ease;
+.account-outline-button svg,
+.account-content-header>button svg {
+    width: 16px;
+    height: 16px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.4;
+
+    transition:
+        transform 0.2s ease;
 }
 
-.account-outline-button:hover span,
-.account-content-header>button:hover span {
-    transform: translateX(4px);
+.account-outline-button:hover svg,
+.account-content-header>button:hover svg {
+    transform: translateX(3px);
 }
+
+
+/* =========================================================
+   PRIMARY BUTTON
+========================================================= */
+
+.account-primary-button {
+    min-height: 42px;
+
+    padding: 0 18px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    border:
+        1px solid var(--brown);
+
+    border-radius: 5px;
+
+    background:
+        var(--brown);
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.12em;
+
+    color: #fff9f4;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.account-primary-button:hover {
+    background:
+        #4f352d;
+
+    transform:
+        translateY(-1px);
+
+    box-shadow:
+        0 8px 20px rgba(55, 35, 30, 0.13);
+}
+
+.account-primary-button:disabled {
+    opacity: 0.55;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+}
+
+.account-primary-button svg {
+    width: 16px;
+    height: 16px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.4;
+}
+
+
+/* =========================================================
+   SECONDARY BUTTON
+========================================================= */
+
+.account-secondary-button {
+    min-height: 42px;
+
+    padding: 0 18px;
+
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.26);
+
+    border-radius: 5px;
+
+    background:
+        rgba(255, 255, 255, 0.30);
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.12em;
+
+    color: var(--brown);
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   TEXT BUTTON
+========================================================= */
+
+.account-text-button {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 0 0 5px;
+
+    border: none;
+
+    border-bottom:
+        1px solid rgba(93, 62, 53, 0.35);
+
+    background: transparent;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 8.5px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.11em;
+
+    color: var(--brown);
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.account-text-button svg {
+    width: 15px;
+    height: 15px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.4;
+
+    transition:
+        transform 0.2s ease;
+}
+
+.account-text-button:hover svg {
+    transform: translateX(3px);
+}
+
 
 /* =========================================================
    PROFILE DETAILS
@@ -464,74 +867,456 @@
 
 .profile-details {
     width: 100%;
-    margin-top: 23px;
+
+    margin-top: 25px;
+
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+
+    grid-template-columns:
+        repeat(3, 1fr);
 }
 
 .profile-detail {
     min-width: 0;
-    min-height: 82px;
-    padding-right: 23px;
-    border-right: 1px solid rgba(93, 62, 53, 0.13);
+
+    min-height: 92px;
+
+    padding-right: 25px;
+
+    border-right:
+        1px solid rgba(93, 62, 53, 0.13);
 }
 
 .profile-detail:not(:first-child) {
-    padding-left: 23px;
+    padding-left: 25px;
 }
 
 .profile-detail:last-child {
     border-right: none;
 }
 
-.profile-detail span {
+.profile-detail>span {
     display: block;
-    margin-bottom: 8px;
-    font-family: "DM Sans", sans-serif;
-    font-size: 7px;
-    font-weight: 600;
-    letter-spacing: 0.18em;
+
+    margin-bottom: 9px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.15em;
+
     color: var(--brown-muted);
 }
 
 .profile-detail p {
-    min-height: 22px;
     margin: 0;
-    font-family: "Cormorant Garamond", serif;
-    font-size: 21px;
+
+    min-height: 27px;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 25px;
+
     font-weight: 500;
+
+    line-height: 1.15;
+
     color: var(--brown);
+
     overflow-wrap: anywhere;
 }
+
+
+/* =========================================================
+   PHONE DISPLAY
+========================================================= */
+
+.profile-phone-value {
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 9px;
+}
+
+.profile-phone-value p {
+    margin: 0;
+}
+
+.phone-verified-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 5px 8px;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.18);
+
+    border-radius: 20px;
+
+    background:
+        rgba(255, 255, 255, 0.34);
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 6.5px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.10em;
+
+    color: var(--brown);
+}
+
+.phone-verified-badge svg {
+    width: 12px;
+    height: 12px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.5;
+}
+
 
 /* =========================================================
    ACCOUNT NOTE
 ========================================================= */
 
 .profile-account-note {
-    margin-top: 22px;
-    padding-top: 18px;
-    border-top: 1px solid rgba(93, 62, 53, 0.13);
+    margin-top: 25px;
+
+    padding-top: 19px;
+
+    border-top:
+        1px solid rgba(93, 62, 53, 0.13);
 }
 
 .profile-account-note span {
     display: block;
-    margin-bottom: 6px;
-    font-family: "DM Sans", sans-serif;
-    font-size: 7px;
-    font-weight: 600;
-    letter-spacing: 0.19em;
+
+    margin-bottom: 7px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.17em;
+
     color: var(--brown-muted);
 }
 
 .profile-account-note p {
-    max-width: 560px;
+    max-width: 680px;
+
     margin: 0;
-    font-family: "DM Sans", sans-serif;
-    font-size: 10px;
-    line-height: 1.65;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 12px;
+
+    line-height: 1.7;
+
     color: var(--brown-muted);
 }
+
+
+/* =========================================================
+   SUCCESS / ERROR MESSAGE
+========================================================= */
+
+.account-success-message,
+.account-form-error {
+    margin-top: 17px;
+
+    padding: 11px 13px;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.16);
+
+    border-radius: 6px;
+
+    background:
+        rgba(255, 255, 255, 0.30);
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 10px;
+
+    line-height: 1.5;
+
+    color: var(--brown);
+}
+
+.account-success-message.error,
+.account-form-error:not(.success) {
+    color: var(--brown);
+}
+
+
+/* =========================================================
+   FORMS
+========================================================= */
+
+.account-form {
+    width: 100%;
+
+    margin-top: 23px;
+}
+
+.account-form-grid {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 18px;
+}
+
+.account-form-field {
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.account-form-field-full {
+    grid-column: 1 / -1;
+}
+
+.account-form-field label {
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 9px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.14em;
+
+    color: var(--brown-muted);
+}
+
+.account-form-field input,
+.account-form-field select {
+    width: 100%;
+
+    height: 46px;
+
+    padding: 0 13px;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.16);
+
+    border-radius: 6px;
+
+    outline: none;
+
+    background:
+        rgba(255, 255, 255, 0.38);
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 12px;
+
+    color: var(--brown);
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.account-form-field input::placeholder {
+    color:
+        rgba(93, 62, 53, 0.42);
+}
+
+.account-form-field input:focus,
+.account-form-field select:focus {
+    border-color:
+        rgba(93, 62, 53, 0.42);
+
+    background:
+        rgba(255, 255, 255, 0.54);
+
+    box-shadow:
+        0 0 0 3px rgba(93, 62, 53, 0.05);
+}
+
+.account-form-field select {
+    cursor: pointer;
+}
+
+.account-form-actions {
+    margin-top: 23px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-end;
+
+    gap: 10px;
+}
+
+
+/* =========================================================
+   FORM CARD
+========================================================= */
+
+.account-form-card {
+    margin-top: 23px;
+
+    padding: 21px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.70);
+
+    border-radius: 10px;
+
+    background:
+        rgba(255, 255, 255, 0.22);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.account-form-heading {
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding-bottom: 14px;
+
+    border-bottom:
+        1px solid rgba(93, 62, 53, 0.11);
+}
+
+.account-form-heading>div {
+    min-width: 0;
+}
+
+.account-form-heading>div>span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.15em;
+
+    color: var(--brown-muted);
+}
+
+.account-form-heading h3 {
+    margin: 0;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 29px;
+
+    font-weight: 500;
+
+    color: var(--brown);
+}
+
+
+/* =========================================================
+   ICON BUTTON
+========================================================= */
+
+.account-icon-button {
+    width: 34px;
+    height: 34px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.14);
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.34);
+
+    color: var(--brown);
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.account-icon-button:hover {
+    background:
+        rgba(255, 255, 255, 0.60);
+
+    border-color:
+        rgba(93, 62, 53, 0.32);
+}
+
+.account-icon-button svg {
+    width: 15px;
+    height: 15px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.4;
+}
+
 
 /* =========================================================
    EMPTY STATE
@@ -539,99 +1324,735 @@
 
 .account-empty-state {
     width: 100%;
-    height: calc(100% - 64px);
-    min-height: 0;
-    padding: 25px;
+
+    min-height: 320px;
+
+    padding: 38px 25px;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
+
     flex-direction: column;
+
     text-align: center;
 }
 
 .account-empty-mark {
-    width: 50px;
-    height: 50px;
-    margin-bottom: 14px;
+    width: 56px;
+    height: 56px;
+
+    margin-bottom: 16px;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
 
-    border: 1px solid rgba(255, 255, 255, 0.88);
+    border:
+        1px solid rgba(255, 255, 255, 0.88);
+
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.56);
+
+    background:
+        rgba(255, 255, 255, 0.56);
 
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.95),
+
         0 5px 15px rgba(55, 35, 30, 0.08);
 
-    font-family: "Cormorant Garamond", serif;
-    font-size: 21px;
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 24px;
+
     color: var(--brown);
 }
 
 .account-empty-state h3 {
     margin: 0;
-    font-family: "Cormorant Garamond", serif;
-    font-size: 27px;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 31px;
+
     font-weight: 500;
+
     color: var(--brown);
 }
 
 .account-empty-state p {
-    max-width: 370px;
-    margin: 7px 0 18px;
-    font-family: "DM Sans", sans-serif;
-    font-size: 10px;
-    line-height: 1.65;
+    max-width: 430px;
+
+    margin: 8px 0 20px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 12px;
+
+    line-height: 1.7;
+
     color: var(--brown-muted);
 }
 
-.account-empty-state button {
+
+/* =========================================================
+   ORDERS
+========================================================= */
+
+.account-order-list {
+    margin-top: 21px;
+
     display: flex;
+
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+.account-order-card {
+    padding: 17px 18px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.66);
+
+    border-radius: 9px;
+
+    background:
+        rgba(255, 255, 255, 0.24);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.62);
+}
+
+.account-order-top {
+    display: flex;
+
     align-items: center;
-    gap: 9px;
-    padding: 0 0 6px;
-    border: none;
-    border-bottom: 1px solid rgba(93, 62, 53, 0.38);
-    background: transparent;
-    font-family: "DM Sans", sans-serif;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding-bottom: 13px;
+
+    border-bottom:
+        1px solid rgba(93, 62, 53, 0.10);
+}
+
+.account-order-top>div {
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+.account-order-top span:first-child {
+    font-family:
+        "DM Sans",
+        sans-serif;
+
     font-size: 8px;
-    font-weight: 600;
-    letter-spacing: 0.15em;
+
+    font-weight: 700;
+
+    letter-spacing: 0.16em;
+
+    color: var(--brown-muted);
+}
+
+.account-order-top strong {
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 22px;
+
+    font-weight: 500;
+
     color: var(--brown);
+}
+
+.account-order-status {
+    flex-shrink: 0;
+
+    padding: 6px 9px;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.17);
+
+    border-radius: 20px;
+
+    background:
+        rgba(255, 255, 255, 0.36);
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.11em;
+
+    color: var(--brown);
+}
+
+.account-order-meta {
+    margin-top: 14px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 14px;
+}
+
+.account-order-meta>div {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+.account-order-meta span {
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.13em;
+
+    color: var(--brown-muted);
+}
+
+.account-order-meta strong {
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 11px;
+
+    font-weight: 500;
+
+    color: var(--brown);
+}
+
+
+/* =========================================================
+   WISHLIST
+========================================================= */
+
+.account-wishlist-grid {
+    margin-top: 21px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 14px;
+}
+
+.account-wishlist-card {
+    min-width: 0;
+
+    overflow: hidden;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.67);
+
+    border-radius: 9px;
+
+    background:
+        rgba(255, 255, 255, 0.23);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.62);
+}
+
+.account-wishlist-image {
+    position: relative;
+
+    width: 100%;
+    height: 205px;
+
+    overflow: hidden;
+
+    background:
+        rgba(255, 255, 255, 0.25);
+}
+
+.account-wishlist-image img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+.account-wishlist-image-placeholder {
+    width: 100%;
+    height: 100%;
+
+    background:
+        rgba(255, 255, 255, 0.20);
+}
+
+.account-wishlist-image>.account-icon-button {
+    position: absolute;
+
+    top: 10px;
+    right: 10px;
+
+    background:
+        rgba(255, 249, 244, 0.82);
+
+    backdrop-filter: blur(8px);
+
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.account-wishlist-info {
+    padding: 15px;
+}
+
+.account-wishlist-info>span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.13em;
+
+    color: var(--brown-muted);
+}
+
+.account-wishlist-info h3 {
+    margin: 0 0 7px;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 24px;
+
+    font-weight: 500;
+
+    line-height: 1.05;
+
+    color: var(--brown);
+}
+
+.account-wishlist-info>strong {
+    display: block;
+
+    margin-bottom: 13px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    color: var(--brown);
+}
+
+
+/* =========================================================
+   ADDRESSES
+========================================================= */
+
+.account-address-list {
+    margin-top: 21px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 14px;
+}
+
+.account-address-card {
+    min-width: 0;
+
+    padding: 17px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.67);
+
+    border-radius: 9px;
+
+    background:
+        rgba(255, 255, 255, 0.23);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.62);
+}
+
+.account-address-card.default {
+    border-color:
+        rgba(93, 62, 53, 0.25);
+}
+
+.account-address-top {
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding-bottom: 12px;
+
+    border-bottom:
+        1px solid rgba(93, 62, 53, 0.10);
+}
+
+.account-address-top>div:first-child {
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+}
+
+.account-address-top>div:first-child>span {
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.13em;
+
+    color: var(--brown-muted);
+}
+
+.account-default-badge {
+    padding: 4px 7px;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.16);
+
+    border-radius: 20px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 6px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.09em;
+
+    color: var(--brown);
+}
+
+.account-address-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+}
+
+.account-address-actions button {
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.13);
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.25);
+
+    color: var(--brown);
+
     cursor: pointer;
 }
 
-.account-empty-state button span {
-    font-size: 14px;
-    transition: transform 0.2s ease;
+.account-address-actions svg {
+    width: 14px;
+    height: 14px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.35;
 }
 
-.account-empty-state button:hover span {
-    transform: translateX(4px);
+.account-address-body {
+    padding: 14px 0;
 }
+
+.account-address-body>strong {
+    display: block;
+
+    margin-bottom: 6px;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 23px;
+
+    font-weight: 500;
+
+    color: var(--brown);
+}
+
+.account-address-body p {
+    margin: 4px 0;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 10px;
+
+    line-height: 1.6;
+
+    color: var(--brown-muted);
+}
+
+
+/* =========================================================
+   PAYMENT METHODS
+========================================================= */
+
+.account-security-note {
+    margin-top: 19px;
+
+    padding: 13px 14px;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.12);
+
+    border-radius: 7px;
+
+    background:
+        rgba(255, 255, 255, 0.18);
+}
+
+.account-security-note>span {
+    display: block;
+
+    margin-bottom: 6px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.14em;
+
+    color: var(--brown-muted);
+}
+
+.account-security-note p {
+    max-width: 720px;
+
+    margin: 0;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 10px;
+
+    line-height: 1.65;
+
+    color: var(--brown-muted);
+}
+
+.account-payment-list {
+    margin-top: 18px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+.account-payment-card {
+    padding: 15px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 14px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.65);
+
+    border-radius: 8px;
+
+    background:
+        rgba(255, 255, 255, 0.23);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.58);
+}
+
+.account-payment-card>div {
+    min-width: 0;
+}
+
+.account-payment-card>div>span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.14em;
+
+    color: var(--brown-muted);
+}
+
+.account-payment-card h3 {
+    margin: 0;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 24px;
+
+    font-weight: 500;
+
+    color: var(--brown);
+
+    overflow-wrap: anywhere;
+}
+
+.account-payment-card>button {
+    width: 32px;
+    height: 32px;
+
+    flex-shrink: 0;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.14);
+
+    border-radius: 50%;
+
+    background:
+        rgba(255, 255, 255, 0.28);
+
+    color: var(--brown);
+
+    cursor: pointer;
+}
+
+.account-payment-card svg {
+    width: 14px;
+    height: 14px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.35;
+}
+
 
 /* =========================================================
    SETTINGS
 ========================================================= */
 
 .account-settings-list {
-    margin-top: 1px;
+    margin-top: 3px;
 }
 
 .account-settings-list button {
     width: 100%;
-    min-height: 68px;
-    padding: 14px 0;
+
+    min-height: 76px;
+
+    padding: 15px 0;
+
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
+
     border: none;
-    border-bottom: 1px solid rgba(93, 62, 53, 0.12);
+
+    border-bottom:
+        1px solid rgba(93, 62, 53, 0.12);
+
     background: transparent;
+
     text-align: left;
+
     color: var(--brown);
+
     cursor: pointer;
 }
 
@@ -645,29 +2066,608 @@
 
 .account-settings-list button div span {
     display: block;
-    margin-bottom: 5px;
-    font-family: "DM Sans", sans-serif;
-    font-size: 7px;
-    letter-spacing: 0.17em;
+
+    margin-bottom: 6px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.14em;
+
     color: var(--brown-muted);
 }
 
 .account-settings-list button div strong {
-    font-family: "Cormorant Garamond", serif;
-    font-size: 21px;
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 24px;
+
     font-weight: 500;
+
     color: var(--brown);
 }
 
-.account-settings-list button>span {
+.account-settings-list button>svg {
+    width: 18px;
+    height: 18px;
+
     flex-shrink: 0;
-    font-size: 16px;
-    transition: transform 0.2s ease;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.35;
+
+    transition:
+        transform 0.2s ease;
 }
 
-.account-settings-list button:hover>span {
+.account-settings-list button:hover>svg {
     transform: translateX(4px);
 }
+
+
+/* =========================================================
+   PREFERENCES
+========================================================= */
+
+.account-preference-card {
+    margin-top: 11px;
+
+    padding: 17px 18px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 20px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.62);
+
+    border-radius: 8px;
+
+    background:
+        rgba(255, 255, 255, 0.22);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.58);
+}
+
+.account-preference-card>div {
+    min-width: 0;
+}
+
+.account-preference-card>div>span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.14em;
+
+    color: var(--brown-muted);
+}
+
+.account-preference-card>div>strong {
+    display: block;
+
+    margin-bottom: 4px;
+
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 23px;
+
+    font-weight: 500;
+
+    color: var(--brown);
+}
+
+.account-preference-card>div>p {
+    max-width: 650px;
+
+    margin: 0;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 10px;
+
+    line-height: 1.6;
+
+    color: var(--brown-muted);
+}
+
+
+/* =========================================================
+   TOGGLE
+========================================================= */
+
+.account-toggle {
+    position: relative;
+
+    width: 42px;
+    height: 24px;
+
+    flex-shrink: 0;
+
+    padding: 0;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.20);
+
+    border-radius: 20px;
+
+    background:
+        rgba(255, 255, 255, 0.42);
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.account-toggle span {
+    position: absolute;
+
+    top: 4px;
+    left: 4px;
+
+    width: 14px;
+    height: 14px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(93, 62, 53, 0.48);
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease;
+}
+
+.account-toggle.active {
+    background:
+        var(--brown);
+
+    border-color:
+        var(--brown);
+}
+
+.account-toggle.active span {
+    transform:
+        translateX(18px);
+
+    background:
+        #fff9f4;
+}
+
+
+/* =========================================================
+   PHONE INPUT
+========================================================= */
+
+.phone-input-wrapper {
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    overflow: hidden;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.16);
+
+    border-radius: 6px;
+
+    background:
+        rgba(255, 255, 255, 0.38);
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.phone-input-wrapper:focus-within {
+    border-color:
+        rgba(93, 62, 53, 0.42);
+
+    background:
+        rgba(255, 255, 255, 0.54);
+
+    box-shadow:
+        0 0 0 3px rgba(93, 62, 53, 0.05);
+}
+
+.phone-prefix {
+    height: 46px;
+
+    padding: 0 11px;
+
+    display: flex;
+
+    align-items: center;
+
+    flex-shrink: 0;
+
+    border-right:
+        1px solid rgba(93, 62, 53, 0.11);
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    color: var(--brown-muted);
+}
+
+.phone-input-wrapper input {
+    min-width: 0;
+
+    flex: 1;
+
+    height: 46px;
+
+    padding: 0 12px;
+
+    border: none;
+
+    outline: none;
+
+    background: transparent;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 12px;
+
+    color: var(--brown);
+}
+
+.phone-input-wrapper input::placeholder {
+    color:
+        rgba(93, 62, 53, 0.42);
+}
+
+
+/* =========================================================
+   SEND OTP
+========================================================= */
+
+.phone-verification-row {
+    margin-top: 8px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-start;
+}
+
+.phone-send-otp-button {
+    min-height: 34px;
+
+    padding: 0 13px;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.22);
+
+    border-radius: 5px;
+
+    background:
+        rgba(255, 255, 255, 0.32);
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.11em;
+
+    color: var(--brown);
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.phone-send-otp-button:hover:not(:disabled) {
+    background:
+        rgba(255, 255, 255, 0.58);
+
+    border-color:
+        rgba(93, 62, 53, 0.38);
+
+    transform:
+        translateY(-1px);
+}
+
+.phone-send-otp-button:disabled {
+    opacity: 0.52;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   VERIFIED STATE
+========================================================= */
+
+.phone-verified-state {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.11em;
+
+    color: var(--brown);
+}
+
+.phone-verified-state svg {
+    width: 15px;
+    height: 15px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.5;
+}
+
+
+/* =========================================================
+   OTP BOX
+========================================================= */
+
+.phone-otp-box {
+    width: 100%;
+
+    margin-top: 13px;
+
+    padding: 15px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.68);
+
+    border-radius: 8px;
+
+    background:
+        rgba(255, 255, 255, 0.23);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.62);
+}
+
+.phone-otp-header {
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding-bottom: 12px;
+
+    border-bottom:
+        1px solid rgba(93, 62, 53, 0.10);
+}
+
+.phone-otp-header>div {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+.phone-otp-header>div>span {
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.14em;
+
+    color: var(--brown-muted);
+}
+
+.phone-otp-header strong {
+    font-family:
+        "Cormorant Garamond",
+        serif;
+
+    font-size: 25px;
+
+    font-weight: 500;
+
+    color: var(--brown);
+}
+
+.phone-otp-box>p {
+    margin: 12px 0 11px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 9px;
+
+    line-height: 1.6;
+
+    color: var(--brown-muted);
+}
+
+
+/* =========================================================
+   OTP ACTIONS
+========================================================= */
+
+.phone-otp-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+}
+
+.phone-otp-input {
+    width: 165px;
+
+    height: 43px;
+
+    padding: 0 11px;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.17);
+
+    border-radius: 6px;
+
+    outline: none;
+
+    background:
+        rgba(255, 255, 255, 0.42);
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 18px;
+
+    font-weight: 600;
+
+    letter-spacing: 0.20em;
+
+    text-align: center;
+
+    color: var(--brown);
+}
+
+.phone-otp-input::placeholder {
+    color:
+        rgba(93, 62, 53, 0.30);
+}
+
+.phone-otp-input:focus {
+    border-color:
+        rgba(93, 62, 53, 0.42);
+
+    background:
+        rgba(255, 255, 255, 0.56);
+
+    box-shadow:
+        0 0 0 3px rgba(93, 62, 53, 0.05);
+}
+
+
+/* =========================================================
+   OTP MESSAGE
+========================================================= */
+
+.phone-otp-message {
+    margin-top: 10px;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 9px;
+
+    line-height: 1.5;
+}
+
+.phone-otp-message.error {
+    color: var(--brown);
+}
+
+.phone-otp-message.success {
+    color: var(--brown);
+}
+
+
+/* =========================================================
+   RESEND
+========================================================= */
+
+.phone-resend-button {
+    margin-top: 12px;
+
+    padding: 0 0 5px;
+
+    border: none;
+
+    border-bottom:
+        1px solid rgba(93, 62, 53, 0.30);
+
+    background: transparent;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 7px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.12em;
+
+    color: var(--brown-muted);
+
+    cursor: pointer;
+}
+
+.phone-resend-button:disabled {
+    opacity: 0.50;
+
+    cursor: not-allowed;
+}
+
 
 /* =========================================================
    TABLET
@@ -679,25 +2679,27 @@
         padding: 35px 4% 28px;
     }
 
-    .account-page-header {
-        margin-bottom: 16px;
+    .account-page-header h1 {
+        font-size: 62px;
     }
 
-    .account-page-header h1 {
-        font-size: 58px;
+    .account-page-header p {
+        font-size: 13px;
     }
 
     .account-layout {
-        grid-template-columns: 195px minmax(0, 1fr);
-        gap: 14px;
+        grid-template-columns:
+            205px minmax(0, 1fr);
+
+        gap: 15px;
     }
 
     .account-sidebar {
-        padding: 18px 15px;
+        padding: 20px 16px;
     }
 
     .account-navigation button {
-        font-size: 9px;
+        font-size: 10px;
     }
 
     .profile-details {
@@ -706,36 +2708,44 @@
 
     .profile-detail {
         min-height: auto;
-        padding: 0 0 15px;
+
+        padding:
+            0 0 17px;
+
         border-right: none;
-        border-bottom: 1px solid rgba(93, 62, 53, 0.12);
+
+        border-bottom:
+            1px solid rgba(93, 62, 53, 0.12);
     }
 
     .profile-detail:not(:first-child) {
         padding-left: 0;
-        padding-top: 15px;
+
+        padding-top: 17px;
     }
 
     .profile-detail:last-child {
         padding-bottom: 0;
+
         border-bottom: none;
     }
 
-    .account-background-overlay {
-        background:
-            linear-gradient(90deg,
-                rgba(248, 241, 235, 0.40) 0%,
-                rgba(248, 241, 235, 0.28) 55%,
-                rgba(248, 241, 235, 0.20) 100%);
+    .account-wishlist-grid,
+    .account-address-list {
+        grid-template-columns: 1fr;
     }
 
     .account-sidebar,
     .account-welcome,
     .account-content-panel {
-        backdrop-filter: blur(22px) saturate(110%);
-        -webkit-backdrop-filter: blur(22px) saturate(110%);
+        backdrop-filter:
+            blur(22px) saturate(110%);
+
+        -webkit-backdrop-filter:
+            blur(22px) saturate(110%);
     }
 }
+
 
 /* =========================================================
    MOBILE
@@ -745,24 +2755,27 @@
 
     .account-page {
         height: 100dvh;
-        padding: 25px 4% 22px;
+
+        padding:
+            25px 4% 22px;
     }
 
     .account-page-header {
-        margin-bottom: 11px;
+        margin-bottom: 12px;
     }
 
     .account-page-header>span {
-        font-size: 6px;
+        font-size: 8px;
     }
 
     .account-page-header h1 {
-        font-size: 44px;
+        font-size: 48px;
     }
 
     .account-page-header p {
-        font-size: 8px;
+        font-size: 10px;
     }
+
 
     /* =====================================================
        LAYOUT
@@ -770,9 +2783,12 @@
 
     .account-layout {
         display: flex;
+
         flex-direction: column;
+
         gap: 10px;
     }
+
 
     /* =====================================================
        SIDEBAR
@@ -780,46 +2796,48 @@
 
     .account-sidebar {
         width: 100%;
+
         height: auto;
+
         min-height: 0;
+
         flex-shrink: 0;
-        padding: 13px 15px;
+
+        padding:
+            14px 15px;
+
         border-radius: 13px;
-
-        background:
-            linear-gradient(135deg,
-                rgba(255, 249, 244, 0.91),
-                rgba(235, 216, 208, 0.87));
-
-        border-color: rgba(255, 255, 255, 0.90);
-
-        backdrop-filter: blur(20px) saturate(110%);
-        -webkit-backdrop-filter: blur(20px) saturate(110%);
     }
 
     .account-sidebar-title {
-        padding-bottom: 10px;
+        padding-bottom: 11px;
     }
 
     .account-sidebar-title span {
-        font-size: 20px;
+        font-size: 22px;
     }
 
     .account-sidebar-title small {
-        font-size: 5.5px;
+        font-size: 7px;
     }
 
     .account-navigation {
-        margin-top: 5px;
+        margin-top: 6px;
+
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+
+        grid-template-columns:
+            repeat(3, 1fr);
+
         gap: 0 8px;
     }
 
     .account-navigation button {
-        min-height: 29px;
+        min-height: 33px;
+
         padding: 6px 0;
-        font-size: 6.8px;
+
+        font-size: 7.5px;
     }
 
     .account-navigation button strong {
@@ -829,141 +2847,268 @@
     .account-navigation button:hover,
     .account-navigation button.active {
         padding-left: 0;
-        background: rgba(255, 255, 255, 0.48);
+
+        background:
+            rgba(255, 255, 255, 0.48);
     }
 
     .account-logout {
-        margin-top: 8px;
+        margin-top: 9px;
+
+        font-size: 7px;
     }
 
-    /* =====================================================
-       MAIN
-    ===================================================== */
-
-    .account-main {
-        flex: 1;
-        min-height: 0;
-    }
 
     /* =====================================================
        WELCOME
     ===================================================== */
 
     .account-welcome {
-        height: 61px;
-        padding: 9px 13px;
+        min-height: 69px;
+
+        padding:
+            10px 14px;
+
         border-radius: 13px;
-
-        background:
-            linear-gradient(135deg,
-                rgba(255, 249, 244, 0.93),
-                rgba(235, 216, 208, 0.88));
-
-        border-color: rgba(255, 255, 255, 0.92);
-
-        backdrop-filter: blur(21px) saturate(110%);
-        -webkit-backdrop-filter: blur(21px) saturate(110%);
     }
 
     .account-avatar {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
-        background: rgba(255, 255, 255, 0.60);
+        width: 44px;
+        height: 44px;
+
+        font-size: 18px;
     }
 
-    .account-welcome>div:last-child span {
-        font-size: 5.5px;
+    .account-welcome-content>span {
+        font-size: 6.5px;
     }
 
     .account-welcome h2 {
-        font-size: 22px;
+        font-size: 25px;
     }
 
+
     /* =====================================================
-       CONTENT PANEL
+       CONTENT
     ===================================================== */
 
     .account-content-panel {
-        height: calc(100% - 71px);
+        height:
+            calc(100% - 79px);
+
         margin-top: 9px;
-        padding: 17px;
+
+        padding: 19px;
+
         border-radius: 13px;
-
-        background:
-            linear-gradient(135deg,
-                rgba(255, 249, 244, 0.95),
-                rgba(232, 213, 205, 0.90));
-
-        border-color: rgba(255, 255, 255, 0.94);
-
-        backdrop-filter: blur(23px) saturate(110%);
-        -webkit-backdrop-filter: blur(23px) saturate(110%);
     }
 
     .account-content-header {
-        min-height: 41px;
-        padding-bottom: 11px;
+        min-height: 43px;
+
+        padding-bottom: 12px;
     }
 
     .account-content-header>div span {
-        font-size: 5.5px;
+        font-size: 6.5px;
     }
 
     .account-content-header h2 {
-        font-size: 25px;
+        font-size: 29px;
     }
 
     .account-content-header>button,
     .account-outline-button {
-        font-size: 6.2px;
+        font-size: 7px;
     }
 
+
     /* =====================================================
-       PROFILE DETAILS
+       PROFILE
     ===================================================== */
 
     .profile-details {
-        margin-top: 14px;
+        margin-top: 16px;
     }
 
     .profile-detail {
-        padding-bottom: 11px;
+        padding-bottom: 13px;
     }
 
     .profile-detail:not(:first-child) {
-        padding-top: 11px;
+        padding-top: 13px;
     }
 
-    .profile-detail span {
-        font-size: 5.5px;
+    .profile-detail>span {
+        font-size: 6.5px;
     }
 
     .profile-detail p {
-        font-size: 18px;
+        font-size: 21px;
     }
 
+    .profile-account-note {
+        margin-top: 17px;
+
+        padding-top: 14px;
+    }
+
+    .profile-account-note span {
+        font-size: 6.5px;
+    }
+
+    .profile-account-note p {
+        font-size: 9px;
+    }
+
+
     /* =====================================================
-       EMPTY STATE
+       EMPTY
     ===================================================== */
 
     .account-empty-state {
-        height: calc(100% - 53px);
-        padding: 20px 10px;
+        min-height: 255px;
+
+        padding:
+            25px 10px;
     }
 
     .account-empty-mark {
-        width: 41px;
-        height: 41px;
+        width: 44px;
+        height: 44px;
+
+        margin-bottom: 13px;
+
+        font-size: 20px;
     }
 
     .account-empty-state h3 {
-        font-size: 23px;
+        font-size: 26px;
     }
 
     .account-empty-state p {
+        font-size: 9px;
+    }
+
+
+    /* =====================================================
+       FORM
+    ===================================================== */
+
+    .account-form-grid {
+        grid-template-columns: 1fr;
+
+        gap: 14px;
+    }
+
+    .account-form-field-full {
+        grid-column: auto;
+    }
+
+    .account-form-field label {
+        font-size: 6.5px;
+    }
+
+    .account-form-field input,
+    .account-form-field select {
+        height: 42px;
+
+        font-size: 10px;
+    }
+
+    .account-form-actions {
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+
+    .account-form-actions button {
+        width: 100%;
+    }
+
+
+    /* =====================================================
+       OTP
+    ===================================================== */
+
+    .phone-otp-actions {
+        align-items: stretch;
+
+        flex-direction: column;
+    }
+
+    .phone-otp-input {
+        width: 100%;
+    }
+
+    .phone-otp-actions .account-primary-button {
+        width: 100%;
+    }
+
+    .phone-send-otp-button {
+        width: 100%;
+    }
+
+    .phone-verification-row {
+        width: 100%;
+    }
+
+
+    /* =====================================================
+       WISHLIST
+    ===================================================== */
+
+    .account-wishlist-grid {
+        grid-template-columns: 1fr;
+
+        gap: 10px;
+    }
+
+    .account-wishlist-image {
+        height: 190px;
+    }
+
+
+    /* =====================================================
+       ADDRESSES
+    ===================================================== */
+
+    .account-address-list {
+        grid-template-columns: 1fr;
+
+        gap: 10px;
+    }
+
+
+    /* =====================================================
+       ORDERS
+    ===================================================== */
+
+    .account-order-meta {
+        grid-template-columns: 1fr;
+
+        gap: 10px;
+    }
+
+
+    /* =====================================================
+       SETTINGS
+    ===================================================== */
+
+    .account-preference-card {
+        align-items: flex-start;
+
+        padding: 14px;
+    }
+
+    .account-preference-card>div>strong {
+        font-size: 20px;
+    }
+
+    .account-preference-card>div>p {
         font-size: 8px;
     }
+
 
     /* =====================================================
        BACKGROUND
@@ -978,6 +3123,7 @@
     }
 }
 
+
 /* =========================================================
    SMALL MOBILE
 ========================================================= */
@@ -985,11 +3131,12 @@
 @media (max-width: 420px) {
 
     .account-page {
-        padding: 20px 3.5% 18px;
+        padding:
+            20px 3.5% 18px;
     }
 
     .account-page-header h1 {
-        font-size: 40px;
+        font-size: 42px;
     }
 
     .account-layout {
@@ -997,16 +3144,26 @@
     }
 
     .account-navigation {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns:
+            repeat(2, 1fr);
     }
 
     .account-content-header {
         align-items: flex-start;
+
         flex-direction: column;
     }
 
     .account-content-header>button,
     .account-outline-button {
         align-self: flex-start;
+    }
+
+    .account-form-actions {
+        flex-direction: column;
+    }
+
+    .account-form-actions button {
+        width: 100%;
     }
 }
