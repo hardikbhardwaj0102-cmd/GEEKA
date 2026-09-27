@@ -34,9 +34,9 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
         ("Verification", {"fields": ("email_verified",)}),
-        ("Important Dates", {"fields": ("last_login", "date_joined", "updated_at")}),
+        ("Important Dates", {"fields": ("date_joined", "last_login", "updated_at")}),
     )
-
+    readonly_fields = ("date_joined", "last_login", "updated_at")
     add_fieldsets = (
         (
             None,
