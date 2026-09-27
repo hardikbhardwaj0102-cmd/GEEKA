@@ -101,12 +101,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     "default": dj_database_url.config(
-        default=(
-            f"postgresql://{env('DB_USER')}:{env('DB_PASSWORD')}"
-            f"@{env('DB_HOST')}:{env('DB_PORT')}/{env('DB_NAME')}"
-        ),
         conn_max_age=600,
-        ssl_require=False,
+        ssl_require=env.bool("DATABASE_SSL_REQUIRE", default=True),
     )
 }
 
