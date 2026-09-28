@@ -1,126 +1,142 @@
-/*
-|--------------------------------------------------------------------------
-| GEEKA HEADER
-|--------------------------------------------------------------------------
-*/
-
-.site-header,
-.site-header *,
-.site-header *::before,
-.site-header *::after {
-    box-sizing: border-box;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| HEADER
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   GEEKA HEADER
+========================================================= */
 
 .site-header {
-    position: relative;
-    z-index: 100;
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    right: 0;
+
     width: 100%;
-    padding: 18px 5%;
-    background: #fff9f4;
-    color: #5d3e35;
-}
+    height: 76px;
 
-
-/*
-|--------------------------------------------------------------------------
-| INNER
-|--------------------------------------------------------------------------
-*/
-
-.header-inner {
-    width: 100%;
-    max-width: 1380px;
-    min-height: 62px;
-    margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 5.8%;
 
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+
+    grid-template-columns: 1fr auto 1fr;
+
     align-items: center;
-    gap: 30px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.10);
-
-    border-radius: 14px;
 
     background:
-        rgba(255, 249, 244, 0.94);
+        rgba(248, 241, 235, 0.94);
+
+    border-bottom:
+        1px solid rgba(71, 43, 43, 0.08);
 
     box-shadow:
-        0 12px 35px rgba(55, 35, 30, 0.07),
-        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+        0 5px 22px rgba(71, 43, 43, 0.05);
 
-    backdrop-filter:
-        blur(18px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 
-    -webkit-backdrop-filter:
-        blur(18px);
+    z-index: 1000;
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| LOGO
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   LOGO
+========================================================= */
 
-.header-logo {
-    width: 92px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
+.header-logo-link {
+    justify-self: start;
 
     text-decoration: none;
 }
 
-.header-logo img {
-    width: 100%;
-    height: auto;
-    display: block;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| NAVIGATION
-|--------------------------------------------------------------------------
-*/
-
-.header-navigation {
-    min-width: 0;
+.brand-logo {
+    width: fit-content;
 
     display: flex;
+    flex-direction: column;
+
     align-items: center;
-    justify-content: center;
-    gap: 34px;
+
+    color: var(--brown);
 }
 
-.header-navigation a {
+.brand-logo-mark {
     position: relative;
 
-    padding:
-        7px 0;
+    font-family: "Cormorant Garamond", serif;
 
-    font-family:
-        "DM Sans",
-        sans-serif;
+    font-size: 50px;
 
-    font-size: 9px;
-    font-weight: 700;
+    font-weight: 500;
 
-    letter-spacing:
-        0.15em;
+    line-height: 34px;
 
-    color:
-        #806a61;
+    letter-spacing: -5px;
+}
+
+.brand-logo-flower {
+    position: absolute;
+
+    top: -6px;
+    right: -17px;
+
+    font-family: serif;
+
+    font-size: 24px;
+
+    color: var(--brown);
+
+    transform: rotate(-20deg);
+}
+
+.brand-logo-tagline {
+    margin-top: 7px;
+
+    white-space: nowrap;
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 7px;
+
+    letter-spacing: 1.15px;
+
+    text-transform: uppercase;
+}
+
+.brand-logo-tagline span {
+    margin: 0 4px;
+
+    color: var(--rose);
+}
+
+
+/* =========================================================
+   MAIN NAVIGATION
+========================================================= */
+
+.main-navigation {
+    display: flex;
+
+    align-items: center;
+
+    gap: 42px;
+}
+
+.brand-logo-image {
+    display: block;
+    width: 72px;
+    height: auto;
+    max-height: 58px;
+    object-fit: contain;
+}
+
+.main-navigation a {
+    position: relative;
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 12px;
+
+    font-weight: 500;
+
+    color: var(--brown);
 
     text-decoration: none;
 
@@ -128,696 +144,750 @@
         color 0.2s ease;
 }
 
-.header-navigation a::after {
+.main-navigation a:hover {
+    color: var(--rose);
+}
+
+.navigation-active::after {
     content: "";
 
     position: absolute;
 
     left: 0;
-    bottom: 1px;
+    right: 0;
 
-    width: 100%;
+    bottom: -9px;
+
     height: 1px;
 
-    background:
-        #5d3e35;
+    background: var(--brown);
+}
 
-    transform:
-        scaleX(0);
+.navigation-shop {
+    display: flex;
 
-    transform-origin:
-        right;
+    align-items: center;
+
+    gap: 5px;
+}
+
+.navigation-shop span {
+    font-size: 14px;
+
+    margin-top: -2px;
+}
+
+
+/* =========================================================
+   HEADER ACTIONS
+========================================================= */
+
+.header-actions {
+    justify-self: end;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 17px;
+}
+
+.header-actions button {
+    width: 25px;
+    height: 25px;
+
+    padding: 2px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    background: transparent;
+
+    color: var(--brown);
+
+    cursor: pointer;
+
+    position: relative;
 
     transition:
-        transform 0.25s ease;
+        color 0.2s ease;
 }
 
-.header-navigation a:hover,
-.header-navigation a.active {
-    color:
-        #5d3e35;
+.header-actions svg {
+    width: 20px;
+    height: 20px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.25;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
 }
 
-.header-navigation a:hover::after,
-.header-navigation a.active::after {
-    transform:
-        scaleX(1);
+.header-actions button:hover {
+    color: var(--rose);
+}
 
-    transform-origin:
-        left;
+.header-actions button:hover svg {
+    transform: translateY(-1px);
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| SEARCH
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   ACCOUNT LINK
+========================================================= */
 
-.header-search-form {
-    width: 100%;
-    max-width: 620px;
-    min-width: 0;
-    margin: 0 auto;
+.header-account-link {
+    width: 25px;
+    height: 25px;
 
-    height: 42px;
+    padding: 2px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    color: var(--brown);
+
+    text-decoration: none;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.header-account-link svg {
+    width: 20px;
+    height: 20px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.25;
+
+    transition:
+        transform 0.2s ease;
+}
+
+.header-account-link:hover {
+    color: var(--rose);
+
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   BAG
+========================================================= */
+
+.header-bag {
+    position: relative;
+}
+
+.header-bag>span {
+    position: absolute;
+
+    top: -5px;
+    right: -6px;
+
+    width: 14px;
+    height: 14px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: var(--brown);
+
+    color: white;
+
+    font-family: "DM Sans", sans-serif;
+
+    font-size: 7px;
+
+    line-height: 1;
+}
+
+
+/* =========================================================
+   MOBILE MENU
+========================================================= */
+
+.mobile-menu-button {
+    display: none;
+
+    width: 30px;
+    height: 30px;
+
+    padding: 0;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    border: none;
+
+    background: transparent;
+
+    cursor: pointer;
+}
+
+.mobile-menu-button span {
+    width: 22px;
+    height: 1px;
+
+    background: var(--brown);
+
+    transition:
+        transform 0.2s ease;
+}
+
+
+/* =========================================================
+   TABLET / MOBILE
+========================================================= */
+
+@media (max-width: 800px) {
+
+    .site-header {
+        height: 72px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        padding: 0 6%;
+    }
+
+    .main-navigation,
+    .header-actions {
+        display: none;
+    }
+
+    .mobile-menu-button {
+        display: flex;
+    }
+}
+
+
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+
+    .site-header {
+        height: 68px;
+
+        padding: 0 5%;
+    }
+
+    .brand-logo-mark {
+        font-size: 45px;
+
+        line-height: 31px;
+    }
+
+    .brand-logo-flower {
+        top: -5px;
+
+        right: -16px;
+
+        font-size: 22px;
+    }
+
+    .brand-logo-tagline {
+        margin-top: 6px;
+
+        font-size: 6px;
+
+        letter-spacing: 1px;
+    }
+
+    .mobile-menu-button {
+        width: 28px;
+        height: 28px;
+    }
+
+    .mobile-menu-button span {
+        width: 21px;
+    }
+}
+
+.brand-logo {
+    display: flex;
+    align-items: center;
+}
+
+.brand-logo-image {
+    display: block;
+    width: 72px;
+    height: auto;
+    max-height: 58px;
+    object-fit: contain;
+}
+
+/* =========================================================
+   EXPANDING HEADER SEARCH
+========================================================= */
+
+.header-search-wrapper {
+    position: relative;
 
     display: flex;
     align-items: center;
 
-    padding:
-        0 9px 0 13px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.16);
-
-    border-radius:
-        7px;
-
-    background:
-        rgba(255, 255, 255, 0.55);
-
-    color:
-        #5d3e35;
-
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    width: 38px;
+    height: 38px;
 
     transition:
-        border-color 0.2s ease,
-        background 0.2s ease,
-        box-shadow 0.2s ease;
+        width 0.28s ease;
 }
 
-.header-search-form:focus-within {
-    border-color:
-        rgba(93, 62, 53, 0.34);
-
-    background:
-        rgba(255, 255, 255, 0.78);
-
-    box-shadow:
-        0 0 0 3px rgba(93, 62, 53, 0.05);
-}
-
-.header-search-form>svg {
-    width: 17px;
-    height: 17px;
-    flex-shrink: 0;
-
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.45;
-
-    color:
-        #806a61;
-}
-
-.header-search-form input {
-    min-width: 0;
-    flex: 1;
-
-    height: 100%;
-
-    margin-left:
-        10px;
-
-    padding:
-        0;
-
-    border:
-        none;
-
-    outline:
-        none;
-
-    background:
-        transparent;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        11px;
-
-    color:
-        #5d3e35;
-}
-
-.header-search-form input::placeholder {
-    color:
-        rgba(93, 62, 53, 0.45);
-}
-
-.header-search-form input::-webkit-search-cancel-button {
-    display: none;
+.header-search-wrapper.search-expanded {
+    width: 250px;
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| SEARCH BUTTONS
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   NORMAL SEARCH BUTTON
+========================================================= */
 
-.header-search-clear,
-.header-search-close {
-    width: 30px;
-    height: 30px;
-    flex-shrink: 0;
+.header-search-button {
+    width: 38px;
+    height: 38px;
+
+    padding: 0;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    padding: 0;
+    border: none;
 
-    border:
-        none;
+    background: transparent;
 
-    border-radius:
-        50%;
+    color: inherit;
 
-    background:
-        transparent;
-
-    color:
-        #806a61;
-
-    cursor:
-        pointer;
-
-    transition:
-        color 0.2s ease,
-        background 0.2s ease;
+    cursor: pointer;
 }
 
-.header-search-clear:hover,
-.header-search-close:hover {
+.header-search-button svg {
+    width: 19px;
+    height: 19px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.45;
+}
+
+
+/* =========================================================
+   EXPANDED SEARCH
+========================================================= */
+
+.header-search-expanded {
+    width: 100%;
+    height: 38px;
+
+    padding: 0 9px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.20);
+
+    border-radius: 20px;
+
+    background:
+        rgba(255, 255, 255, 0.72);
+
+    box-shadow:
+        0 7px 20px rgba(55, 35, 30, 0.08);
+
+    backdrop-filter:
+        blur(12px);
+
+    -webkit-backdrop-filter:
+        blur(12px);
+
+    animation:
+        header-search-open 0.25s ease both;
+}
+
+@keyframes header-search-open {
+
+    from {
+        opacity: 0;
+
+        transform:
+            scaleX(0.82);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            scaleX(1);
+    }
+}
+
+.header-search-expanded>svg {
+    width: 17px;
+    height: 17px;
+
+    flex-shrink: 0;
+
+    fill: none;
+
+    stroke: var(--brown);
+
+    stroke-width: 1.45;
+}
+
+.header-search-expanded input {
+    width: 100%;
+    min-width: 0;
+
+    height: 100%;
+
+    padding: 0;
+
+    border: none;
+
+    outline: none;
+
+    background: transparent;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size: 11px;
+
+    color: var(--brown);
+}
+
+.header-search-expanded input::placeholder {
     color:
-        #5d3e35;
+        rgba(93, 62, 53, 0.45);
+}
+
+
+/* Remove browser search decoration */
+
+.header-search-expanded input::-webkit-search-decoration,
+.header-search-expanded input::-webkit-search-cancel-button,
+.header-search-expanded input::-webkit-search-results-button,
+.header-search-expanded input::-webkit-search-results-decoration {
+    display: none;
+}
+
+
+/* =========================================================
+   SEARCH CLEAR
+========================================================= */
+
+.header-search-clear {
+    width: 25px;
+    height: 25px;
+
+    flex-shrink: 0;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 50%;
 
     background:
         rgba(93, 62, 53, 0.07);
+
+    color: var(--brown);
+
+    cursor: pointer;
 }
 
-.header-search-clear svg,
-.header-search-close svg {
-    width: 14px;
-    height: 14px;
+.header-search-clear svg {
+    width: 13px;
+    height: 13px;
 
     fill: none;
+
     stroke: currentColor;
+
     stroke-width: 1.4;
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| ACTIONS
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   WISHLIST
+========================================================= */
 
-.header-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ACTION BUTTON
-|--------------------------------------------------------------------------
-*/
-
-.header-action-button {
+.header-wishlist {
     position: relative;
 
     width: 38px;
     height: 38px;
 
-    flex-shrink: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
     padding: 0;
 
-    border:
-        none;
-
-    border-radius:
-        50%;
-
-    background:
-        transparent;
-
-    color:
-        #5d3e35;
-
-    text-decoration:
-        none;
-
-    cursor:
-        pointer;
-
-    transition:
-        color 0.2s ease,
-        background 0.2s ease,
-        transform 0.2s ease;
-}
-
-.header-action-button:hover {
-    background:
-        rgba(93, 62, 53, 0.07);
-
-    color:
-        #4f352d;
-}
-
-.header-action-button svg {
-    width: 18px;
-    height: 18px;
-
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.35;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ACCOUNT
-|--------------------------------------------------------------------------
-*/
-
-.header-account-link {
-    border:
-        none;
-
-    outline:
-        none;
-}
-
-.header-account-link:focus-visible,
-.header-action-button:focus-visible {
-    box-shadow:
-        0 0 0 3px rgba(93, 62, 53, 0.12);
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| LOGGED-IN ACCOUNT
-|--------------------------------------------------------------------------
-*/
-
-.header-account-logged-in {
-    background:
-        transparent;
-}
-
-.header-account-logged-in:hover {
-    background:
-        transparent;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| ACCOUNT AVATAR
-|--------------------------------------------------------------------------
-*/
-
-.header-account-avatar {
-    width: 31px;
-    height: 31px;
-
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border-radius:
-        50%;
+    border: none;
 
-    border:
-        1px solid rgba(93, 62, 53, 0.22);
+    background: transparent;
 
-    background:
-        linear-gradient(135deg,
-            #f4e9e2 0%,
-            #ead6cc 100%);
+    color: inherit;
 
-    color:
-        #5d3e35;
+    cursor: pointer;
+}
 
-    font-family:
-        "DM Sans",
-        sans-serif;
+.header-wishlist svg {
+    width: 19px;
+    height: 19px;
 
-    font-size:
-        9px;
+    fill: none;
 
-    font-weight:
-        700;
+    stroke: currentColor;
 
-    letter-spacing:
-        0.04em;
-
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.90),
-        0 3px 9px rgba(55, 35, 30, 0.08);
+    stroke-width: 1.35;
 
     transition:
         transform 0.2s ease,
-        box-shadow 0.2s ease;
+        stroke-width 0.2s ease;
 }
 
-.header-account-logged-in:hover .header-account-avatar {
+.header-wishlist:hover svg {
     transform:
         translateY(-1px);
 
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.90),
-        0 5px 13px rgba(55, 35, 30, 0.12);
+    stroke-width: 1.7;
+}
+
+.header-wishlist-active svg {
+    stroke-width: 1.8;
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| WISHLIST / CART
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   WISHLIST COUNT
+========================================================= */
 
-.header-wishlist-link,
-.header-cart-link {
-    text-decoration:
-        none;
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| COUNTS
-|--------------------------------------------------------------------------
-*/
-
-.header-count {
+.header-wishlist-count {
     position: absolute;
 
-    top: 2px;
-    right: 2px;
+    top: 3px;
+    right: 1px;
 
-    min-width: 16px;
-    height: 16px;
+    min-width: 14px;
+    height: 14px;
 
-    padding:
-        0 4px;
+    padding: 0 3px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    border-radius:
-        20px;
+    border-radius: 20px;
 
     background:
-        #5d3e35;
-
-    color:
-        #fff9f4;
+        var(--brown);
 
     font-family:
         "DM Sans",
         sans-serif;
 
-    font-size:
-        7px;
+    font-size: 7px;
+    font-weight: 700;
 
-    font-weight:
-        700;
+    color: #fff9f4;
 
-    line-height:
-        1;
+    line-height: 1;
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| TABLET
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   EXISTING CART COUNT IMPROVEMENT
+========================================================= */
 
-@media (max-width: 950px) {
+.header-bag {
+    position: relative;
+}
 
-    .site-header {
-        padding:
-            14px 4%;
-    }
+.header-bag-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    .header-inner {
-        min-height:
-            58px;
+    min-width: 15px;
+    height: 15px;
 
-        padding:
-            0 15px;
+    padding: 0 3px;
 
-        gap:
-            20px;
-    }
+    border-radius: 20px;
 
-    .header-logo {
-        width:
-            82px;
-    }
+    background:
+        var(--brown);
 
-    .header-navigation {
-        gap:
-            24px;
-    }
+    font-family:
+        "DM Sans",
+        sans-serif;
 
-    .header-navigation a {
-        font-size:
-            8px;
-    }
+    font-size: 7px;
+    font-weight: 700;
 
-    .header-action-button {
-        width:
-            36px;
+    color: #fff9f4;
 
-        height:
-            36px;
-    }
-
-    .header-action-button svg {
-        width:
-            17px;
-
-        height:
-            17px;
-    }
+    line-height: 1;
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| MOBILE
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   MOBILE
+========================================================= */
 
 @media (max-width: 700px) {
 
-    .site-header {
-        padding:
-            10px 4%;
+    .header-search-wrapper.search-expanded {
+        width: 190px;
     }
 
-    .header-inner {
-        min-height:
-            54px;
-
-        padding:
-            0 11px;
-
-        gap:
-            8px;
-
-        border-radius:
-            11px;
+    .header-search-expanded {
+        height: 34px;
     }
 
-    .header-logo {
-        width:
-            68px;
+    .header-search-wrapper {
+        width: 34px;
+        height: 34px;
     }
 
-    /*
-    ----------------------------------------------------------------------
-    | Hide text navigation on mobile
-    ----------------------------------------------------------------------
-    */
-
-    .header-navigation {
-        display:
-            none;
+    .header-search-button,
+    .header-wishlist {
+        width: 34px;
+        height: 34px;
     }
 
-    /*
-    ----------------------------------------------------------------------
-    | Actions
-    ----------------------------------------------------------------------
-    */
-
-    .header-actions {
-        margin-left:
-            auto;
-
-        gap:
-            1px;
-    }
-
-    .header-action-button {
-        width:
-            34px;
-
-        height:
-            34px;
-    }
-
-    .header-action-button svg {
-        width:
-            16px;
-
-        height:
-            16px;
-    }
-
-    .header-account-avatar {
-        width:
-            28px;
-
-        height:
-            28px;
-
-        font-size:
-            8px;
-    }
-
-    /*
-    ----------------------------------------------------------------------
-    | Search
-    ----------------------------------------------------------------------
-    */
-
-    .header-search-form {
-        max-width:
-            none;
-
-        height:
-            38px;
-    }
-
-    .header-search-form input {
-        font-size:
-            10px;
-    }
-
-    .header-search-form>svg {
-        width:
-            15px;
-
-        height:
-            15px;
-    }
-
-    .header-search-clear,
-    .header-search-close {
-        width:
-            27px;
-
-        height:
-            27px;
-    }
-
-    /*
-    ----------------------------------------------------------------------
-    | Count
-    ----------------------------------------------------------------------
-    */
-
-    .header-count {
-        top:
-            1px;
-
-        right:
-            0;
-
-        min-width:
-            14px;
-
-        height:
-            14px;
-
-        font-size:
-            6px;
+    .header-search-expanded input {
+        font-size: 10px;
     }
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| SMALL MOBILE
-|--------------------------------------------------------------------------
-*/
+@media (max-width: 430px) {
 
-@media (max-width: 420px) {
+    .header-search-wrapper.search-expanded {
+        position: absolute;
 
-    .site-header {
-        padding:
-            8px 3.5%;
+        top: 50%;
+        right: 50px;
+
+        width: calc(100vw - 100px);
+
+        transform:
+            translateY(-50%);
     }
 
-    .header-inner {
-        padding:
-            0 8px;
-
-        min-height:
-            50px;
+    .header-actions {
+        position: relative;
     }
 
-    .header-logo {
-        width:
-            63px;
+    .header-search-expanded {
+        width: 100%;
+    }
+}
+
+/* =========================================================
+   SHOP PAGE NAVBAR SEARCH
+   Search stays permanently expanded on Shop.
+========================================================= */
+
+.shop-header-search {
+    width: 250px;
+}
+
+.shop-header-search .header-search-expanded {
+    width: 100%;
+}
+
+
+/* =========================================================
+   SHOP SEARCH - MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .shop-header-search {
+        width: 190px;
     }
 
-    .header-action-button {
-        width:
-            31px;
+}
 
-        height:
-            31px;
+
+@media (max-width: 430px) {
+
+    .shop-header-search {
+        position: absolute;
+        top: 50%;
+        right: 50px;
+        width: calc(100vw - 100px);
+        transform: translateY(-50%);
     }
 
-    .header-action-button svg {
-        width:
-            15px;
+}
 
-        height:
-            15px;
-    }
+.header-account-link {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
 
-    .header-account-avatar {
-        width:
-            26px;
+.header-account-logged-in {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-        height:
-            26px;
-
-        font-size:
-            7.5px;
-    }
+.header-account-avatar {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #f3e7df;
+    border: 1px solid rgba(93, 62, 53, 0.22);
+    color: var(--brown);
+    font-family: "DM Sans", sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
 }

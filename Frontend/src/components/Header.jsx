@@ -4,7 +4,6 @@ import {
     useLocation,
     useNavigate,
 } from "react-router-dom";
-
 import "../style/Header.css";
 
 import geekaLogo from "../assets/logo.png";
@@ -27,6 +26,22 @@ const API_URL =
 | ICONS
 |--------------------------------------------------------------------------
 */
+
+function Logo() {
+    return (
+        <Link
+            to="/"
+            className="header-logo"
+            aria-label="GEEKA Home"
+        >
+            <img
+                src={geekaLogo}
+                alt="GEEKA"
+            />
+        </Link>
+    );
+}
+
 
 function SearchIcon() {
     return (
@@ -102,29 +117,7 @@ function BagIcon() {
 
 /*
 |--------------------------------------------------------------------------
-| LOGO
-|--------------------------------------------------------------------------
-*/
-
-function Logo() {
-    return (
-        <Link
-            to="/"
-            className="header-logo"
-            aria-label="GEEKA Home"
-        >
-            <img
-                src={geekaLogo}
-                alt="GEEKA"
-            />
-        </Link>
-    );
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| USER INITIALS
+| USER HELPERS
 |--------------------------------------------------------------------------
 */
 
@@ -133,20 +126,16 @@ function getUserInitials(fullName) {
         return "G";
     }
 
-    const parts =
+    return (
         fullName
             .trim()
             .split(/\s+/)
-            .filter(Boolean);
-
-    if (parts.length === 1) {
-        return parts[0]
+            .filter(Boolean)
+            .map((word) => word[0])
+            .join("")
             .slice(0, 2)
-            .toUpperCase();
-    }
-
-    return `${parts[0][0]}${parts[parts.length - 1][0]}`
-        .toUpperCase();
+            .toUpperCase() || "G"
+    );
 }
 
 
@@ -160,33 +149,34 @@ export default function Header() {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const searchInputRef =
-        useRef(null);
-
-
     /*
     |--------------------------------------------------------------------------
     | CART
     |--------------------------------------------------------------------------
     */
 
-    const cartData =
-        useCart() || {};
+    const cartState = useCart() || {};
+
+    /*
+    |--------------------------------------------------------------------------
+    | Support the common shapes your existing useCart hook may expose.
+    |--------------------------------------------------------------------------
+    */
 
     const cartItems =
-        Array.isArray(cartData.items)
-            ? cartData.items
-            : Array.isArray(cartData.cartItems)
-                ? cartData.cartItems
+        Array.isArray(cartState.items)
+            ? cartState.items
+            : Array.isArray(cartState.cartItems)
+                ? cartState.cartItems
                 : [];
 
     const cartCount =
-        typeof cartData.cartCount === "number"
-            ? cartData.cartCount
-            : typeof cartData.itemCount === "number"
-                ? cartData.itemCount
-                : typeof cartData.count === "number"
-                    ? cartData.count
+        typeof cartState.cartCount === "number"
+            ? cartState.cartCount
+            : typeof cartState.itemCount === "number"
+                ? cartState.itemCount
+                : typeof cartState.count === "number"
+                    ? cartState.count
                     : cartItems.reduce(
                         (total, item) =>
                             total +
@@ -199,7 +189,7 @@ export default function Header() {
 
     /*
     |--------------------------------------------------------------------------
-    | AUTHENTICATION
+    | AUTH
     |--------------------------------------------------------------------------
     */
 
@@ -221,6 +211,9 @@ export default function Header() {
 
     const [searchValue, setSearchValue] =
         useState("");
+
+    const searchInputRef =
+        useRef(null);
 
 
     /*
@@ -272,7 +265,9 @@ export default function Header() {
                 await response.json();
 
             if (data?.user) {
-                setUser(data.user);
+                setUser(
+                    data.user
+                );
             } else {
                 setUser(null);
             }
@@ -286,18 +281,12 @@ export default function Header() {
 
     /*
     |--------------------------------------------------------------------------
-    | INITIAL AUTH CHECK
+    | AUTH SESSION CHECK
     |--------------------------------------------------------------------------
-    */
-
-    useEffect(() => {
-        loadCurrentUser();
-    }, []);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | RECHECK AUTH AFTER ROUTE CHANGES
+    |
+    | Check on initial mount and whenever the route changes.
+    | This is important because Header remains mounted while moving
+    | from Login -> Home -> Profile.
     |--------------------------------------------------------------------------
     */
 
@@ -308,7 +297,10 @@ export default function Header() {
 
     /*
     |--------------------------------------------------------------------------
-    | LISTEN FOR LOGIN / LOGOUT
+    | AUTH UPDATE EVENT
+    |--------------------------------------------------------------------------
+    |
+    | Login/Profile can notify Header without a full page refresh.
     |--------------------------------------------------------------------------
     */
 
@@ -366,29 +358,29 @@ export default function Header() {
     useEffect(() => {
         loadWishlistCount();
 
-        function handleWishlistUpdate() {
+        function syncWishlist() {
             loadWishlistCount();
         }
 
         window.addEventListener(
             "storage",
-            handleWishlistUpdate
+            syncWishlist
         );
 
         window.addEventListener(
             "geeka-wishlist-updated",
-            handleWishlistUpdate
+            syncWishlist
         );
 
         return () => {
             window.removeEventListener(
                 "storage",
-                handleWishlistUpdate
+                syncWishlist
             );
 
             window.removeEventListener(
                 "geeka-wishlist-updated",
-                handleWishlistUpdate
+                syncWishlist
             );
         };
     }, []);
@@ -396,7 +388,7 @@ export default function Header() {
 
     /*
     |--------------------------------------------------------------------------
-    | SYNC SEARCH FROM URL
+    | SEARCH URL SYNC
     |--------------------------------------------------------------------------
     */
 
@@ -417,9 +409,13 @@ export default function Header() {
             location.pathname ===
             "/shop"
         ) {
-            setSearchOpen(true);
+            setSearchOpen(
+                true
+            );
         } else {
-            setSearchOpen(false);
+            setSearchOpen(
+                false
+            );
         }
     }, [
         location.pathname,
@@ -439,15 +435,6 @@ export default function Header() {
             "/shop"
         ) {
             navigate("/shop");
-
-            setTimeout(() => {
-                setSearchOpen(true);
-
-                setTimeout(() => {
-                    searchInputRef.current?.focus();
-                }, 50);
-            }, 0);
-
             return;
         }
 
@@ -473,9 +460,7 @@ export default function Header() {
                 location.search
             );
 
-        params.delete(
-            "search"
-        );
+        params.delete("search");
 
         const query =
             params.toString();
@@ -592,20 +577,6 @@ export default function Header() {
 
     /*
     |--------------------------------------------------------------------------
-    | ACTIVE NAV ITEM
-    |--------------------------------------------------------------------------
-    */
-
-    function isActive(path) {
-        return (
-            location.pathname ===
-            path
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
     | RENDER
     |--------------------------------------------------------------------------
     */
@@ -618,58 +589,7 @@ export default function Header() {
                 <Logo />
 
 
-                {!searchOpen ? (
-                    <nav
-                        className="header-navigation"
-                        aria-label="Main navigation"
-                    >
-
-                        <Link
-                            to="/"
-                            className={
-                                isActive("/")
-                                    ? "active"
-                                    : ""
-                            }
-                        >
-                            HOME
-                        </Link>
-
-                        <Link
-                            to="/shop"
-                            className={
-                                isActive("/shop")
-                                    ? "active"
-                                    : ""
-                            }
-                        >
-                            SHOP
-                        </Link>
-
-                        <Link
-                            to="/about"
-                            className={
-                                isActive("/about")
-                                    ? "active"
-                                    : ""
-                            }
-                        >
-                            ABOUT
-                        </Link>
-
-                        <Link
-                            to="/contact"
-                            className={
-                                isActive("/contact")
-                                    ? "active"
-                                    : ""
-                            }
-                        >
-                            CONTACT
-                        </Link>
-
-                    </nav>
-                ) : (
+                {searchOpen ? (
                     <form
                         className="header-search-form"
                         onSubmit={
@@ -692,44 +612,7 @@ export default function Header() {
                             }
                             placeholder="Search products"
                             aria-label="Search products"
-                            autoComplete="off"
                         />
-
-                        {searchValue && (
-                            <button
-                                type="button"
-                                className="header-search-clear"
-                                onClick={() => {
-                                    setSearchValue("");
-
-                                    const params =
-                                        new URLSearchParams(
-                                            location.search
-                                        );
-
-                                    params.delete(
-                                        "search"
-                                    );
-
-                                    navigate(
-                                        `/shop${params.toString()
-                                            ? `?${params.toString()}`
-                                            : ""
-                                        }`,
-                                        {
-                                            replace: true,
-                                        }
-                                    );
-
-                                    setTimeout(() => {
-                                        searchInputRef.current?.focus();
-                                    }, 0);
-                                }}
-                                aria-label="Clear search"
-                            >
-                                <CloseIcon />
-                            </button>
-                        )}
 
                         <button
                             type="button"
@@ -743,6 +626,58 @@ export default function Header() {
                         </button>
 
                     </form>
+                ) : (
+                    <nav className="header-navigation">
+
+                        <Link
+                            to="/"
+                            className={
+                                location.pathname ===
+                                    "/"
+                                    ? "active"
+                                    : ""
+                            }
+                        >
+                            HOME
+                        </Link>
+
+                        <Link
+                            to="/shop"
+                            className={
+                                location.pathname ===
+                                    "/shop"
+                                    ? "active"
+                                    : ""
+                            }
+                        >
+                            SHOP
+                        </Link>
+
+                        <Link
+                            to="/about"
+                            className={
+                                location.pathname ===
+                                    "/about"
+                                    ? "active"
+                                    : ""
+                            }
+                        >
+                            ABOUT
+                        </Link>
+
+                        <Link
+                            to="/contact"
+                            className={
+                                location.pathname ===
+                                    "/contact"
+                                    ? "active"
+                                    : ""
+                            }
+                        >
+                            CONTACT
+                        </Link>
+
+                    </nav>
                 )}
 
 
@@ -751,12 +686,11 @@ export default function Header() {
                     {!searchOpen && (
                         <button
                             type="button"
-                            className="header-action-button header-search-button"
+                            className="header-action-button"
                             onClick={
                                 openSearch
                             }
                             aria-label="Search"
-                            title="Search"
                         >
                             <SearchIcon />
                         </button>
@@ -765,9 +699,9 @@ export default function Header() {
 
                     <button
                         type="button"
-                        className={`header-action-button header-account-link ${user && !authLoading
-                                ? "header-account-logged-in"
-                                : ""
+                        className={`header-account-link ${user
+                            ? "header-account-logged-in"
+                            : ""
                             }`}
                         onClick={
                             handleAccountClick
@@ -805,7 +739,6 @@ export default function Header() {
                         to="/profile?section=wishlist"
                         className="header-action-button header-wishlist-link"
                         aria-label="Wishlist"
-                        title="Wishlist"
                     >
 
                         <HeartIcon />
@@ -823,7 +756,6 @@ export default function Header() {
                         to="/cart"
                         className="header-action-button header-cart-link"
                         aria-label="Cart"
-                        title="Cart"
                     >
 
                         <BagIcon />
