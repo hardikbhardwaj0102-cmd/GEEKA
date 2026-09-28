@@ -7,6 +7,7 @@ import {
 import {
     Link,
     useLocation,
+    useNavigate,
 } from "react-router-dom";
 
 import "../style/Shop.css";
@@ -22,6 +23,154 @@ import {
 } from "../services/productService";
 
 import shopBanner from "../assets/top-banner.jpg";
+
+
+/* =========================================================
+   COLLECTION FILTER CONFIGURATION
+========================================================= */
+
+const COLLECTION_FILTERS = {
+    ethnic: {
+        label: "Ethnic Wear",
+
+        categories: [
+            "Ethnic Wear",
+            "Kurti & Kurta Sets",
+            "Sarees",
+            "Anarkali",
+            "Co-ord Sets",
+        ],
+    },
+
+    jewellery: {
+        label: "Jewellery",
+
+        categories: [
+            "Jewellery",
+            "Earrings",
+            "Necklaces",
+            "Rings",
+            "Bracelets",
+            "Jewelry",
+        ],
+    },
+
+    creative: {
+        label: "Creative",
+
+        categories: [
+            "Creative",
+            "Crochet Bags",
+            "Keychains",
+            "Hair Accessories",
+            "Home Décor",
+            "Home Decor",
+        ],
+    },
+};
+
+
+/* =========================================================
+   NORMALIZE CATEGORY
+========================================================= */
+
+function normalizeCategory(value) {
+    return String(
+        value || ""
+    )
+        .trim()
+        .toLowerCase();
+}
+
+
+/* =========================================================
+   COLLECTION MATCH
+========================================================= */
+
+function productBelongsToCollection(
+    product,
+    collectionId
+) {
+    if (
+        !collectionId ||
+        !COLLECTION_FILTERS[
+        collectionId
+        ]
+    ) {
+        return true;
+    }
+
+
+    const collection =
+        COLLECTION_FILTERS[
+        collectionId
+        ];
+
+
+    const productCategory =
+        normalizeCategory(
+            product.category
+        );
+
+
+    const collectionCategories =
+        collection.categories.map(
+            normalizeCategory
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CATEGORY MATCH
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        collectionCategories.includes(
+            productCategory
+        )
+    ) {
+        return true;
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | BACKEND COLLECTION FIELD
+    |--------------------------------------------------------------------------
+    |
+    | Also support products that may have:
+    |
+    | product.collection
+    | product.collectionId
+    |
+    */
+
+    const productCollection =
+        normalizeCategory(
+            product.collection
+        );
+
+    const productCollectionId =
+        normalizeCategory(
+            product.collectionId
+        );
+
+
+    if (
+        productCollection ===
+        normalizeCategory(collection.label) ||
+        productCollection ===
+        normalizeCategory(collectionId) ||
+        productCollectionId ===
+        normalizeCategory(collectionId)
+    ) {
+        return true;
+    }
+
+
+    return false;
+}
 
 
 /* =========================================================
@@ -72,9 +221,7 @@ function HeartIcon({
                     : ""
             }
         >
-
             <path d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.7Z" />
-
         </svg>
     );
 }
@@ -155,9 +302,7 @@ function ProductCard({
     onQuickView,
     onAddToCart,
 }) {
-
     return (
-
         <article className="shop-product-card">
 
             <div className="shop-product-image">
@@ -170,19 +315,17 @@ function ProductCard({
 
 
                 {product.isNew && (
-
                     <span className="shop-product-new">
                         NEW
                     </span>
-
                 )}
 
 
                 <button
                     type="button"
                     className={`shop-product-heart ${isWishlisted
-                        ? "active"
-                        : ""
+                            ? "active"
+                            : ""
                         }`}
                     onClick={() =>
                         onToggleWishlist(
@@ -195,13 +338,11 @@ function ProductCard({
                             : `Add ${product.name} to wishlist`
                     }
                 >
-
                     <HeartIcon
                         filled={
                             isWishlisted
                         }
                     />
-
                 </button>
 
 
@@ -245,13 +386,11 @@ function ProductCard({
 
 
                     {product.oldPrice && (
-
                         <del>
                             {formatPrice(
                                 product.oldPrice
                             )}
                         </del>
-
                     )}
 
                 </div>
@@ -284,7 +423,6 @@ function ProductCard({
             </div>
 
         </article>
-
     );
 }
 
@@ -295,7 +433,11 @@ function ProductCard({
 
 export default function Shop() {
 
-    const location = useLocation();
+    const location =
+        useLocation();
+
+    const navigate =
+        useNavigate();
 
 
     /*
@@ -312,28 +454,56 @@ export default function Shop() {
 
     /*
     |--------------------------------------------------------------------------
-    | SEARCH
+    | URL PARAMETERS
     |--------------------------------------------------------------------------
-    |
-    | Search now comes from the navbar through ?search=
-    |
     */
 
-    const search = useMemo(() => {
-
-        const params =
+    const urlParams = useMemo(
+        () =>
             new URLSearchParams(
                 location.search
-            );
+            ),
+        [
+            location.search,
+        ]
+    );
 
-        return (
-            params.get("search") || ""
-        );
 
-    }, [
-        location.search,
-    ]);
+    /*
+    |--------------------------------------------------------------------------
+    | COLLECTION
+    |--------------------------------------------------------------------------
+    */
 
+    const collectionFilter =
+        urlParams.get(
+            "collection"
+        ) || "";
+
+
+    const activeCollection =
+        COLLECTION_FILTERS[
+        collectionFilter
+        ] || null;
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SEARCH
+    |--------------------------------------------------------------------------
+    */
+
+    const search =
+        urlParams.get(
+            "search"
+        ) || "";
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PRICE
+    |--------------------------------------------------------------------------
+    */
 
     const [
         minPrice,
@@ -345,6 +515,13 @@ export default function Shop() {
         setMaxPrice,
     ] = useState(2500);
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | OTHER FILTERS
+    |--------------------------------------------------------------------------
+    */
+
     const [
         newOnly,
         setNewOnly,
@@ -354,6 +531,13 @@ export default function Shop() {
         stockOnly,
         setStockOnly,
     ] = useState(false);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SORT
+    |--------------------------------------------------------------------------
+    */
 
     const [
         sortBy,
@@ -511,18 +695,14 @@ export default function Shop() {
     const categories = useMemo(() => {
 
         const uniqueCategories = [
-
             ...new Set(
-
                 products
                     .map(
                         (product) =>
                             product.category
                     )
                     .filter(Boolean)
-
             ),
-
         ];
 
         return [
@@ -622,11 +802,6 @@ export default function Shop() {
     |--------------------------------------------------------------------------
     | FILTERED PRODUCTS
     |--------------------------------------------------------------------------
-    |
-    | EXACT SAME SEARCH LOGIC AS BEFORE:
-    |
-    | Product name OR product category
-    |
     */
 
     const filteredProducts =
@@ -642,25 +817,65 @@ export default function Shop() {
                 products.filter(
                     (product) => {
 
+                        /*
+                        |--------------------------------------------------------------------------
+                        | STANDARD CATEGORY FILTER
+                        |--------------------------------------------------------------------------
+                        */
+
                         const matchesCategory =
                             category === "All" ||
                             product.category ===
                             category;
 
 
+                        /*
+                        |--------------------------------------------------------------------------
+                        | COLLECTION FILTER
+                        |--------------------------------------------------------------------------
+                        */
+
+                        const matchesCollection =
+                            productBelongsToCollection(
+                                product,
+                                collectionFilter
+                            );
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | SEARCH FILTER
+                        |--------------------------------------------------------------------------
+                        */
+
+                        const productName =
+                            String(
+                                product.name ||
+                                ""
+                            ).toLowerCase();
+
+                        const productCategory =
+                            String(
+                                product.category ||
+                                ""
+                            ).toLowerCase();
+
+
                         const matchesSearch =
                             !query ||
-                            product.name
-                                .toLowerCase()
-                                .includes(
-                                    query
-                                ) ||
-                            product.category
-                                .toLowerCase()
-                                .includes(
-                                    query
-                                );
+                            productName.includes(
+                                query
+                            ) ||
+                            productCategory.includes(
+                                query
+                            );
 
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | PRICE FILTER
+                        |--------------------------------------------------------------------------
+                        */
 
                         const matchesPrice =
                             product.price >=
@@ -669,10 +884,22 @@ export default function Shop() {
                             maxPrice;
 
 
+                        /*
+                        |--------------------------------------------------------------------------
+                        | NEW FILTER
+                        |--------------------------------------------------------------------------
+                        */
+
                         const matchesNew =
                             !newOnly ||
                             product.isNew;
 
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | STOCK FILTER
+                        |--------------------------------------------------------------------------
+                        */
 
                         const matchesStock =
                             !stockOnly ||
@@ -680,13 +907,12 @@ export default function Shop() {
 
 
                         return (
-
                             matchesCategory &&
+                            matchesCollection &&
                             matchesSearch &&
                             matchesPrice &&
                             matchesNew &&
                             matchesStock
-
                         );
 
                     }
@@ -755,6 +981,7 @@ export default function Shop() {
 
         }, [
             category,
+            collectionFilter,
             search,
             minPrice,
             maxPrice,
@@ -767,29 +994,124 @@ export default function Shop() {
 
     /*
     |--------------------------------------------------------------------------
+    | CATEGORY CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    function handleCategoryChange(item) {
+
+        setCategory(
+            item
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Selecting a specific category overrides
+        | the collection-level filter.
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            collectionFilter
+        ) {
+
+            const params =
+                new URLSearchParams(
+                    location.search
+                );
+
+            params.delete(
+                "collection"
+            );
+
+            const nextQuery =
+                params.toString();
+
+            navigate(
+                nextQuery
+                    ? `/shop?${nextQuery}`
+                    : "/shop"
+            );
+
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | CLEAR FILTERS
     |--------------------------------------------------------------------------
-    |
-    | Search itself is now controlled by Header.
-    | The Header clears ?search= from the URL.
-    |
     */
 
     const clearFilters = () => {
 
-        setCategory("All");
+        setCategory(
+            "All"
+        );
 
-        setMinPrice(0);
+        setMinPrice(
+            0
+        );
 
-        setMaxPrice(2500);
+        setMaxPrice(
+            2500
+        );
 
-        setNewOnly(false);
+        setNewOnly(
+            false
+        );
 
-        setStockOnly(false);
+        setStockOnly(
+            false
+        );
 
-        setSortBy("featured");
+        setSortBy(
+            "featured"
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Remove collection and search parameters too.
+        |--------------------------------------------------------------------------
+        */
+
+        navigate(
+            "/shop"
+        );
 
     };
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CLEAR SEARCH ONLY
+    |--------------------------------------------------------------------------
+    */
+
+    function clearSearch() {
+
+        const params =
+            new URLSearchParams(
+                location.search
+            );
+
+        params.delete(
+            "search"
+        );
+
+        const nextQuery =
+            params.toString();
+
+        navigate(
+            nextQuery
+                ? `/shop?${nextQuery}`
+                : "/shop"
+        );
+
+    }
 
 
     /*
@@ -803,22 +1125,18 @@ export default function Shop() {
 
             setWishlist(
                 (current) =>
-
                     current.includes(
                         productId
                     )
-
                         ? current.filter(
                             (id) =>
                                 id !==
                                 productId
                         )
-
                         : [
                             ...current,
                             productId,
                         ]
-
             );
 
         };
@@ -833,7 +1151,9 @@ export default function Shop() {
     const addToCart =
         (product) => {
 
-            addItem(product);
+            addItem(
+                product
+            );
 
             setCartMessage(
                 true
@@ -877,6 +1197,9 @@ export default function Shop() {
 
     const hasFilters =
         category !== "All" ||
+        Boolean(
+            collectionFilter
+        ) ||
         minPrice !== 0 ||
         maxPrice !== 2500 ||
         newOnly ||
@@ -1009,7 +1332,8 @@ export default function Shop() {
                                     value={sortBy}
                                     onChange={(event) =>
                                         setSortBy(
-                                            event.target
+                                            event
+                                                .target
                                                 .value
                                         )
                                     }
@@ -1057,12 +1381,46 @@ export default function Shop() {
                             </span>
 
 
+                            {activeCollection && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+
+                                        const params =
+                                            new URLSearchParams(
+                                                location.search
+                                            );
+
+                                        params.delete(
+                                            "collection"
+                                        );
+
+                                        const nextQuery =
+                                            params.toString();
+
+                                        navigate(
+                                            nextQuery
+                                                ? `/shop?${nextQuery}`
+                                                : "/shop"
+                                        );
+
+                                    }}
+                                >
+
+                                    {activeCollection.label}
+
+                                    <CloseIcon />
+
+                                </button>
+                            )}
+
+
                             {category !== "All" && (
 
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        setCategory(
+                                        handleCategoryChange(
                                             "All"
                                         )
                                     }
@@ -1081,29 +1439,9 @@ export default function Shop() {
 
                                 <button
                                     type="button"
-                                    onClick={() => {
-
-                                        /*
-                                        | Search is controlled
-                                        | by Header.
-                                        |
-                                        | Navigate to /shop
-                                        | without search query.
-                                        */
-
-                                        window.history.pushState(
-                                            {},
-                                            "",
-                                            "/shop"
-                                        );
-
-                                        window.dispatchEvent(
-                                            new PopStateEvent(
-                                                "popstate"
-                                            )
-                                        );
-
-                                    }}
+                                    onClick={
+                                        clearSearch
+                                    }
                                 >
 
                                     Search: {search}
@@ -1232,7 +1570,9 @@ export default function Shop() {
                                         (item) => (
 
                                             <button
-                                                key={item}
+                                                key={
+                                                    item
+                                                }
                                                 type="button"
                                                 className={
                                                     category ===
@@ -1241,7 +1581,7 @@ export default function Shop() {
                                                         : ""
                                                 }
                                                 onClick={() =>
-                                                    setCategory(
+                                                    handleCategoryChange(
                                                         item
                                                     )
                                                 }
@@ -1601,7 +1941,7 @@ export default function Shop() {
                                                             : ""
                                                     }
                                                     onClick={() =>
-                                                        setCategory(
+                                                        handleCategoryChange(
                                                             item
                                                         )
                                                     }

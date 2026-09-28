@@ -1,8 +1,11 @@
+import { Link } from "react-router-dom";
 import "../style/CollectionSection.css";
 
 import creativeImage from "../assets/Ethical.png";
 import jwelImage from "../assets/jwel.png";
 import handImage from "../assets/Hand.png";
+
+
 const collections = [
     {
         id: "ethnic",
@@ -11,8 +14,7 @@ const collections = [
         subtitle: "Tradition, Reimagined.",
         description:
             "Discover thoughtfully curated ethnic pieces that blend timeless Indian aesthetics with contemporary style.",
-        image:
-            creativeImage,
+        image: creativeImage,
         icon: "✿",
         categories: [
             "Kurti & Kurta Sets",
@@ -29,8 +31,7 @@ const collections = [
         subtitle: "Little Details, Big Impact.",
         description:
             "Add the perfect finishing touch to your look with jewellery designed for every mood and occasion.",
-        image:
-            jwelImage,
+        image: jwelImage,
         icon: "♢",
         categories: [
             "Earrings",
@@ -47,8 +48,7 @@ const collections = [
         subtitle: "Made by Hand, Made with Heart.",
         description:
             "Explore charming handcrafted creations that bring creativity and individuality to everyday life.",
-        image:
-            handImage,
+        image: handImage,
         icon: "◌",
         categories: [
             "Crochet Bags",
@@ -60,9 +60,13 @@ const collections = [
     },
 ];
 
+
 function CollectionCard({ collection }) {
     return (
-        <article className={`collection-card collection-${collection.id}`}>
+        <article
+            className={`collection-card collection-${collection.id}`}
+        >
+
             <div className="collection-card-image">
                 <img
                     src={collection.image}
@@ -70,61 +74,114 @@ function CollectionCard({ collection }) {
                 />
             </div>
 
+
             <div className="collection-card-info">
+
                 <div className="collection-card-icon">
                     {collection.icon}
                 </div>
 
-                <h3>{collection.title}</h3>
+
+                <h3>
+                    {collection.title}
+                </h3>
+
 
                 <div className="collection-card-subtitle">
                     {collection.subtitle}
                 </div>
 
-                <p>{collection.description}</p>
 
-                <a href="#new-arrivals" className="collection-card-link">
-                    <span>Shop Now</span>
-                    <strong>→</strong>
-                </a>
+                <p>
+                    {collection.description}
+                </p>
+
+
+                <Link
+                    to={`/shop?collection=${encodeURIComponent(
+                        collection.id
+                    )}`}
+                    className="collection-card-link"
+                >
+                    <span>
+                        Shop Now
+                    </span>
+
+                    <strong>
+                        →
+                    </strong>
+                </Link>
+
             </div>
+
 
             <div className="collection-card-categories">
-                {collection.categories.map((category, index) => (
-                    <span key={category}>
-                        {category}
-                        {index !== collection.categories.length - 1 && (
-                            <b>|</b>
-                        )}
-                    </span>
-                ))}
+
+                {collection.categories.map(
+                    (category, index) => (
+                        <span
+                            key={category}
+                        >
+                            {category}
+
+                            {index !==
+                                collection.categories.length - 1 && (
+                                    <b>
+                                        |
+                                    </b>
+                                )}
+                        </span>
+                    )
+                )}
+
             </div>
+
         </article>
     );
 }
 
+
 export default function CollectionSection() {
     return (
-        <section className="collection-section" id="collections">
+        <section
+            className="collection-section"
+            id="collections"
+        >
+
             <div className="collection-heading">
+
                 <div className="collection-heading-line" />
+
 
                 <div>
-                    <h2>OUR COLLECTION</h2>
-                    <p>Curated with love, crafted for you</p>
+                    <h2>
+                        OUR COLLECTION
+                    </h2>
+
+                    <p>
+                        Curated with love, crafted for you
+                    </p>
                 </div>
 
+
                 <div className="collection-heading-line" />
+
             </div>
 
+
             <div className="collection-grid">
-                {collections.map((collection) => (
-                    <CollectionCard
-                        key={collection.id}
-                        collection={collection}
-                    />
-                ))}
+
+                {collections.map(
+                    (collection) => (
+                        <CollectionCard
+                            key={collection.id}
+                            collection={collection}
+                        />
+                    )
+                )}
+
             </div>
+
         </section>
     );
 }
