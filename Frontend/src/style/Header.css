@@ -863,3 +863,51 @@
     }
 
 }
+
+.header-profile-button,
+.header-logout-button {
+    border: none;
+    background: transparent;
+    font-family: "DM Sans", sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--brown);
+    cursor: pointer;
+    white-space: nowrap;
+    padding: 7px 4px;
+    transition:
+        color 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.header-profile-button:hover,
+.header-logout-button:hover {
+    color: var(--brown-muted);
+}
+
+.header-profile-active {
+    text-decoration: underline;
+    text-underline-offset: 5px;
+}
+
+.header-logout-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+@media (max-width: 900px) {
+
+    .header-profile-button,
+    .header-logout-button {
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 700px) {
+
+    .header-profile-button,
+    .header-logout-button {
+        display: none;
+    }
+}

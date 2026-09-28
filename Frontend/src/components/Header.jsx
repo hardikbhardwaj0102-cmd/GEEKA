@@ -201,6 +201,9 @@ export default function Header() {
     const [authLoading, setAuthLoading] =
         useState(true);
 
+    const [loggingOut, setLoggingOut] =
+        useState(false);
+
 
     /*
     |--------------------------------------------------------------------------
@@ -286,8 +289,7 @@ export default function Header() {
     |
     | GET /api/v1/auth/me/
     |
-    | No JWT/token is stored on the frontend.
-    |
+    |--------------------------------------------------------------------------
     */
 
     async function loadCurrentUser() {
@@ -336,19 +338,6 @@ export default function Header() {
                 return;
             }
 
-            /*
-             * Expected response:
-             *
-             * {
-             *     "user": {
-             *         "id": "...",
-             *         "email": "...",
-             *         "full_name": "...",
-             *         "email_verified": true
-             *     }
-             * }
-             */
-
             if (data?.user) {
 
                 setUser(
@@ -387,12 +376,6 @@ export default function Header() {
     useEffect(() => {
 
         loadCurrentUser();
-
-        /*
-         * Allows Login.jsx / other components
-         * to tell Header to refresh authentication
-         * without storing anything locally.
-         */
 
         function handleAuthUpdated() {
 
@@ -505,9 +488,9 @@ export default function Header() {
         setSearchValue(query);
 
         /*
-        | On Shop the search bar is always visible.
-        | On other pages the search remains closed.
-        */
+         * On Shop the search bar is always visible.
+         * On other pages the search remains closed.
+         */
 
         if (isShop) {
 
@@ -698,9 +681,9 @@ export default function Header() {
     useEffect(() => {
 
         /*
-        | Do not close the search on Shop.
-        | The Shop search is permanently visible.
-        */
+         * Do not close the search on Shop.
+         * The Shop search is permanently visible.
+         */
 
         if (
             !searchOpen ||
@@ -769,6 +752,21 @@ export default function Header() {
 
     /*
     |--------------------------------------------------------------------------
+    | PROFILE NAVIGATION
+    |--------------------------------------------------------------------------
+    */
+
+    function goToProfile() {
+
+        navigate(
+            "/profile"
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | ACCOUNT NAVIGATION
     |--------------------------------------------------------------------------
     */
@@ -777,14 +775,108 @@ export default function Header() {
 
         if (user) {
 
-            navigate("/profile");
+            navigate(
+                "/profile"
+            );
 
             return;
 
         }
 
-        navigate("/login");
+        navigate(
+            "/login"
+        );
 
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOGOUT
+    |--------------------------------------------------------------------------
+    */
+
+    async function handleLogout() {
+
+        if (loggingOut) {
+            return;
+        }
+
+        setLoggingOut(true);
+
+        try {
+
+            await fetch(
+                `${API_URL}/api/v1/auth/logout/`,
+                {
+                    method: "POST",
+                    credentials:
+                        "include",
+                    headers: {
+                        Accept:
+                            "application/json",
+                    },
+                }
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Logout request failed:",
+                error
+            );
+
+        } finally {
+
+            /*
+             * Clear any old frontend auth
+             * leftovers as well.
+             */
+
+            const authKeys = [
+                "geeka-auth",
+                "geeka-user",
+                "access_token",
+                "refresh_token",
+                "token",
+            ];
+
+            authKeys.forEach(
+                (key) => {
+                    try {
+                        localStorage.removeItem(
+                            key
+                        );
+                    } catch {
+                        // Ignore storage errors.
+                    }
+                }
+            );
+
+            setUser(null);
+
+            /*
+             * Tell any other component,
+             * including Profile, that the
+             * authentication state changed.
+             */
+
+            window.dispatchEvent(
+                new Event(
+                    "geeka-auth-updated"
+                )
+            );
+
+            navigate(
+                "/login",
+                {
+                    replace: true,
+                }
+            );
+
+            setLoggingOut(false);
+
+        }
     }
 
 
@@ -831,8 +923,8 @@ export default function Header() {
                 <Link
                     to="/shop"
                     className={`navigation-shop ${isShop
-                        ? "navigation-active"
-                        : ""
+                            ? "navigation-active"
+                            : ""
                         }`}
                 >
 
@@ -886,8 +978,8 @@ export default function Header() {
 
                 <div
                     className={`header-search-wrapper ${searchOpen
-                        ? "search-expanded"
-                        : ""
+                            ? "search-expanded"
+                            : ""
                         } ${isShop
                             ? "shop-header-search"
                             : ""
@@ -983,8 +1075,8 @@ export default function Header() {
                 <button
                     type="button"
                     className={`header-wishlist ${isWishlist
-                        ? "header-wishlist-active"
-                        : ""
+                            ? "header-wishlist-active"
+                            : ""
                         }`}
                     onClick={
                         goToWishlist
@@ -1006,14 +1098,61 @@ export default function Header() {
 
 
                 {/* =============================================
+                    LOGGED-IN PROFILE BUTTON
+                ============================================== */}
+
+                {user && !authLoading && (
+
+                    <button
+                        type="button"
+                        className={`header-profile-button ${isProfile &&
+                                !isWishlist
+                                ? "header-profile-active"
+                                : ""
+                            }`}
+                        onClick={
+                            goToProfile
+                        }
+                    >
+                        Profile
+                    </button>
+
+                )}
+
+
+                {/* =============================================
+                    LOGOUT BUTTON
+                ============================================== */}
+
+                {user && !authLoading && (
+
+                    <button
+                        type="button"
+                        className="header-logout-button"
+                        onClick={
+                            handleLogout
+                        }
+                        disabled={
+                            loggingOut
+                        }
+                    >
+                        {loggingOut
+                            ? "Logging out..."
+                            : "Log out"}
+                    </button>
+
+                )}
+
+
+                {/* =============================================
                     ACCOUNT
                 ============================================== */}
 
                 <button
                     type="button"
                     className={`header-account-link ${user
-                        ? "header-account-logged-in"
-                        : ""
+                            ? "header-account-logged-in"
+                            : ""
                         }`}
                     onClick={
                         goToAccount
@@ -1041,20 +1180,28 @@ export default function Header() {
                             style={{
                                 display:
                                     "inline-flex",
+
                                 alignItems:
                                     "center",
+
                                 justifyContent:
                                     "center",
+
                                 width:
                                     "32px",
+
                                 height:
                                     "32px",
+
                                 borderRadius:
                                     "50%",
+
                                 fontSize:
                                     "11px",
+
                                 fontWeight:
                                     "600",
+
                                 letterSpacing:
                                     "0.5px",
                             }}
@@ -1080,8 +1227,8 @@ export default function Header() {
                 <Link
                     to="/cart"
                     className={`header-bag ${isCart
-                        ? "header-bag-active"
-                        : ""
+                            ? "header-bag-active"
+                            : ""
                         }`}
                     aria-label="Shopping bag"
                 >
@@ -1115,4 +1262,4 @@ export default function Header() {
 
         </header>
     );
-}   
+}
