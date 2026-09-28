@@ -18,6 +18,15 @@ import { useCart } from "../hooks/useCart";
 
 
 /* =========================================================
+   API CONFIGURATION
+========================================================= */
+
+const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "https://geeka-backend.onrender.com";
+
+
+/* =========================================================
    LOGO
 ========================================================= */
 
@@ -130,6 +139,33 @@ function BagIcon() {
 
 
 /* =========================================================
+   USER INITIALS
+========================================================= */
+
+function getUserInitials(fullName) {
+    if (!fullName) {
+        return "U";
+    }
+
+    const parts = fullName
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (parts.length === 1) {
+        return parts[0]
+            .charAt(0)
+            .toUpperCase();
+    }
+
+    return (
+        parts[0].charAt(0) +
+        parts[parts.length - 1].charAt(0)
+    ).toUpperCase();
+}
+
+
+/* =========================================================
    HEADER
 ========================================================= */
 
@@ -151,6 +187,19 @@ export default function Header() {
     const {
         cartCount,
     } = useCart();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | AUTHENTICATION STATE
+    |--------------------------------------------------------------------------
+    */
+
+    const [user, setUser] =
+        useState(null);
+
+    const [authLoading, setAuthLoading] =
+        useState(true);
 
 
     /*
@@ -226,6 +275,146 @@ export default function Header() {
         new URLSearchParams(
             location.search
         ).get("section") === "wishlist";
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD CURRENT USER
+    |--------------------------------------------------------------------------
+    |
+    | Django session is checked through:
+    |
+    | GET /api/v1/auth/me/
+    |
+    | No JWT/token is stored on the frontend.
+    |
+    */
+
+    async function loadCurrentUser() {
+
+        setAuthLoading(true);
+
+        try {
+
+            const response =
+                await fetch(
+                    `${API_URL}/api/v1/auth/me/`,
+                    {
+                        method: "GET",
+                        credentials:
+                            "include",
+                        headers: {
+                            Accept:
+                                "application/json",
+                        },
+                    }
+                );
+
+            if (
+                response.status ===
+                401
+            ) {
+
+                setUser(null);
+
+                return;
+            }
+
+            let data = {};
+
+            try {
+                data =
+                    await response.json();
+            } catch {
+                data = {};
+            }
+
+            if (!response.ok) {
+
+                setUser(null);
+
+                return;
+            }
+
+            /*
+             * Expected response:
+             *
+             * {
+             *     "user": {
+             *         "id": "...",
+             *         "email": "...",
+             *         "full_name": "...",
+             *         "email_verified": true
+             *     }
+             * }
+             */
+
+            if (data?.user) {
+
+                setUser(
+                    data.user
+                );
+
+            } else {
+
+                setUser(null);
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Unable to load current user:",
+                error
+            );
+
+            setUser(null);
+
+        } finally {
+
+            setAuthLoading(false);
+
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHECK LOGIN SESSION
+    |--------------------------------------------------------------------------
+    */
+
+    useEffect(() => {
+
+        loadCurrentUser();
+
+        /*
+         * Allows Login.jsx / other components
+         * to tell Header to refresh authentication
+         * without storing anything locally.
+         */
+
+        function handleAuthUpdated() {
+
+            loadCurrentUser();
+
+        }
+
+        window.addEventListener(
+            "geeka-auth-updated",
+            handleAuthUpdated
+        );
+
+        return () => {
+
+            window.removeEventListener(
+                "geeka-auth-updated",
+                handleAuthUpdated
+            );
+
+        };
+
+    }, []);
 
 
     /*
@@ -381,11 +570,6 @@ export default function Header() {
     |--------------------------------------------------------------------------
     | UPDATE SHOP SEARCH
     |--------------------------------------------------------------------------
-    |
-    | The search value is written directly into the Shop URL.
-    | Shop.jsx reads ?search= and applies the exact same
-    | product filtering logic.
-    |
     */
 
     function handleSearchChange(event) {
@@ -585,6 +769,27 @@ export default function Header() {
 
     /*
     |--------------------------------------------------------------------------
+    | ACCOUNT NAVIGATION
+    |--------------------------------------------------------------------------
+    */
+
+    function goToAccount() {
+
+        if (user) {
+
+            navigate("/profile");
+
+            return;
+
+        }
+
+        navigate("/login");
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | RENDER
     |--------------------------------------------------------------------------
     */
@@ -626,8 +831,8 @@ export default function Header() {
                 <Link
                     to="/shop"
                     className={`navigation-shop ${isShop
-                            ? "navigation-active"
-                            : ""
+                        ? "navigation-active"
+                        : ""
                         }`}
                 >
 
@@ -681,8 +886,8 @@ export default function Header() {
 
                 <div
                     className={`header-search-wrapper ${searchOpen
-                            ? "search-expanded"
-                            : ""
+                        ? "search-expanded"
+                        : ""
                         } ${isShop
                             ? "shop-header-search"
                             : ""
@@ -778,8 +983,8 @@ export default function Header() {
                 <button
                     type="button"
                     className={`header-wishlist ${isWishlist
-                            ? "header-wishlist-active"
-                            : ""
+                        ? "header-wishlist-active"
+                        : ""
                         }`}
                     onClick={
                         goToWishlist
@@ -804,13 +1009,68 @@ export default function Header() {
                     ACCOUNT
                 ============================================== */}
 
-                <Link
-                    to="/login"
-                    className="header-account-link"
-                    aria-label="Account"
+                <button
+                    type="button"
+                    className={`header-account-link ${user
+                        ? "header-account-logged-in"
+                        : ""
+                        }`}
+                    onClick={
+                        goToAccount
+                    }
+                    aria-label={
+                        user
+                            ? `Open profile for ${user.full_name ||
+                            user.email
+                            }`
+                            : "Account"
+                    }
+                    title={
+                        user
+                            ? user.full_name ||
+                            user.email
+                            : "Login"
+                    }
                 >
-                    <AccountIcon />
-                </Link>
+
+                    {user ? (
+
+                        <span
+                            className="header-account-avatar"
+                            aria-hidden="true"
+                            style={{
+                                display:
+                                    "inline-flex",
+                                alignItems:
+                                    "center",
+                                justifyContent:
+                                    "center",
+                                width:
+                                    "32px",
+                                height:
+                                    "32px",
+                                borderRadius:
+                                    "50%",
+                                fontSize:
+                                    "11px",
+                                fontWeight:
+                                    "600",
+                                letterSpacing:
+                                    "0.5px",
+                            }}
+                        >
+                            {getUserInitials(
+                                user.full_name
+                            )}
+                        </span>
+
+                    ) : (
+
+                        <AccountIcon />
+
+                    )}
+
+                </button>
 
 
                 {/* =============================================
@@ -820,8 +1080,8 @@ export default function Header() {
                 <Link
                     to="/cart"
                     className={`header-bag ${isCart
-                            ? "header-bag-active"
-                            : ""
+                        ? "header-bag-active"
+                        : ""
                         }`}
                     aria-label="Shopping bag"
                 >
@@ -855,4 +1115,4 @@ export default function Header() {
 
         </header>
     );
-}
+}   

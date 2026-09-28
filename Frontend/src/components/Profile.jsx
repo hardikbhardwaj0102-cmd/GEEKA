@@ -13,6 +13,17 @@ import { getProducts } from "../services/productService";
 
 /*
 |--------------------------------------------------------------------------
+| BACKEND
+|--------------------------------------------------------------------------
+*/
+
+const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "https://geeka-backend.onrender.com";
+
+
+/*
+|--------------------------------------------------------------------------
 | STORAGE KEYS
 |--------------------------------------------------------------------------
 */
@@ -23,6 +34,7 @@ const PAYMENT_STORAGE_KEY = "geeka-payment-methods";
 const SETTINGS_STORAGE_KEY = "geeka-settings";
 const ORDERS_STORAGE_KEY = "geeka-orders";
 const WISHLIST_STORAGE_KEY = "geeka-wishlist";
+const USER_STORAGE_KEY = "geeka-user";
 
 
 /*
@@ -32,10 +44,23 @@ const WISHLIST_STORAGE_KEY = "geeka-wishlist";
 */
 
 const PHONE_SEND_OTP_URL =
-    "http://127.0.0.1:8000/api/v1/account/phone/send-otp/";
+    `${API_URL}/api/v1/account/phone/send-otp/`;
 
 const PHONE_VERIFY_OTP_URL =
-    "http://127.0.0.1:8000/api/v1/account/phone/verify-otp/";
+    `${API_URL}/api/v1/account/phone/verify-otp/`;
+
+
+/*
+|--------------------------------------------------------------------------
+| BACKEND AUTH ENDPOINTS
+|--------------------------------------------------------------------------
+*/
+
+const ME_URL =
+    `${API_URL}/api/v1/auth/me/`;
+
+const LOGOUT_URL =
+    `${API_URL}/api/v1/auth/logout/`;
 
 
 /*
@@ -83,6 +108,15 @@ function writeStorage(key, value) {
 }
 
 
+function removeStorage(key) {
+    try {
+        localStorage.removeItem(key);
+    } catch {
+        // Ignore storage errors.
+    }
+}
+
+
 function createId(prefix = "item") {
     if (
         typeof crypto !== "undefined" &&
@@ -108,6 +142,7 @@ const DEFAULT_PROFILE = {
     email: "",
     phone: "",
     phoneVerified: false,
+    emailVerified: false,
 };
 
 
@@ -236,6 +271,25 @@ export default function Profile() {
 
     /*
     |--------------------------------------------------------------------------
+    | AUTHENTICATED BACKEND USER
+    |--------------------------------------------------------------------------
+    */
+
+    const [accountLoading, setAccountLoading] =
+        useState(true);
+
+    const [accountUser, setAccountUser] =
+        useState(null);
+
+    const [accountError, setAccountError] =
+        useState("");
+
+    const [loggingOut, setLoggingOut] =
+        useState(false);
+
+
+    /*
+    |--------------------------------------------------------------------------
     | SYNC ACTIVE SECTION WITH URL
     |--------------------------------------------------------------------------
     */
@@ -279,7 +333,7 @@ export default function Profile() {
 
         const savedUser =
             readStorage(
-                "geeka-user",
+                USER_STORAGE_KEY,
                 {}
             );
 
@@ -302,6 +356,221 @@ export default function Profile() {
 
     const [profileMessageType, setProfileMessageType] =
         useState("success");
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD CURRENT AUTHENTICATED USER
+    |--------------------------------------------------------------------------
+    |
+    | Django session is the source of truth for:
+    | - Full name
+    | - Email
+    | - Email verification status
+    |
+    */
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadCurrentUser() {
+            setAccountLoading(true);
+            setAccountError("");
+
+            try {
+                const response =
+                    await fetch(
+                        ME_URL,
+                        {
+                            method: "GET",
+                            credentials: "include",
+                            headers: {
+                                Accept:
+                                    "application/json",
+                            },
+                        }
+                    );
+
+                const contentType =
+                    response.headers.get(
+                        "content-type"
+                    ) || "";
+
+                const data =
+                    contentType.includes(
+                        "application/json"
+                    )
+                        ? await response.json()
+                        : {};
+
+                if (response.status === 401) {
+                    if (!cancelled) {
+                        setAccountUser(null);
+                        setAccountError(
+                            "Your session has expired. Please log in again."
+                        );
+
+                        removeStorage(
+                            USER_STORAGE_KEY
+                        );
+
+                        navigate(
+                            "/login",
+                            {
+                                replace: true,
+                            }
+                        );
+                    }
+
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message ||
+                        data.error ||
+                        "Unable to load your account."
+                    );
+                }
+
+                const remoteUser =
+                    data.user;
+
+                if (
+                    !remoteUser ||
+                    !remoteUser.email
+                ) {
+                    throw new Error(
+                        "The account response is incomplete."
+                    );
+                }
+
+                if (!cancelled) {
+                    setAccountUser(
+                        remoteUser
+                    );
+
+                    setProfile(
+                        (current) => {
+                            const updatedProfile = {
+                                ...current,
+
+                                name:
+                                    remoteUser.full_name ||
+                                    current.name ||
+                                    "",
+
+                                email:
+                                    remoteUser.email ||
+                                    current.email ||
+                                    "",
+
+                                emailVerified:
+                                    remoteUser.email_verified !==
+                                        undefined
+                                        ? Boolean(
+                                            remoteUser.email_verified
+                                        )
+                                        : Boolean(
+                                            current.emailVerified
+                                        ),
+                            };
+
+                            writeStorage(
+                                PROFILE_STORAGE_KEY,
+                                updatedProfile
+                            );
+
+                            const existingUser =
+                                readStorage(
+                                    USER_STORAGE_KEY,
+                                    {}
+                                );
+
+                            writeStorage(
+                                USER_STORAGE_KEY,
+                                {
+                                    ...(existingUser || {}),
+                                    ...updatedProfile,
+
+                                    id:
+                                        remoteUser.id,
+
+                                    full_name:
+                                        remoteUser.full_name,
+
+                                    email:
+                                        remoteUser.email,
+
+                                    email_verified:
+                                        remoteUser.email_verified,
+                                }
+                            );
+
+                            return updatedProfile;
+                        }
+                    );
+
+                    setProfileDraft(
+                        (currentDraft) => ({
+                            ...currentDraft,
+
+                            name:
+                                remoteUser.full_name ||
+                                currentDraft.name ||
+                                "",
+
+                            email:
+                                remoteUser.email ||
+                                currentDraft.email ||
+                                "",
+
+                            emailVerified:
+                                remoteUser.email_verified !==
+                                    undefined
+                                    ? Boolean(
+                                        remoteUser.email_verified
+                                    )
+                                    : Boolean(
+                                        currentDraft.emailVerified
+                                    ),
+                        })
+                    );
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | Notify Header
+                    |--------------------------------------------------------------------------
+                    */
+
+                    window.dispatchEvent(
+                        new Event(
+                            "geeka-auth-updated"
+                        )
+                    );
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setAccountUser(null);
+
+                    setAccountError(
+                        error.message ||
+                        "Unable to load your account."
+                    );
+                }
+            } finally {
+                if (!cancelled) {
+                    setAccountLoading(false);
+                }
+            }
+        }
+
+        loadCurrentUser();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [navigate]);
 
 
     /*
@@ -459,11 +728,6 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     | PERSIST WISHLIST
     |--------------------------------------------------------------------------
-    |
-    | This was missing before.
-    | Whenever wishlistIds changes, the updated wishlist is written
-    | back to localStorage.
-    |
     */
 
     useEffect(() => {
@@ -476,11 +740,8 @@ export default function Profile() {
 
     /*
     |--------------------------------------------------------------------------
-    | LISTEN FOR WISHLIST CHANGES FROM OTHER COMPONENTS
+    | LISTEN FOR WISHLIST CHANGES
     |--------------------------------------------------------------------------
-    |
-    | This keeps Profile in sync when Shop changes the wishlist.
-    |
     */
 
     useEffect(() => {
@@ -646,8 +907,15 @@ export default function Profile() {
 
 
     const displayName =
+        accountUser?.full_name?.trim() ||
         profile.name?.trim() ||
         "Guest";
+
+
+    const displayEmail =
+        accountUser?.email?.trim() ||
+        profile.email?.trim() ||
+        "Not added yet";
 
 
     const formatPrice = (value) => {
@@ -864,6 +1132,17 @@ export default function Profile() {
                     ? await response.json()
                     : {};
 
+            if (response.status === 401) {
+                navigate(
+                    "/login",
+                    {
+                        replace: true,
+                    }
+                );
+
+                return;
+            }
+
             if (!response.ok) {
                 throw new Error(
                     data.message ||
@@ -989,6 +1268,17 @@ export default function Profile() {
                     ? await response.json()
                     : {};
 
+            if (response.status === 401) {
+                navigate(
+                    "/login",
+                    {
+                        replace: true,
+                    }
+                );
+
+                return;
+            }
+
             if (!response.ok) {
                 throw new Error(
                     data.message ||
@@ -997,18 +1287,21 @@ export default function Profile() {
                 );
             }
 
+            const verified =
+                data.phone_verified !==
+                    undefined
+                    ? Boolean(
+                        data.phone_verified
+                    )
+                    : true;
+
             const verifiedProfile = {
                 ...profileDraft,
 
                 phone,
 
                 phoneVerified:
-                    data.phone_verified !==
-                        undefined
-                        ? Boolean(
-                            data.phone_verified
-                        )
-                        : true,
+                    verified,
             };
 
             setProfileDraft(
@@ -1022,27 +1315,25 @@ export default function Profile() {
                     phone,
 
                     phoneVerified:
-                        data.phone_verified !==
-                            undefined
-                            ? Boolean(
-                                data.phone_verified
-                            )
-                            : true,
+                        verified,
                 })
             );
 
             const existingUser =
                 readStorage(
-                    "geeka-user",
+                    USER_STORAGE_KEY,
                     {}
                 );
 
             writeStorage(
-                "geeka-user",
+                USER_STORAGE_KEY,
                 {
                     ...(existingUser || {}),
+
                     phone,
-                    phoneVerified: true,
+
+                    phoneVerified:
+                        verified,
                 }
             );
 
@@ -1158,12 +1449,12 @@ export default function Profile() {
 
         const existingUser =
             readStorage(
-                "geeka-user",
+                USER_STORAGE_KEY,
                 {}
             );
 
         writeStorage(
-            "geeka-user",
+            USER_STORAGE_KEY,
             {
                 ...(existingUser || {}),
                 ...updatedProfile,
@@ -1422,12 +1713,6 @@ export default function Profile() {
             nextWishlist
         );
 
-        /*
-        |------------------------------------------------------------------
-        | Immediately persist + notify other components.
-        |------------------------------------------------------------------
-        */
-
         writeStorage(
             WISHLIST_STORAGE_KEY,
             nextWishlist
@@ -1567,23 +1852,67 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     */
 
-    function handleLogout() {
-        const authKeys = [
-            "geeka-auth",
-            "geeka-user",
-            "access_token",
-            "refresh_token",
-            "token",
-        ];
+    async function handleLogout() {
+        if (loggingOut) {
+            return;
+        }
 
-        authKeys.forEach(
-            (key) =>
-                localStorage.removeItem(
-                    key
+        setLoggingOut(true);
+
+        try {
+            await fetch(
+                LOGOUT_URL,
+                {
+                    method: "POST",
+
+                    credentials:
+                        "include",
+
+                    headers: {
+                        Accept:
+                            "application/json",
+                    },
+                }
+            );
+        } catch {
+            /*
+            |--------------------------------------------------------------------------
+            | Even if the network request fails,
+            | clear the old frontend auth data and
+            | send the user back to login.
+            |--------------------------------------------------------------------------
+            */
+        } finally {
+            const authKeys = [
+                "geeka-auth",
+                USER_STORAGE_KEY,
+                "access_token",
+                "refresh_token",
+                "token",
+            ];
+
+            authKeys.forEach(
+                (key) =>
+                    removeStorage(key)
+            );
+
+            setAccountUser(null);
+
+            window.dispatchEvent(
+                new Event(
+                    "geeka-auth-updated"
                 )
-        );
+            );
 
-        navigate("/login");
+            navigate(
+                "/login",
+                {
+                    replace: true,
+                }
+            );
+
+            setLoggingOut(false);
+        }
     }
 
 
@@ -1632,9 +1961,9 @@ export default function Profile() {
         switch (activeSection) {
 
             /*
-            |==========================================================
+            |--------------------------------------------------------------------------
             | ORDERS
-            |==========================================================
+            |--------------------------------------------------------------------------
             */
 
             case "orders":
@@ -1775,9 +2104,9 @@ export default function Profile() {
 
 
             /*
-            |==========================================================
+            |--------------------------------------------------------------------------
             | WISHLIST
-            |==========================================================
+            |--------------------------------------------------------------------------
             */
 
             case "wishlist":
@@ -1935,9 +2264,9 @@ export default function Profile() {
 
 
             /*
-            |==========================================================
+            |--------------------------------------------------------------------------
             | ADDRESSES
-            |==========================================================
+            |--------------------------------------------------------------------------
             */
 
             case "addresses":
@@ -2007,8 +2336,8 @@ export default function Profile() {
                                                 address.id
                                             }
                                             className={`account-address-card ${address.isDefault
-                                                ? "default"
-                                                : ""
+                                                    ? "default"
+                                                    : ""
                                                 }`}
                                         >
 
@@ -2183,6 +2512,7 @@ export default function Profile() {
                                                 <option value="Other">
                                                     Other
                                                 </option>
+
                                             </select>
 
                                         </div>
@@ -2389,9 +2719,9 @@ export default function Profile() {
 
 
             /*
-            |==========================================================
+            |--------------------------------------------------------------------------
             | PAYMENTS
-            |==========================================================
+            |--------------------------------------------------------------------------
             */
 
             case "payments":
@@ -2532,6 +2862,7 @@ export default function Profile() {
                                         onClick={
                                             closePaymentForm
                                         }
+                                        aria-label="Close payment form"
                                     >
                                         <CloseIcon />
                                     </button>
@@ -2633,9 +2964,9 @@ export default function Profile() {
 
 
             /*
-            |==========================================================
+            |--------------------------------------------------------------------------
             | SETTINGS
-            |==========================================================
+            |--------------------------------------------------------------------------
             */
 
             case "settings":
@@ -2747,8 +3078,8 @@ export default function Profile() {
                             <button
                                 type="button"
                                 className={`account-toggle ${settings.orderUpdates
-                                    ? "active"
-                                    : ""
+                                        ? "active"
+                                        : ""
                                     }`}
                                 onClick={() =>
                                     toggleSetting(
@@ -2785,8 +3116,8 @@ export default function Profile() {
                             <button
                                 type="button"
                                 className={`account-toggle ${settings.promotionalEmails
-                                    ? "active"
-                                    : ""
+                                        ? "active"
+                                        : ""
                                     }`}
                                 onClick={() =>
                                     toggleSetting(
@@ -2823,8 +3154,8 @@ export default function Profile() {
                             <button
                                 type="button"
                                 className={`account-toggle ${settings.productRecommendations
-                                    ? "active"
-                                    : ""
+                                        ? "active"
+                                        : ""
                                     }`}
                                 onClick={() =>
                                     toggleSetting(
@@ -2845,9 +3176,9 @@ export default function Profile() {
 
 
             /*
-            |==========================================================
+            |--------------------------------------------------------------------------
             | PROFILE
-            |==========================================================
+            |--------------------------------------------------------------------------
             */
 
             default:
@@ -2893,7 +3224,9 @@ export default function Profile() {
                                         </span>
 
                                         <p>
-                                            {profile.name ||
+                                            {accountLoading
+                                                ? "Loading..."
+                                                : profile.name ||
                                                 "Not added yet"}
                                         </p>
 
@@ -2907,8 +3240,9 @@ export default function Profile() {
                                         </span>
 
                                         <p>
-                                            {profile.email ||
-                                                "Not added yet"}
+                                            {accountLoading
+                                                ? "Loading..."
+                                                : displayEmail}
                                         </p>
 
                                     </div>
@@ -2949,21 +3283,28 @@ export default function Profile() {
                                     </span>
 
                                     <p>
-                                        Your profile information and
-                                        mobile verification status are
-                                        ready to be connected to the
-                                        backend account system.
+                                        Your account is connected to
+                                        the Geeka authentication system.
+                                        Your name and email are loaded
+                                        from your authenticated account session.
                                     </p>
 
                                 </div>
 
 
+                                {accountError && (
+                                    <div className="account-success-message error">
+                                        {accountError}
+                                    </div>
+                                )}
+
+
                                 {profileMessage && (
                                     <div
                                         className={`account-success-message ${profileMessageType ===
-                                            "error"
-                                            ? "error"
-                                            : ""
+                                                "error"
+                                                ? "error"
+                                                : ""
                                             }`}
                                     >
                                         {profileMessage}
@@ -3224,9 +3565,9 @@ export default function Profile() {
                                 {profileMessage && (
                                     <div
                                         className={`account-form-error ${profileMessageType ===
-                                            "success"
-                                            ? "success"
-                                            : ""
+                                                "success"
+                                                ? "success"
+                                                : ""
                                             }`}
                                     >
                                         {profileMessage}
@@ -3389,8 +3730,13 @@ export default function Profile() {
                         onClick={
                             handleLogout
                         }
+                        disabled={
+                            loggingOut
+                        }
                     >
-                        LOG OUT
+                        {loggingOut
+                            ? "LOGGING OUT..."
+                            : "LOG OUT"}
                     </button>
 
                 </aside>
