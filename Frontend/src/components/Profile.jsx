@@ -59,6 +59,9 @@ const PHONE_VERIFY_OTP_URL =
 const ME_URL =
     `${API_URL}/api/v1/auth/me/`;
 
+const CSRF_URL =
+    `${API_URL}/api/v1/auth/csrf/`;
+
 const LOGOUT_URL =
     `${API_URL}/api/v1/auth/logout/`;
 
@@ -403,7 +406,10 @@ export default function Profile() {
                         ? await response.json()
                         : {};
 
-                if (response.status === 401) {
+                if (
+                    response.status === 401 ||
+                    response.status === 403
+                ) {
                     if (!cancelled) {
                         setAccountUser(null);
                         setAccountError(
@@ -536,12 +542,6 @@ export default function Profile() {
                                     ),
                         })
                     );
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Notify Header
-                    |--------------------------------------------------------------------------
-                    */
 
                     window.dispatchEvent(
                         new Event(
@@ -1132,7 +1132,10 @@ export default function Profile() {
                     ? await response.json()
                     : {};
 
-            if (response.status === 401) {
+            if (
+                response.status === 401 ||
+                response.status === 403
+            ) {
                 navigate(
                     "/login",
                     {
@@ -1268,7 +1271,10 @@ export default function Profile() {
                     ? await response.json()
                     : {};
 
-            if (response.status === 401) {
+            if (
+                response.status === 401 ||
+                response.status === 403
+            ) {
                 navigate(
                     "/login",
                     {
@@ -1850,6 +1856,16 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     | LOGOUT
     |--------------------------------------------------------------------------
+    |
+    | IMPORTANT:
+    | Django requires the CSRF token for logout.
+    |
+    | Flow:
+    | 1. GET CSRF endpoint
+    | 2. Read csrfToken from JSON response
+    | 3. POST logout using X-CSRFToken
+    | 4. Only clear frontend auth state after successful logout
+    |
     */
 
     async function handleLogout() {
@@ -1859,30 +1875,115 @@ export default function Profile() {
 
         setLoggingOut(true);
 
+        setAccountError("");
+
+        setProfileMessage("");
+
         try {
-            await fetch(
-                LOGOUT_URL,
-                {
-                    method: "POST",
-
-                    credentials:
-                        "include",
-
-                    headers: {
-                        Accept:
-                            "application/json",
-                    },
-                }
-            );
-        } catch {
             /*
             |--------------------------------------------------------------------------
-            | Even if the network request fails,
-            | clear the old frontend auth data and
-            | send the user back to login.
+            | STEP 1: GET CSRF TOKEN
             |--------------------------------------------------------------------------
             */
-        } finally {
+
+            const csrfResponse =
+                await fetch(
+                    CSRF_URL,
+                    {
+                        method: "GET",
+                        credentials: "include",
+                        headers: {
+                            Accept:
+                                "application/json",
+                        },
+                    }
+                );
+
+            const csrfContentType =
+                csrfResponse.headers.get(
+                    "content-type"
+                ) || "";
+
+            const csrfData =
+                csrfContentType.includes(
+                    "application/json"
+                )
+                    ? await csrfResponse.json()
+                    : {};
+
+            if (!csrfResponse.ok) {
+                throw new Error(
+                    csrfData.message ||
+                    csrfData.error ||
+                    "Unable to obtain CSRF token."
+                );
+            }
+
+            const csrfToken =
+                csrfData?.csrfToken;
+
+            if (!csrfToken) {
+                throw new Error(
+                    "CSRF token was not returned by the server."
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 2: LOG OUT FROM DJANGO SESSION
+            |--------------------------------------------------------------------------
+            */
+
+            const logoutResponse =
+                await fetch(
+                    LOGOUT_URL,
+                    {
+                        method: "POST",
+
+                        credentials:
+                            "include",
+
+                        headers: {
+                            Accept:
+                                "application/json",
+
+                            "Content-Type":
+                                "application/json",
+
+                            "X-CSRFToken":
+                                csrfToken,
+                        },
+                    }
+                );
+
+            const logoutContentType =
+                logoutResponse.headers.get(
+                    "content-type"
+                ) || "";
+
+            const logoutData =
+                logoutContentType.includes(
+                    "application/json"
+                )
+                    ? await logoutResponse.json()
+                    : {};
+
+            if (!logoutResponse.ok) {
+                throw new Error(
+                    logoutData.message ||
+                    logoutData.error ||
+                    `Logout failed with status ${logoutResponse.status}.`
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 3: CLEAR FRONTEND AUTH CACHE
+            |--------------------------------------------------------------------------
+            */
+
             const authKeys = [
                 "geeka-auth",
                 USER_STORAGE_KEY,
@@ -1896,13 +1997,46 @@ export default function Profile() {
                     removeStorage(key)
             );
 
+            removeStorage(
+                PROFILE_STORAGE_KEY
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 4: CLEAR LOCAL ACCOUNT STATE
+            |--------------------------------------------------------------------------
+            */
+
             setAccountUser(null);
+
+            setProfile({
+                ...DEFAULT_PROFILE,
+            });
+
+            setProfileDraft({
+                ...DEFAULT_PROFILE,
+            });
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 5: TELL HEADER THAT AUTH CHANGED
+            |--------------------------------------------------------------------------
+            */
 
             window.dispatchEvent(
                 new Event(
                     "geeka-auth-updated"
                 )
             );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 6: REDIRECT TO LOGIN
+            |--------------------------------------------------------------------------
+            */
 
             navigate(
                 "/login",
@@ -1911,6 +2045,30 @@ export default function Profile() {
                 }
             );
 
+        } catch (error) {
+            /*
+            |--------------------------------------------------------------------------
+            | IMPORTANT:
+            | Do NOT clear auth data when logout fails.
+            | The Django session may still be active.
+            |--------------------------------------------------------------------------
+            */
+
+            setProfileMessage(
+                error.message ||
+                "Unable to log out. Please try again."
+            );
+
+            setProfileMessageType(
+                "error"
+            );
+
+            setAccountError(
+                error.message ||
+                "Unable to log out. Please try again."
+            );
+
+        } finally {
             setLoggingOut(false);
         }
     }
