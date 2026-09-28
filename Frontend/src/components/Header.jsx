@@ -167,24 +167,6 @@ function getUserInitials(fullName) {
 
 
 /* =========================================================
-   CSRF TOKEN
-========================================================= */
-
-function getCsrfToken() {
-    const match =
-        document.cookie.match(
-            /(^|;)\s*csrftoken=([^;]+)/
-        );
-
-    return match
-        ? decodeURIComponent(
-            match[2]
-        )
-        : null;
-}
-
-
-/* =========================================================
    HEADER
 ========================================================= */
 
@@ -223,7 +205,7 @@ export default function Header() {
     const [authLoading, setAuthLoading] =
         useState(true);
 
-    const [loggingOut, setLoggingOut] =
+    const [logoutLoading, setLogoutLoading] =
         useState(false);
 
 
@@ -330,6 +312,12 @@ export default function Header() {
                     }
                 );
 
+            /*
+             * Depending on the backend's authentication
+             * configuration, an unauthenticated session may
+             * return either 401 or 403.
+             */
+
             if (
                 response.status === 401 ||
                 response.status === 403
@@ -339,6 +327,7 @@ export default function Header() {
 
                 return;
             }
+
 
             let data = {};
 
@@ -353,12 +342,14 @@ export default function Header() {
 
             }
 
+
             if (!response.ok) {
 
                 setUser(null);
 
                 return;
             }
+
 
             if (
                 data?.user
@@ -515,6 +506,7 @@ export default function Header() {
             query
         );
 
+
         if (isShop) {
 
             setSearchOpen(true);
@@ -591,8 +583,10 @@ export default function Header() {
 
         }
 
+
         const trimmedValue =
             value.trim();
+
 
         if (!trimmedValue) {
 
@@ -604,8 +598,8 @@ export default function Header() {
             );
 
             return;
-
         }
+
 
         navigate(
             `/shop?search=${encodeURIComponent(
@@ -632,6 +626,7 @@ export default function Header() {
         const query =
             searchValue.trim();
 
+
         if (!query) {
 
             navigate(
@@ -642,8 +637,8 @@ export default function Header() {
             );
 
             return;
-
         }
+
 
         navigate(
             `/shop?search=${encodeURIComponent(
@@ -679,14 +674,13 @@ export default function Header() {
                 );
 
                 return;
-
             }
 
             closeSearch();
 
             return;
-
         }
+
 
         if (
             event.key ===
@@ -716,8 +710,8 @@ export default function Header() {
         ) {
 
             return undefined;
-
         }
+
 
         function handleOutsideClick(
             event
@@ -741,10 +735,12 @@ export default function Header() {
 
         }
 
+
         document.addEventListener(
             "mousedown",
             handleOutsideClick
         );
+
 
         return () => {
 
@@ -792,8 +788,8 @@ export default function Header() {
             );
 
             return;
-
         }
+
 
         navigate(
             "/login"
@@ -807,41 +803,104 @@ export default function Header() {
     | LOGOUT
     |--------------------------------------------------------------------------
     |
-    | Backend requires CSRF token for logout.
+    | IMPORTANT:
     |
-    | We read csrftoken from document.cookie and send
-    | it as X-CSRFToken while keeping credentials: include.
-    |
+    | 1. Get a fresh CSRF token from the backend.
+    | 2. Send that token as X-CSRFToken.
+    | 3. Keep credentials: "include".
+    | 4. Only clear the frontend user when logout
+    |    actually succeeds.
+    |--------------------------------------------------------------------------
     */
 
     async function handleLogout() {
 
-        if (loggingOut) {
+        if (
+            logoutLoading
+        ) {
+
             return;
         }
 
-        setLoggingOut(true);
+
+        setLogoutLoading(
+            true
+        );
+
 
         try {
 
-            const csrfToken =
-                getCsrfToken();
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 1 — GET CSRF TOKEN
+            |--------------------------------------------------------------------------
+            */
 
-            const headers = {
-                Accept:
-                    "application/json",
-            };
+            const csrfResponse =
+                await fetch(
+                    `${API_URL}/api/v1/auth/csrf/`,
+                    {
+                        method: "GET",
 
-            if (csrfToken) {
+                        credentials:
+                            "include",
 
-                headers[
-                    "X-CSRFToken"
-                ] =
-                    csrfToken;
+                        headers: {
+                            Accept:
+                                "application/json",
+                        },
+                    }
+                );
+
+
+            let csrfData = {};
+
+
+            try {
+
+                csrfData =
+                    await csrfResponse.json();
+
+            } catch {
+
+                csrfData = {};
 
             }
 
-            const response =
+
+            if (
+                !csrfResponse.ok
+            ) {
+
+                throw new Error(
+                    csrfData?.error ||
+                    csrfData?.message ||
+                    `Unable to obtain CSRF token (${csrfResponse.status}).`
+                );
+
+            }
+
+
+            const csrfToken =
+                csrfData?.csrfToken;
+
+
+            if (!csrfToken) {
+
+                throw new Error(
+                    "The backend did not return a CSRF token."
+                );
+
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 2 — LOGOUT
+            |--------------------------------------------------------------------------
+            */
+
+            const logoutResponse =
                 await fetch(
                     `${API_URL}/api/v1/auth/logout/`,
                     {
@@ -850,45 +909,126 @@ export default function Header() {
                         credentials:
                             "include",
 
-                        headers,
+                        headers: {
+                            Accept:
+                                "application/json",
+
+                            "Content-Type":
+                                "application/json",
+
+                            "X-CSRFToken":
+                                csrfToken,
+                        },
                     }
                 );
 
-            if (!response.ok) {
 
-                let data = {};
+            let logoutData = {};
 
-                try {
 
-                    data =
-                        await response.json();
+            try {
 
-                } catch {
+                logoutData =
+                    await logoutResponse.json();
 
-                    data = {};
+            } catch {
 
-                }
-
-                console.error(
-                    "Logout request failed:",
-                    response.status,
-                    data
-                );
+                logoutData = {};
 
             }
 
-        } catch (error) {
-
-            console.error(
-                "Logout request failed:",
-                error
-            );
-
-        } finally {
 
             /*
             |--------------------------------------------------------------------------
-            | Clear frontend cache
+            | ALREADY LOGGED OUT
+            |--------------------------------------------------------------------------
+            |
+            | If backend says the session is already gone,
+            | we can safely treat the account as logged out.
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                logoutResponse.status ===
+                401
+            ) {
+
+                setUser(null);
+
+                try {
+
+                    localStorage.removeItem(
+                        "geeka-user"
+                    );
+
+                    localStorage.removeItem(
+                        "geeka-auth"
+                    );
+
+                } catch {
+                    // Ignore storage errors.
+                }
+
+
+                window.dispatchEvent(
+                    new Event(
+                        "geeka-auth-updated"
+                    )
+                );
+
+
+                navigate(
+                    "/login",
+                    {
+                        replace: true,
+                    }
+                );
+
+                return;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | LOGOUT FAILED
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                !logoutResponse.ok
+            ) {
+
+                const backendMessage =
+                    logoutData?.error ||
+                    logoutData?.message ||
+                    (
+                        logoutData?.errors &&
+                        JSON.stringify(
+                            logoutData.errors
+                        )
+                    ) ||
+                    `Logout failed with status ${logoutResponse.status}.`;
+
+
+                console.error(
+                    "GEEKA logout failed:",
+                    backendMessage
+                );
+
+
+                /*
+                | Keep the current session/user intact.
+                | We should not tell the frontend that the
+                | account is logged out when Django rejected it.
+                */
+
+                return;
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SUCCESS — CLEAR FRONTEND CACHE
             |--------------------------------------------------------------------------
             */
 
@@ -899,6 +1039,7 @@ export default function Header() {
                 "refresh_token",
                 "token",
             ];
+
 
             authKeys.forEach(
                 (key) => {
@@ -919,7 +1060,7 @@ export default function Header() {
 
             /*
             |--------------------------------------------------------------------------
-            | Update Header immediately
+            | CLEAR CURRENT USER
             |--------------------------------------------------------------------------
             */
 
@@ -928,7 +1069,7 @@ export default function Header() {
 
             /*
             |--------------------------------------------------------------------------
-            | Notify other components
+            | NOTIFY OTHER COMPONENTS
             |--------------------------------------------------------------------------
             */
 
@@ -941,7 +1082,7 @@ export default function Header() {
 
             /*
             |--------------------------------------------------------------------------
-            | Redirect to Login
+            | REDIRECT
             |--------------------------------------------------------------------------
             */
 
@@ -952,7 +1093,18 @@ export default function Header() {
                 }
             );
 
-            setLoggingOut(false);
+        } catch (error) {
+
+            console.error(
+                "Logout failed:",
+                error
+            );
+
+        } finally {
+
+            setLogoutLoading(
+                false
+            );
 
         }
     }
@@ -976,7 +1128,9 @@ export default function Header() {
                 className="header-logo-link"
                 aria-label="Go to Geeka home"
             >
+
                 <Logo />
+
             </Link>
 
 
@@ -1075,6 +1229,7 @@ export default function Header() {
 
                             <SearchIcon />
 
+
                             <input
                                 ref={
                                     searchInputRef
@@ -1121,7 +1276,9 @@ export default function Header() {
                                     }}
                                     aria-label="Clear search"
                                 >
+
                                     <CloseIcon />
+
                                 </button>
 
                             )}
@@ -1138,7 +1295,9 @@ export default function Header() {
                             }
                             aria-label="Search"
                         >
+
                             <SearchIcon />
+
                         </button>
 
                     )}
@@ -1164,6 +1323,7 @@ export default function Header() {
 
                     <HeartIcon />
 
+
                     {wishlistCount > 0 && (
 
                         <span className="header-wishlist-count">
@@ -1176,7 +1336,7 @@ export default function Header() {
 
 
                 {/* =============================================
-                    ACCOUNT / PROFILE
+                    PROFILE / ACCOUNT
                 ============================================== */}
 
                 <button
