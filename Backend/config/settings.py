@@ -186,3 +186,8 @@ SESSION_COOKIE_SAMESITE = env(
     "SESSION_COOKIE_SAMESITE",
     default="Lax",
 )
+
+CSRF_COOKIE_SAMESITE = env(
+    "CSRF_COOKIE_SAMESITE",
+    default="Lax",
+)
