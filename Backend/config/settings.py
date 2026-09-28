@@ -181,3 +181,8 @@ SECURE_HSTS_SECONDS = env.int(
     "SECURE_HSTS_SECONDS",
     default=0,
 )
+
+SESSION_COOKIE_SAMESITE = env(
+    "SESSION_COOKIE_SAMESITE",
+    default="Lax",
+)
