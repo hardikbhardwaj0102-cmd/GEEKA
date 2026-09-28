@@ -169,6 +169,19 @@ class ProductVariant(models.Model):
 
     sku = models.CharField(max_length=100, unique=True)
 
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default="INR",
+    ) 
+
+    stock = models.PositiveIntegerField(default=0)
+    low_stock_threshold = models.PositiveIntegerField(default=0)
+
     attribute_values = models.ManyToManyField(
         AttributeValue,
         related_name="product_variants",
@@ -193,6 +206,58 @@ class ProductVariant(models.Model):
         indexes = [
             models.Index(fields=["product", "is_active"]),
         ]
-
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(price__gt=0),
+                name="product_variant_price_positive",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(stock__gte=0),
+                name="product_variant_stock_non_negative",
+            ),
+        ]
+        
     def __str__(self):
         return f"{self.product.name} - {self.sku}"
+
+
+
+
+class ProductImage(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="images",
+    )
+
+    image = models.CharField(max_length=500)
+
+    display_order = models.PositiveIntegerField(default=0)
+
+    is_primary = models.BooleanField(default=False)
+
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["display_order", "created_at"]
+
+        indexes = [
+            models.Index(fields=["product", "is_active"]),
+            models.Index(fields=["product", "display_order"]),
+        ]
+
+        constraints = [
+            models.UniqueConstraint(
+                fields=["product"],
+                condition=models.Q(is_primary=True),
+                name="unique_primary_image_per_product",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.product.name} - Image {self.display_order}"
