@@ -167,14 +167,34 @@ function getUserInitials(fullName) {
 
 
 /* =========================================================
+   CSRF TOKEN
+========================================================= */
+
+function getCsrfToken() {
+    const match =
+        document.cookie.match(
+            /(^|;)\s*csrftoken=([^;]+)/
+        );
+
+    return match
+        ? decodeURIComponent(
+            match[2]
+        )
+        : null;
+}
+
+
+/* =========================================================
    HEADER
 ========================================================= */
 
 export default function Header() {
 
-    const location = useLocation();
+    const location =
+        useLocation();
 
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
 
     const searchInputRef =
         useRef(null);
@@ -202,6 +222,9 @@ export default function Header() {
 
     const [authLoading, setAuthLoading] =
         useState(true);
+
+    const [loggingOut, setLoggingOut] =
+        useState(false);
 
 
     /*
@@ -308,10 +331,8 @@ export default function Header() {
                 );
 
             if (
-                response.status ===
-                401 ||
-                response.status ===
-                403
+                response.status === 401 ||
+                response.status === 403
             ) {
 
                 setUser(null);
@@ -698,7 +719,9 @@ export default function Header() {
 
         }
 
-        function handleOutsideClick(event) {
+        function handleOutsideClick(
+            event
+        ) {
 
             if (
                 !event.target.closest(
@@ -776,6 +799,162 @@ export default function Header() {
             "/login"
         );
 
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOGOUT
+    |--------------------------------------------------------------------------
+    |
+    | Backend requires CSRF token for logout.
+    |
+    | We read csrftoken from document.cookie and send
+    | it as X-CSRFToken while keeping credentials: include.
+    |
+    */
+
+    async function handleLogout() {
+
+        if (loggingOut) {
+            return;
+        }
+
+        setLoggingOut(true);
+
+        try {
+
+            const csrfToken =
+                getCsrfToken();
+
+            const headers = {
+                Accept:
+                    "application/json",
+            };
+
+            if (csrfToken) {
+
+                headers[
+                    "X-CSRFToken"
+                ] =
+                    csrfToken;
+
+            }
+
+            const response =
+                await fetch(
+                    `${API_URL}/api/v1/auth/logout/`,
+                    {
+                        method: "POST",
+
+                        credentials:
+                            "include",
+
+                        headers,
+                    }
+                );
+
+            if (!response.ok) {
+
+                let data = {};
+
+                try {
+
+                    data =
+                        await response.json();
+
+                } catch {
+
+                    data = {};
+
+                }
+
+                console.error(
+                    "Logout request failed:",
+                    response.status,
+                    data
+                );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Logout request failed:",
+                error
+            );
+
+        } finally {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Clear frontend cache
+            |--------------------------------------------------------------------------
+            */
+
+            const authKeys = [
+                "geeka-auth",
+                "geeka-user",
+                "access_token",
+                "refresh_token",
+                "token",
+            ];
+
+            authKeys.forEach(
+                (key) => {
+
+                    try {
+
+                        localStorage.removeItem(
+                            key
+                        );
+
+                    } catch {
+                        // Ignore storage errors.
+                    }
+
+                }
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Update Header immediately
+            |--------------------------------------------------------------------------
+            */
+
+            setUser(null);
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Notify other components
+            |--------------------------------------------------------------------------
+            */
+
+            window.dispatchEvent(
+                new Event(
+                    "geeka-auth-updated"
+                )
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Redirect to Login
+            |--------------------------------------------------------------------------
+            */
+
+            navigate(
+                "/login",
+                {
+                    replace: true,
+                }
+            );
+
+            setLoggingOut(false);
+
+        }
     }
 
 
