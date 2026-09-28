@@ -1,204 +1,314 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "../style/Login.css";
+import "../style/Register.css";
 
-import loginImage from "../assets/login.png";
+import registerBackground from "../assets/register.png";
 import geekaLogo from "../assets/logo.png";
+
+/*
+|--------------------------------------------------------------------------
+| API CONFIGURATION
+|--------------------------------------------------------------------------
+*/
 
 const API_URL =
     import.meta.env.VITE_API_URL ||
     "https://geeka-backend.onrender.com";
 
+/*
+|--------------------------------------------------------------------------
+| LOGO
+|--------------------------------------------------------------------------
+*/
+
 function Logo() {
     return (
-        <Link
-            to="/"
-            className="login-logo"
-            aria-label="Go to Geeka home"
-        >
+        <div className="register-logo">
             <img
                 src={geekaLogo}
                 alt="Geeka"
-                className="login-logo-image"
+                className="register-logo-image"
             />
-        </Link>
+        </div>
     );
 }
 
+/*
+|--------------------------------------------------------------------------
+| EYE ICON
+|--------------------------------------------------------------------------
+*/
+
 function EyeIcon({ visible }) {
     return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
             {visible ? (
                 <>
-                    <path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z" />
-                    <circle cx="12" cy="12" r="2.5" />
+                    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+
+                    <circle
+                        cx="12"
+                        cy="12"
+                        r="2.5"
+                    />
                 </>
             ) : (
                 <>
                     <path d="M3 3l18 18" />
-                    <path d="M10.6 5.2A9.7 9.7 0 0 1 12 5c6.1 0 9.5 7 9.5 7a17 17 0 0 1-3.1 3.9" />
-                    <path d="M6.2 6.3C3.7 8 2.5 12 2.5 12s3.4 7 9.5 7c1.6 0 3-.4 4.2-1" />
-                    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+
+                    <path d="M10.6 6.2A10.7 10.7 0 0 1 12 6c6 0 9.5 6 9.5 6a17 17 0 0 1-3.1 3.6" />
+
+                    <path d="M6.3 6.4C3.8 8.2 2.5 12 2.5 12s3.5 6 9.5 6c1.5 0 2.8-.3 4-.8" />
                 </>
             )}
         </svg>
     );
 }
 
+/*
+|--------------------------------------------------------------------------
+| ARROW ICON
+|--------------------------------------------------------------------------
+*/
+
 function ArrowIcon() {
     return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
             <path d="M4 12h15" />
             <path d="m13 6 6 6-6 6" />
         </svg>
     );
 }
 
-function GoogleIcon() {
-    return (
-        <svg
-            className="google-icon"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-        >
-            <path
-                d="M21.35 12.25c0-.72-.06-1.42-.18-2.08H12v3.94h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.25Z"
-                fill="#4285F4"
-            />
+/*
+|--------------------------------------------------------------------------
+| API ERROR HANDLER
+|--------------------------------------------------------------------------
+*/
 
-            <path
-                d="M12 21.6c2.63 0 4.83-.87 6.44-2.35l-3.14-2.45c-.87.58-1.98.92-3.3.92-2.54 0-4.69-1.72-5.46-4.03H3.29v2.53A9.73 9.73 0 0 0 12 21.6Z"
-                fill="#34A853"
-            />
+function getApiError(
+    data,
+    fallbackMessage
+) {
+    if (!data) {
+        return fallbackMessage;
+    }
 
-            <path
-                d="M6.54 13.69a5.85 5.85 0 0 1 0-3.38V7.78H3.29v2.53a9.75 9.75 0 0 0 0 8.44l3.25-2.53Z"
-                fill="#FBBC05"
-            />
+    if (typeof data === "string") {
+        return data;
+    }
 
-            <path
-                d="M12 6.28c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.82 3.38 14.63 2.4 12 2.4a9.73 9.73 0 0 0-8.71 5.38l3.25 2.53C7.31 8 9.46 6.28 12 6.28Z"
-                fill="#EA4335"
-            />
-        </svg>
-    );
-}
+    if (data.detail) {
+        return data.detail;
+    }
 
-function getApiError(data, fallbackMessage) {
-    if (!data) return fallbackMessage;
-    if (typeof data === "string") return data;
-    if (data.detail) return data.detail;
-    if (data.message) return data.message;
-    if (data.error) return data.error;
+    if (data.message) {
+        return data.message;
+    }
 
-    if (data.errors && typeof data.errors === "object") {
+    if (data.error) {
+        return data.error;
+    }
+
+    if (
+        data.errors &&
+        typeof data.errors === "object"
+    ) {
         const messages = [];
 
-        Object.values(data.errors).forEach((value) => {
-            if (Array.isArray(value)) {
-                messages.push(...value);
-            } else if (typeof value === "string") {
-                messages.push(value);
+        Object.values(data.errors).forEach(
+            (value) => {
+                if (Array.isArray(value)) {
+                    messages.push(...value);
+                } else if (
+                    typeof value === "string"
+                ) {
+                    messages.push(value);
+                }
             }
-        });
+        );
 
-        if (messages.length) {
+        if (messages.length > 0) {
             return messages.join(" ");
         }
     }
 
-    if (Array.isArray(data.non_field_errors)) {
-        return data.non_field_errors.join(" ");
+    if (
+        Array.isArray(
+            data.non_field_errors
+        )
+    ) {
+        return data.non_field_errors.join(
+            " "
+        );
     }
 
     return fallbackMessage;
 }
 
-export default function Login() {
+/*
+|--------------------------------------------------------------------------
+| MAIN REGISTER
+|--------------------------------------------------------------------------
+*/
+
+export default function Register() {
     const navigate = useNavigate();
 
-    const [showPassword, setShowPassword] = useState(false);
+    /*
+     * Correct backend-compatible flow:
+     *
+     * email → details → otp
+     */
+    const [step, setStep] =
+        useState("email");
 
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
-        remember: false,
-    });
+    const [email, setEmail] =
+        useState("");
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    const [otp, setOtp] =
+        useState("");
 
-    function handleChange(event) {
-        const { name, value, type, checked } = event.target;
+    const [name, setName] =
+        useState("");
 
-        setFormData((current) => ({
-            ...current,
-            [name]:
-                type === "checkbox"
-                    ? checked
-                    : value,
-        }));
+    const [password, setPassword] =
+        useState("");
 
+    const [confirmPassword, setConfirmPassword] =
+        useState("");
+
+    const [showPassword, setShowPassword] =
+        useState(false);
+
+    const [showConfirmPassword, setShowConfirmPassword] =
+        useState(false);
+
+    const [loading, setLoading] =
+        useState(false);
+
+    const [message, setMessage] =
+        useState("");
+
+    const [error, setError] =
+        useState("");
+
+    /*
+    |--------------------------------------------------------------------------
+    | CLEAR MESSAGES
+    |--------------------------------------------------------------------------
+    */
+
+    const clearMessages = () => {
         setError("");
-    }
+        setMessage("");
+    };
 
-    async function getCsrfToken() {
-        const response = await fetch(
-            `${API_URL}/api/v1/auth/csrf/`,
-            {
-                method: "GET",
-                credentials: "include",
-                headers: {
-                    Accept: "application/json",
-                },
-            }
+    /*
+    |--------------------------------------------------------------------------
+    | EMAIL VALIDATION
+    |--------------------------------------------------------------------------
+    */
+
+    const isValidEmail = (value) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+            value.trim()
         );
+    };
 
-        let data = {};
+    /*
+    |--------------------------------------------------------------------------
+    | STEP 1 — EMAIL
+    |--------------------------------------------------------------------------
+    */
 
-        try {
-            data = await response.json();
-        } catch {
-            data = {};
-        }
-
-        if (!response.ok) {
-            throw new Error(
-                data.detail ||
-                data.message ||
-                "Unable to initialize secure login."
-            );
-        }
-
-        if (!data.csrfToken) {
-            throw new Error(
-                "CSRF token was not received from the server."
-            );
-        }
-
-        return data.csrfToken;
-    }
-
-    async function handleSubmit(event) {
+    const handleEmailSubmit = (event) => {
         event.preventDefault();
 
-        setError("");
+        clearMessages();
 
-        const email =
-            formData.email
-                .trim()
-                .toLowerCase();
+        const cleanEmail =
+            email.trim().toLowerCase();
 
-        if (!email) {
+        if (!cleanEmail) {
             setError(
                 "Please enter your email address."
             );
             return;
         }
 
-        if (!formData.password) {
+        if (!isValidEmail(cleanEmail)) {
             setError(
-                "Please enter your password."
+                "Please enter a valid email address."
+            );
+            return;
+        }
+
+        setEmail(cleanEmail);
+
+        /*
+         * The backend register endpoint needs:
+         * email + full_name + password + password_confirm
+         *
+         * So account details are collected before
+         * making the register API request.
+         */
+        setStep("details");
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | STEP 2 — CREATE ACCOUNT
+    |--------------------------------------------------------------------------
+    |
+    | POST /api/v1/auth/register/
+    |
+    | {
+    |     email,
+    |     full_name,
+    |     password,
+    |     password_confirm
+    | }
+    |
+    | Backend creates an unverified account and
+    | sends the verification OTP.
+    |
+    */
+
+    const handleRegister = async (event) => {
+        event.preventDefault();
+
+        clearMessages();
+
+        const cleanName =
+            name.trim();
+
+        if (!cleanName) {
+            setError(
+                "Please enter your full name."
+            );
+            return;
+        }
+
+        if (password.length < 8) {
+            setError(
+                "Password must contain at least 8 characters."
+            );
+            return;
+        }
+
+        if (
+            password !==
+            confirmPassword
+        ) {
+            setError(
+                "Passwords do not match."
             );
             return;
         }
@@ -206,12 +316,9 @@ export default function Login() {
         setLoading(true);
 
         try {
-            const csrfToken =
-                await getCsrfToken();
-
             const response =
                 await fetch(
-                    `${API_URL}/api/v1/auth/login/`,
+                    `${API_URL}/api/v1/auth/register/`,
                     {
                         method: "POST",
                         credentials:
@@ -221,13 +328,14 @@ export default function Login() {
                                 "application/json",
                             Accept:
                                 "application/json",
-                            "X-CSRFToken":
-                                csrfToken,
                         },
                         body: JSON.stringify({
                             email,
-                            password:
-                                formData.password,
+                            full_name:
+                                cleanName,
+                            password,
+                            password_confirm:
+                                confirmPassword,
                         }),
                     }
                 );
@@ -245,264 +353,792 @@ export default function Login() {
                 throw new Error(
                     getApiError(
                         data,
-                        "Unable to sign in. Please check your email and password."
+                        "Unable to create your account. Please check your details and try again."
                     )
                 );
             }
 
-            navigate("/", {
+            /*
+             * Backend has sent the verification OTP.
+             */
+            setOtp("");
+
+            setMessage(
+                "We've sent a verification code to your email."
+            );
+
+            setStep("otp");
+        } catch (err) {
+            console.error(
+                "Registration error:",
+                err
+            );
+
+            if (
+                err instanceof TypeError
+            ) {
+                setError(
+                    "Unable to connect to the Geeka server. Please try again."
+                );
+            } else {
+                setError(
+                    err.message ||
+                    "Unable to create your account."
+                );
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | STEP 3 — VERIFY OTP
+    |--------------------------------------------------------------------------
+    |
+    | POST /api/v1/auth/verify-email/
+    |
+    | {
+    |     email,
+    |     otp
+    | }
+    |
+    */
+
+    const handleOtpSubmit = async (event) => {
+        event.preventDefault();
+
+        clearMessages();
+
+        const cleanOtp =
+            otp.trim();
+
+        if (!cleanOtp) {
+            setError(
+                "Please enter the verification code."
+            );
+            return;
+        }
+
+        if (!/^\d{6}$/.test(cleanOtp)) {
+            setError(
+                "Enter the 6-digit verification code."
+            );
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response =
+                await fetch(
+                    `${API_URL}/api/v1/auth/verify-email/`,
+                    {
+                        method: "POST",
+                        credentials:
+                            "include",
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+                            Accept:
+                                "application/json",
+                        },
+                        body: JSON.stringify({
+                            email,
+                            otp: cleanOtp,
+                        }),
+                    }
+                );
+
+            let data = {};
+
+            try {
+                data =
+                    await response.json();
+            } catch {
+                data = {};
+            }
+
+            if (!response.ok) {
+                throw new Error(
+                    getApiError(
+                        data,
+                        "The verification code is invalid or expired."
+                    )
+                );
+            }
+
+            /*
+             * Account is now verified.
+             */
+            navigate("/login", {
                 replace: true,
                 state: {
-                    loginSuccess: true,
                     message:
-                        "Welcome back to GEEKA.",
+                        "Account created successfully. Please sign in.",
                 },
             });
         } catch (err) {
             console.error(
-                "Login error:",
+                "Email verification error:",
                 err
             );
 
-            setError(
+            if (
                 err instanceof TypeError
-                    ? "Unable to connect to the Geeka server. Please try again."
-                    : err.message ||
-                    "Login failed. Please try again."
-            );
+            ) {
+                setError(
+                    "Unable to connect to the Geeka server. Please try again."
+                );
+            } else {
+                setError(
+                    err.message ||
+                    "Unable to verify your email."
+                );
+            }
         } finally {
             setLoading(false);
         }
-    }
+    };
 
-    function handleGoogleLogin() {
-        window.location.href =
-            `${API_URL}/api/v1/auth/google/login/`;
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | RESEND OTP
+    |--------------------------------------------------------------------------
+    |
+    | Your backend contract does not currently define
+    | a resend-verification-OTP endpoint.
+    |
+    | We therefore don't make up an API call here.
+    |
+    */
+
+    const handleResendOtp = () => {
+        clearMessages();
+
+        setError(
+            "The current API does not provide a resend verification-code endpoint."
+        );
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHANGE EMAIL
+    |--------------------------------------------------------------------------
+    */
+
+    const handleChangeEmail = () => {
+        clearMessages();
+
+        setOtp("");
+
+        setStep("email");
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | RENDER
+    |--------------------------------------------------------------------------
+    */
 
     return (
-        <main className="login-page">
-            <section className="login-panel">
-                <div className="login-top">
+        <main className="register-page">
+
+            {/* =================================================
+                LEFT PANEL
+            ================================================= */}
+
+            <section className="register-panel">
+
+                <div className="register-top">
+
                     <Link
                         to="/"
-                        className="login-back-link"
+                        className="register-back"
                     >
-                        <span className="back-arrow">
+                        <span>
                             ←
                         </span>
 
                         Back to Store
                     </Link>
+
                 </div>
 
-                <div className="login-container">
-                    <Logo />
+                <div className="register-content">
 
-                    <div className="login-heading">
-                        <span className="login-eyebrow">
-                            WELCOME BACK
-                        </span>
+                    {/* =================================================
+                        GEEKA LOGO
+                    ================================================= */}
 
-                        <h1>
-                            Sign in to
-                            <br />
-                            your account.
-                        </h1>
-
-                        <p>
-                            Continue your journey with
-                            carefully curated fashion,
-                            jewellery and handmade
-                            creations.
-                        </p>
-                    </div>
-
-                    {error && (
-                        <div
-                            className="login-error"
-                            role="alert"
-                        >
-                            {error}
-                        </div>
-                    )}
-
-                    <form
-                        className="login-form"
-                        onSubmit={handleSubmit}
+                    <Link
+                        to="/"
+                        className="register-brand-link"
+                        aria-label="Go to Geeka home"
                     >
-                        <div className="login-field">
-                            <label htmlFor="login-email">
-                                Email Address
-                            </label>
+                        <Logo />
+                    </Link>
 
-                            <input
-                                id="login-email"
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                placeholder="Enter your email"
-                                autoComplete="email"
-                                required
-                                disabled={loading}
-                            />
-                        </div>
+                    {/* =================================================
+                        STEP 1 — EMAIL
+                    ================================================= */}
 
-                        <div className="login-field">
-                            <div className="password-header">
-                                <label htmlFor="login-password">
-                                    Password
-                                </label>
+                    {step === "email" && (
+                        <>
+                            <div className="register-heading">
 
-                                <Link to="/forgot-password">
-                                    Forgot password?
-                                </Link>
+                                <span className="register-eyebrow">
+                                    CREATE YOUR ACCOUNT
+                                </span>
+
+                                <h1>
+                                    Join the
+                                    <br />
+                                    GEEKA family.
+                                </h1>
+
+                                <p>
+                                    Start your journey with handmade
+                                    jewellery and thoughtfully crafted
+                                    ethical wear.
+                                </p>
+
                             </div>
 
-                            <div className="password-wrapper">
-                                <input
-                                    id="login-password"
-                                    type={
-                                        showPassword
-                                            ? "text"
-                                            : "password"
-                                    }
-                                    name="password"
-                                    value={
-                                        formData.password
-                                    }
-                                    onChange={
-                                        handleChange
-                                    }
-                                    placeholder="Enter your password"
-                                    autoComplete="current-password"
-                                    required
+                            <form
+                                className="register-form"
+                                onSubmit={
+                                    handleEmailSubmit
+                                }
+                            >
+
+                                <div className="register-field">
+
+                                    <label htmlFor="email">
+                                        Email Address
+                                    </label>
+
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        value={email}
+                                        onChange={(event) => {
+                                            setEmail(
+                                                event.target.value
+                                            );
+                                            clearMessages();
+                                        }}
+                                        placeholder="Enter your email"
+                                        autoComplete="email"
+                                        autoFocus
+                                        required
+                                    />
+
+                                </div>
+
+                                {error && (
+                                    <div
+                                        className="register-message register-error"
+                                        role="alert"
+                                    >
+                                        {error}
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    className="register-submit"
                                     disabled={loading}
-                                />
+                                >
+                                    <span>
+                                        CONTINUE
+                                    </span>
+
+                                    <span className="register-submit-arrow">
+                                        <ArrowIcon />
+                                    </span>
+                                </button>
+
+                            </form>
+                        </>
+                    )}
+
+                    {/* =================================================
+                        STEP 2 — DETAILS
+                    ================================================= */}
+
+                    {step === "details" && (
+                        <>
+                            <div className="register-heading">
+
+                                <span className="register-eyebrow">
+                                    ACCOUNT DETAILS
+                                </span>
+
+                                <h1>
+                                    Complete your
+                                    <br />
+                                    account.
+                                </h1>
+
+                                <p>
+                                    Just a few details and your GEEKA
+                                    account will be ready.
+                                </p>
+
+                            </div>
+
+                            <form
+                                className="register-form register-details-form"
+                                onSubmit={
+                                    handleRegister
+                                }
+                            >
+
+                                {/* NAME */}
+
+                                <div className="register-field">
+
+                                    <label htmlFor="name">
+                                        Full Name
+                                    </label>
+
+                                    <input
+                                        id="name"
+                                        type="text"
+                                        value={name}
+                                        onChange={(event) => {
+                                            setName(
+                                                event.target.value
+                                            );
+                                            clearMessages();
+                                        }}
+                                        placeholder="Enter your full name"
+                                        autoComplete="name"
+                                        autoFocus
+                                        disabled={loading}
+                                        required
+                                    />
+
+                                </div>
+
+                                {/* VERIFIED EMAIL */}
+
+                                <div className="register-field">
+
+                                    <label>
+                                        Email Address
+                                    </label>
+
+                                    <div className="register-verified-email">
+
+                                        <span>
+                                            {email}
+                                        </span>
+
+                                        <span className="verified-badge">
+                                            VERIFIED
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                                {/* PASSWORD */}
+
+                                <div className="register-field">
+
+                                    <label htmlFor="password">
+                                        Password
+                                    </label>
+
+                                    <div className="register-password-wrapper">
+
+                                        <input
+                                            id="password"
+                                            type={
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            value={
+                                                password
+                                            }
+                                            onChange={(event) => {
+                                                setPassword(
+                                                    event.target.value
+                                                );
+                                                clearMessages();
+                                            }}
+                                            placeholder="Create a password"
+                                            autoComplete="new-password"
+                                            disabled={loading}
+                                            required
+                                        />
+
+                                        <button
+                                            type="button"
+                                            className="register-password-toggle"
+                                            onClick={() =>
+                                                setShowPassword(
+                                                    (current) =>
+                                                        !current
+                                                )
+                                            }
+                                            aria-label={
+                                                showPassword
+                                                    ? "Hide password"
+                                                    : "Show password"
+                                            }
+                                            disabled={loading}
+                                        >
+                                            <EyeIcon
+                                                visible={
+                                                    showPassword
+                                                }
+                                            />
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                                {/* CONFIRM PASSWORD */}
+
+                                <div className="register-field">
+
+                                    <label htmlFor="confirmPassword">
+                                        Confirm Password
+                                    </label>
+
+                                    <div className="register-password-wrapper">
+
+                                        <input
+                                            id="confirmPassword"
+                                            type={
+                                                showConfirmPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            value={
+                                                confirmPassword
+                                            }
+                                            onChange={(event) => {
+                                                setConfirmPassword(
+                                                    event.target.value
+                                                );
+                                                clearMessages();
+                                            }}
+                                            placeholder="Confirm your password"
+                                            autoComplete="new-password"
+                                            disabled={loading}
+                                            required
+                                        />
+
+                                        <button
+                                            type="button"
+                                            className="register-password-toggle"
+                                            onClick={() =>
+                                                setShowConfirmPassword(
+                                                    (current) =>
+                                                        !current
+                                                )
+                                            }
+                                            aria-label={
+                                                showConfirmPassword
+                                                    ? "Hide password"
+                                                    : "Show password"
+                                            }
+                                            disabled={loading}
+                                        >
+                                            <EyeIcon
+                                                visible={
+                                                    showConfirmPassword
+                                                }
+                                            />
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                                {/* TERMS */}
+
+                                <label className="register-terms">
+
+                                    <input
+                                        type="checkbox"
+                                        required
+                                        disabled={loading}
+                                    />
+
+                                    <span className="register-custom-checkbox">
+                                        <span />
+                                    </span>
+
+                                    <span className="register-terms-text">
+
+                                        I agree to the{" "}
+
+                                        <a href="#terms">
+                                            Terms & Conditions
+                                        </a>
+
+                                        {" "}and{" "}
+
+                                        <a href="#privacy">
+                                            Privacy Policy
+                                        </a>
+
+                                        .
+
+                                    </span>
+
+                                </label>
+
+                                {error && (
+                                    <div
+                                        className="register-message register-error"
+                                        role="alert"
+                                    >
+                                        {error}
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    className="register-submit"
+                                    disabled={loading}
+                                >
+
+                                    <span>
+                                        {loading
+                                            ? "CREATING ACCOUNT..."
+                                            : "CREATE ACCOUNT"}
+                                    </span>
+
+                                    {!loading && (
+                                        <span className="register-submit-arrow">
+                                            <ArrowIcon />
+                                        </span>
+                                    )}
+
+                                </button>
 
                                 <button
                                     type="button"
-                                    className="password-toggle"
-                                    onClick={() =>
-                                        setShowPassword(
-                                            (current) =>
-                                                !current
-                                        )
+                                    onClick={
+                                        handleChangeEmail
                                     }
-                                    aria-label={
-                                        showPassword
-                                            ? "Hide password"
-                                            : "Show password"
-                                    }
+                                    className="register-change-email"
                                     disabled={loading}
                                 >
-                                    <EyeIcon
-                                        visible={
-                                            showPassword
-                                        }
-                                    />
+                                    Change email
                                 </button>
+
+                            </form>
+                        </>
+                    )}
+
+                    {/* =================================================
+                        STEP 3 — OTP
+                    ================================================= */}
+
+                    {step === "otp" && (
+                        <>
+                            <div className="register-heading">
+
+                                <span className="register-eyebrow">
+                                    VERIFY YOUR EMAIL
+                                </span>
+
+                                <h1>
+                                    Check your
+                                    <br />
+                                    inbox.
+                                </h1>
+
+                                <p>
+                                    We've sent a 6-digit verification
+                                    code to{" "}
+
+                                    <strong>
+                                        {email}
+                                    </strong>
+
+                                    .
+                                </p>
+
                             </div>
-                        </div>
 
-                        <label className="remember-me">
-                            <input
-                                type="checkbox"
-                                name="remember"
-                                checked={
-                                    formData.remember
+                            <form
+                                className="register-form"
+                                onSubmit={
+                                    handleOtpSubmit
                                 }
-                                onChange={
-                                    handleChange
-                                }
-                                disabled={loading}
-                            />
+                            >
 
-                            <span className="custom-checkbox">
-                                <span />
-                            </span>
+                                <div className="register-field">
 
-                            <span className="remember-text">
-                                Keep me signed in
-                            </span>
-                        </label>
+                                    <label htmlFor="otp">
+                                        Verification Code
+                                    </label>
 
-                        <button
-                            type="submit"
-                            className="login-submit"
-                            disabled={loading}
-                        >
-                            <span>
-                                {loading
-                                    ? "SIGNING IN..."
-                                    : "SIGN IN"}
-                            </span>
+                                    <input
+                                        id="otp"
+                                        type="text"
+                                        inputMode="numeric"
+                                        maxLength={6}
+                                        value={otp}
+                                        onChange={(event) => {
+                                            const value =
+                                                event.target.value
+                                                    .replace(
+                                                        /\D/g,
+                                                        ""
+                                                    )
+                                                    .slice(
+                                                        0,
+                                                        6
+                                                    );
 
-                            <span className="submit-arrow">
-                                <ArrowIcon />
-                            </span>
-                        </button>
-                    </form>
+                                            setOtp(
+                                                value
+                                            );
 
-                    <div className="login-divider">
-                        <span />
-                        <p>OR</p>
-                        <span />
-                    </div>
+                                            clearMessages();
+                                        }}
+                                        placeholder="Enter 6-digit code"
+                                        autoComplete="one-time-code"
+                                        className="register-otp-input"
+                                        autoFocus
+                                        disabled={loading}
+                                    />
 
-                    <button
-                        type="button"
-                        className="google-login"
-                        onClick={
-                            handleGoogleLogin
-                        }
-                        disabled={loading}
-                    >
-                        <GoogleIcon />
+                                </div>
+
+                                {message && (
+                                    <div className="register-message register-success">
+                                        {message}
+                                    </div>
+                                )}
+
+                                {error && (
+                                    <div
+                                        className="register-message register-error"
+                                        role="alert"
+                                    >
+                                        {error}
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    className="register-submit"
+                                    disabled={loading}
+                                >
+
+                                    <span>
+                                        {loading
+                                            ? "VERIFYING..."
+                                            : "VERIFY EMAIL"}
+                                    </span>
+
+                                    {!loading && (
+                                        <span className="register-submit-arrow">
+                                            <ArrowIcon />
+                                        </span>
+                                    )}
+
+                                </button>
+
+                                <div className="register-otp-actions">
+
+                                    <button
+                                        type="button"
+                                        onClick={
+                                            handleResendOtp
+                                        }
+                                        className="register-resend"
+                                        disabled={loading}
+                                    >
+                                        Resend code
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={
+                                            handleChangeEmail
+                                        }
+                                        className="register-change-email"
+                                        disabled={loading}
+                                    >
+                                        Change email
+                                    </button>
+
+                                </div>
+
+                            </form>
+                        </>
+                    )}
+
+                    {/* =================================================
+                        LOGIN LINK
+                    ================================================= */}
+
+                    <div className="register-login">
 
                         <span>
-                            Continue with Google
-                        </span>
-                    </button>
-
-                    <div className="login-register">
-                        <span>
-                            New to GEEKA?
+                            Already have an account?
                         </span>
 
-                        <Link to="/register">
-                            Create an account
+                        <Link to="/login">
+
+                            Sign in
 
                             <ArrowIcon />
+
                         </Link>
+
                     </div>
 
-                    <div className="login-footer-note">
-                        By continuing, you agree to our
+                    <div className="register-footer-note">
+
+                        By continuing, you agree to our{" "}
 
                         <span>
-                            {" "}Terms & Conditions{" "}
+                            Terms & Conditions
                         </span>
 
-                        and
+                        {" "}and{" "}
 
                         <span>
-                            {" "}Privacy Policy.
+                            Privacy Policy
                         </span>
+
+                        .
+
                     </div>
+
                 </div>
             </section>
 
-            <section className="login-visual">
+            {/* =================================================
+                RIGHT VISUAL
+            ================================================= */}
+
+            <section className="register-visual">
+
                 <img
-                    src={loginImage}
-                    alt="GEEKA fashion collection"
+                    src={registerBackground}
+                    alt="GEEKA handmade jewellery and ethical fashion"
+                    className="register-visual-image"
                 />
 
-                <div className="login-visual-overlay" />
+                <div className="register-visual-overlay" />
 
-                <div className="login-visual-top">
+                <div className="register-visual-top">
+
                     <span>
                         GEEKA
                     </span>
@@ -510,35 +1146,38 @@ export default function Login() {
                     <span>
                         EST. 2026
                     </span>
+
                 </div>
 
-                <div className="login-visual-content">
-                    <span className="visual-eyebrow">
-                        THREE EXPRESSIONS.
+                <div className="register-visual-content">
+
+                    <span className="register-visual-eyebrow">
+                        HANDMADE WITH PURPOSE
                     </span>
 
                     <h2>
-                        One Unique
+                        Made to be
                         <br />
-                        <em>You.</em>
+                        <em>uniquely yours.</em>
                     </h2>
 
                     <p>
-                        Fashion, jewellery and
-                        handcrafted pieces made
-                        for the way you express
-                        yourself.
+                        Handmade artificial jewellery and ethical
+                        wear for women who choose style with purpose.
                     </p>
 
-                    <div className="login-visual-line" />
+                    <div className="register-visual-line" />
+
                 </div>
 
-                <div className="login-floral">
+                <div className="register-floral">
+
                     <svg
                         viewBox="0 0 160 240"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                     >
+
                         <path
                             d="M20 237C34 184 63 132 111 94C130 79 140 52 143 19"
                             stroke="currentColor"
@@ -574,9 +1213,13 @@ export default function Login() {
                             stroke="currentColor"
                             strokeWidth="1"
                         />
+
                     </svg>
+
                 </div>
+
             </section>
+
         </main>
     );
 }
