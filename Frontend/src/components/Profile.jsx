@@ -1,14 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+
 import {
     Link,
     useNavigate,
     useSearchParams,
 } from "react-router-dom";
+
 import "../style/Profile.css";
 
 import profileBackground from "../assets/profile.png";
 
-import { getProducts } from "../services/productService";
+import {
+    getProducts,
+} from "../services/productService";
 
 
 /*
@@ -28,13 +36,26 @@ const API_URL =
 |--------------------------------------------------------------------------
 */
 
-const PROFILE_STORAGE_KEY = "geeka-profile";
-const ADDRESS_STORAGE_KEY = "geeka-addresses";
-const PAYMENT_STORAGE_KEY = "geeka-payment-methods";
-const SETTINGS_STORAGE_KEY = "geeka-settings";
-const ORDERS_STORAGE_KEY = "geeka-orders";
-const WISHLIST_STORAGE_KEY = "geeka-wishlist";
-const USER_STORAGE_KEY = "geeka-user";
+const PROFILE_STORAGE_KEY =
+    "geeka-profile";
+
+const ADDRESS_STORAGE_KEY =
+    "geeka-addresses";
+
+const PAYMENT_STORAGE_KEY =
+    "geeka-payment-methods";
+
+const SETTINGS_STORAGE_KEY =
+    "geeka-settings";
+
+const ORDERS_STORAGE_KEY =
+    "geeka-orders";
+
+const WISHLIST_STORAGE_KEY =
+    "geeka-wishlist";
+
+const USER_STORAGE_KEY =
+    "geeka-user";
 
 
 /*
@@ -73,6 +94,7 @@ const LOGOUT_URL =
 */
 
 const OTP_LENGTH = 6;
+
 const OTP_RESEND_SECONDS = 60;
 
 
@@ -82,28 +104,43 @@ const OTP_RESEND_SECONDS = 60;
 |--------------------------------------------------------------------------
 */
 
-function readStorage(key, fallback) {
+function readStorage(
+    key,
+    fallback
+) {
     try {
-        const saved = localStorage.getItem(key);
+        const saved =
+            localStorage.getItem(
+                key
+            );
 
         if (!saved) {
             return fallback;
         }
 
-        const parsed = JSON.parse(saved);
+        const parsed =
+            JSON.parse(saved);
 
-        return parsed ?? fallback;
+        return (
+            parsed ??
+            fallback
+        );
     } catch {
         return fallback;
     }
 }
 
 
-function writeStorage(key, value) {
+function writeStorage(
+    key,
+    value
+) {
     try {
         localStorage.setItem(
             key,
-            JSON.stringify(value)
+            JSON.stringify(
+                value
+            )
         );
     } catch {
         // Keep UI working if localStorage is unavailable.
@@ -111,19 +148,27 @@ function writeStorage(key, value) {
 }
 
 
-function removeStorage(key) {
+function removeStorage(
+    key
+) {
     try {
-        localStorage.removeItem(key);
+        localStorage.removeItem(
+            key
+        );
     } catch {
         // Ignore storage errors.
     }
 }
 
 
-function createId(prefix = "item") {
+function createId(
+    prefix = "item"
+) {
     if (
-        typeof crypto !== "undefined" &&
-        typeof crypto.randomUUID === "function"
+        typeof crypto !==
+        "undefined" &&
+        typeof crypto.randomUUID ===
+        "function"
     ) {
         return `${prefix}-${crypto.randomUUID()}`;
     }
@@ -136,11 +181,83 @@ function createId(prefix = "item") {
 
 /*
 |--------------------------------------------------------------------------
+| WISHLIST NORMALIZATION
+|--------------------------------------------------------------------------
+
+   Your other components may currently save either:
+
+   ["12", "15"]
+
+   OR
+
+   [
+       { id: 12, name: "...", ... },
+       { id: 15, name: "...", ... }
+   ]
+
+   The Profile page only needs product IDs to load the real
+   products from the backend, so everything is normalized here.
+|--------------------------------------------------------------------------
+*/
+
+function normalizeWishlistIds(
+    value
+) {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+
+    const ids = value
+        .map((item) => {
+
+            if (
+                item &&
+                typeof item ===
+                "object"
+            ) {
+                return item.id;
+            }
+
+            return item;
+        })
+        .filter(
+            (id) =>
+                id !== null &&
+                id !== undefined &&
+                String(id).trim() !== ""
+        )
+        .map((id) =>
+            String(id)
+        );
+
+
+    return [
+        ...new Set(ids),
+    ];
+}
+
+
+function wishlistIdsSignature(
+    value
+) {
+    return normalizeWishlistIds(
+        value
+    )
+        .sort()
+        .join("|");
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | RESPONSE HELPER
 |--------------------------------------------------------------------------
 */
 
-async function readResponseData(response) {
+async function readResponseData(
+    response
+) {
     const contentType =
         response.headers.get(
             "content-type"
@@ -158,12 +275,15 @@ async function readResponseData(response) {
         }
     }
 
+
     try {
         const text =
             await response.text();
 
         return text
-            ? { message: text }
+            ? {
+                message: text,
+            }
             : {};
     } catch {
         return {};
@@ -177,19 +297,29 @@ async function readResponseData(response) {
 |--------------------------------------------------------------------------
 */
 
-function getCookie(name) {
+function getCookie(
+    name
+) {
     if (
-        typeof document === "undefined"
+        typeof document ===
+        "undefined"
     ) {
         return null;
     }
 
-    const cookies =
-        document.cookie.split(";");
 
-    for (const cookie of cookies) {
+    const cookies =
+        document.cookie.split(
+            ";"
+        );
+
+
+    for (
+        const cookie of cookies
+    ) {
         const trimmed =
             cookie.trim();
+
 
         if (
             trimmed.startsWith(
@@ -203,6 +333,7 @@ function getCookie(name) {
             );
         }
     }
+
 
     return null;
 }
@@ -337,43 +468,68 @@ function CloseIcon() {
 */
 
 export default function Profile() {
-    const navigate = useNavigate();
 
-    const [searchParams, setSearchParams] =
-        useSearchParams();
+    const navigate =
+        useNavigate();
 
-    const [activeSection, setActiveSection] =
-        useState("profile");
+
+    const [
+        searchParams,
+        setSearchParams,
+    ] = useSearchParams();
+
+
+    const [
+        activeSection,
+        setActiveSection,
+    ] = useState(
+        "profile"
+    );
 
 
     /*
     |--------------------------------------------------------------------------
-    | AUTHENTICATED BACKEND USER
+    | AUTHENTICATED USER
     |--------------------------------------------------------------------------
     */
 
-    const [accountLoading, setAccountLoading] =
-        useState(true);
+    const [
+        accountLoading,
+        setAccountLoading,
+    ] = useState(true);
 
-    const [accountUser, setAccountUser] =
-        useState(null);
 
-    const [accountError, setAccountError] =
-        useState("");
+    const [
+        accountUser,
+        setAccountUser,
+    ] = useState(null);
 
-    const [loggingOut, setLoggingOut] =
-        useState(false);
+
+    const [
+        accountError,
+        setAccountError,
+    ] = useState("");
+
+
+    const [
+        loggingOut,
+        setLoggingOut,
+    ] = useState(false);
 
 
     /*
     |--------------------------------------------------------------------------
-    | SYNC ACTIVE SECTION WITH URL
+    | SYNC ACTIVE SECTION
     |--------------------------------------------------------------------------
     */
 
     useEffect(() => {
+
         const section =
-            searchParams.get("section");
+            searchParams.get(
+                "section"
+            );
+
 
         const allowedSections = [
             "profile",
@@ -384,15 +540,27 @@ export default function Profile() {
             "settings",
         ];
 
+
         if (
             section &&
-            allowedSections.includes(section)
+            allowedSections.includes(
+                section
+            )
         ) {
-            setActiveSection(section);
-        } else if (!section) {
-            setActiveSection("profile");
+            setActiveSection(
+                section
+            );
+        } else if (
+            !section
+        ) {
+            setActiveSection(
+                "profile"
+            );
         }
-    }, [searchParams]);
+
+    }, [
+        searchParams,
+    ]);
 
 
     /*
@@ -401,12 +569,17 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     */
 
-    const [profile, setProfile] = useState(() => {
+    const [
+        profile,
+        setProfile,
+    ] = useState(() => {
+
         const savedProfile =
             readStorage(
                 PROFILE_STORAGE_KEY,
                 {}
             );
+
 
         const savedUser =
             readStorage(
@@ -414,25 +587,42 @@ export default function Profile() {
                 {}
             );
 
+
         return {
             ...DEFAULT_PROFILE,
             ...(savedUser || {}),
             ...(savedProfile || {}),
         };
+
     });
 
 
-    const [profileDraft, setProfileDraft] =
-        useState(profile);
+    const [
+        profileDraft,
+        setProfileDraft,
+    ] = useState(
+        profile
+    );
 
-    const [editingProfile, setEditingProfile] =
-        useState(false);
 
-    const [profileMessage, setProfileMessage] =
-        useState("");
+    const [
+        editingProfile,
+        setEditingProfile,
+    ] = useState(false);
 
-    const [profileMessageType, setProfileMessageType] =
-        useState("success");
+
+    const [
+        profileMessage,
+        setProfileMessage,
+    ] = useState("");
+
+
+    const [
+        profileMessageType,
+        setProfileMessageType,
+    ] = useState(
+        "success"
+    );
 
 
     /*
@@ -442,20 +632,35 @@ export default function Profile() {
     */
 
     useEffect(() => {
+
         let cancelled = false;
 
+
         async function loadCurrentUser() {
-            setAccountLoading(true);
-            setAccountError("");
+
+            setAccountLoading(
+                true
+            );
+
+            setAccountError(
+                ""
+            );
+
 
             try {
+
                 const response =
                     await fetch(
                         ME_URL,
                         {
                             method: "GET",
-                            credentials: "include",
-                            cache: "no-store",
+
+                            credentials:
+                                "include",
+
+                            cache:
+                                "no-store",
+
                             headers: {
                                 Accept:
                                     "application/json",
@@ -463,38 +668,57 @@ export default function Profile() {
                         }
                     );
 
+
                 const data =
                     await readResponseData(
                         response
                     );
 
+
                 if (
-                    response.status === 401 ||
-                    response.status === 403
+                    response.status ===
+                    401 ||
+                    response.status ===
+                    403
                 ) {
-                    if (!cancelled) {
-                        setAccountUser(null);
+
+                    if (
+                        !cancelled
+                    ) {
+
+                        setAccountUser(
+                            null
+                        );
+
 
                         setAccountError(
                             "Your session has expired. Please log in again."
                         );
 
+
                         removeStorage(
                             USER_STORAGE_KEY
                         );
 
+
                         navigate(
                             "/login",
                             {
-                                replace: true,
+                                replace:
+                                    true,
                             }
                         );
+
                     }
+
 
                     return;
                 }
 
-                if (!response.ok) {
+
+                if (
+                    !response.ok
+                ) {
                     throw new Error(
                         data.message ||
                         data.error ||
@@ -502,8 +726,10 @@ export default function Profile() {
                     );
                 }
 
+
                 const remoteUser =
                     data.user;
+
 
                 if (
                     !remoteUser ||
@@ -514,14 +740,21 @@ export default function Profile() {
                     );
                 }
 
-                if (!cancelled) {
+
+                if (
+                    !cancelled
+                ) {
+
                     setAccountUser(
                         remoteUser
                     );
 
+
                     setProfile(
                         (current) => {
-                            const updatedProfile = {
+
+                            const updatedProfile =
+                            {
                                 ...current,
 
                                 name:
@@ -545,10 +778,12 @@ export default function Profile() {
                                         ),
                             };
 
+
                             writeStorage(
                                 PROFILE_STORAGE_KEY,
                                 updatedProfile
                             );
+
 
                             const existingUser =
                                 readStorage(
@@ -556,10 +791,13 @@ export default function Profile() {
                                     {}
                                 );
 
+
                             writeStorage(
                                 USER_STORAGE_KEY,
                                 {
-                                    ...(existingUser || {}),
+                                    ...(existingUser ||
+                                        {}),
+
                                     ...updatedProfile,
 
                                     id:
@@ -576,9 +814,12 @@ export default function Profile() {
                                 }
                             );
 
+
                             return updatedProfile;
+
                         }
                     );
+
 
                     setProfileDraft(
                         (currentDraft) => ({
@@ -606,34 +847,57 @@ export default function Profile() {
                         })
                     );
 
+
                     window.dispatchEvent(
                         new Event(
                             "geeka-auth-updated"
                         )
                     );
+
                 }
+
             } catch (error) {
-                if (!cancelled) {
-                    setAccountUser(null);
+
+                if (
+                    !cancelled
+                ) {
+
+                    setAccountUser(
+                        null
+                    );
+
 
                     setAccountError(
                         error.message ||
                         "Unable to load your account."
                     );
+
                 }
+
             } finally {
-                if (!cancelled) {
-                    setAccountLoading(false);
+
+                if (
+                    !cancelled
+                ) {
+                    setAccountLoading(
+                        false
+                    );
                 }
+
             }
         }
 
+
         loadCurrentUser();
+
 
         return () => {
             cancelled = true;
         };
-    }, [navigate]);
+
+    }, [
+        navigate,
+    ]);
 
 
     /*
@@ -642,26 +906,46 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     */
 
-    const [otpSent, setOtpSent] =
-        useState(false);
+    const [
+        otpSent,
+        setOtpSent,
+    ] = useState(false);
 
-    const [otp, setOtp] =
-        useState("");
 
-    const [otpLoading, setOtpLoading] =
-        useState(false);
+    const [
+        otp,
+        setOtp,
+    ] = useState("");
 
-    const [otpVerifying, setOtpVerifying] =
-        useState(false);
 
-    const [otpError, setOtpError] =
-        useState("");
+    const [
+        otpLoading,
+        setOtpLoading,
+    ] = useState(false);
 
-    const [otpSuccess, setOtpSuccess] =
-        useState("");
 
-    const [resendSeconds, setResendSeconds] =
-        useState(0);
+    const [
+        otpVerifying,
+        setOtpVerifying,
+    ] = useState(false);
+
+
+    const [
+        otpError,
+        setOtpError,
+    ] = useState("");
+
+
+    const [
+        otpSuccess,
+        setOtpSuccess,
+    ] = useState("");
+
+
+    const [
+        resendSeconds,
+        setResendSeconds,
+    ] = useState(0);
 
 
     /*
@@ -670,46 +954,67 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     */
 
-    const [addresses, setAddresses] =
-        useState(() =>
-            readStorage(
-                ADDRESS_STORAGE_KEY,
-                []
-            )
-        );
+    const [
+        addresses,
+        setAddresses,
+    ] = useState(() =>
+        readStorage(
+            ADDRESS_STORAGE_KEY,
+            []
+        )
+    );
 
-    const [addressFormOpen, setAddressFormOpen] =
-        useState(false);
 
-    const [editingAddressId, setEditingAddressId] =
-        useState(null);
+    const [
+        addressFormOpen,
+        setAddressFormOpen,
+    ] = useState(false);
 
-    const [addressDraft, setAddressDraft] =
-        useState(EMPTY_ADDRESS);
+
+    const [
+        editingAddressId,
+        setEditingAddressId,
+    ] = useState(null);
+
+
+    const [
+        addressDraft,
+        setAddressDraft,
+    ] = useState(
+        EMPTY_ADDRESS
+    );
 
 
     /*
     |--------------------------------------------------------------------------
-    | PAYMENT METHODS
+    | PAYMENTS
     |--------------------------------------------------------------------------
     */
 
-    const [paymentMethods, setPaymentMethods] =
-        useState(() =>
-            readStorage(
-                PAYMENT_STORAGE_KEY,
-                []
-            )
-        );
+    const [
+        paymentMethods,
+        setPaymentMethods,
+    ] = useState(() =>
+        readStorage(
+            PAYMENT_STORAGE_KEY,
+            []
+        )
+    );
 
-    const [paymentFormOpen, setPaymentFormOpen] =
-        useState(false);
 
-    const [paymentDraft, setPaymentDraft] =
-        useState({
-            type: "UPI",
-            label: "",
-        });
+    const [
+        paymentFormOpen,
+        setPaymentFormOpen,
+    ] = useState(false);
+
+
+    const [
+        paymentDraft,
+        setPaymentDraft,
+    ] = useState({
+        type: "UPI",
+        label: "",
+    });
 
 
     /*
@@ -718,13 +1023,15 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     */
 
-    const [settings, setSettings] =
-        useState(() =>
-            readStorage(
-                SETTINGS_STORAGE_KEY,
-                DEFAULT_SETTINGS
-            )
-        );
+    const [
+        settings,
+        setSettings,
+    ] = useState(() =>
+        readStorage(
+            SETTINGS_STORAGE_KEY,
+            DEFAULT_SETTINGS
+        )
+    );
 
 
     /*
@@ -733,73 +1040,142 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     */
 
-    const [orders] =
-        useState(() =>
-            readStorage(
-                ORDERS_STORAGE_KEY,
-                []
-            )
-        );
+    const [
+        orders,
+    ] = useState(() =>
+        readStorage(
+            ORDERS_STORAGE_KEY,
+            []
+        )
+    );
 
 
     /*
     |--------------------------------------------------------------------------
     | WISHLIST
     |--------------------------------------------------------------------------
+    |
+    | IMPORTANT:
+    |
+    | Normalize existing wishlist data immediately.
+    |
+    | This allows the Wishlist page to understand both:
+    |
+    |     ["12", "15"]
+    |
+    | and:
+    |
+    |     [{ id: 12, ... }, { id: 15, ... }]
+    |
+    |--------------------------------------------------------------------------
     */
 
-    const [wishlistIds, setWishlistIds] =
-        useState(() =>
+    const [
+        wishlistIds,
+        setWishlistIds,
+    ] = useState(() =>
+        normalizeWishlistIds(
             readStorage(
                 WISHLIST_STORAGE_KEY,
                 []
             )
-        );
+        )
+    );
 
-    const [wishlistProducts, setWishlistProducts] =
-        useState([]);
 
-    const [wishlistLoading, setWishlistLoading] =
-        useState(false);
+    const [
+        wishlistProducts,
+        setWishlistProducts,
+    ] = useState([]);
+
+
+    const [
+        wishlistLoading,
+        setWishlistLoading,
+    ] = useState(false);
 
 
     /*
     |--------------------------------------------------------------------------
-    | OTP RESEND TIMER
+    | OTP TIMER
     |--------------------------------------------------------------------------
     */
 
     useEffect(() => {
-        if (resendSeconds <= 0) {
+
+        if (
+            resendSeconds <= 0
+        ) {
             return undefined;
         }
 
-        const timer = setInterval(() => {
-            setResendSeconds(
-                (current) =>
-                    current > 0
-                        ? current - 1
-                        : 0
+
+        const timer =
+            setInterval(
+                () => {
+
+                    setResendSeconds(
+                        (current) =>
+                            current > 0
+                                ? current -
+                                1
+                                : 0
+                    );
+
+                },
+                1000
             );
-        }, 1000);
+
 
         return () =>
-            clearInterval(timer);
-    }, [resendSeconds]);
+            clearInterval(
+                timer
+            );
+
+    }, [
+        resendSeconds,
+    ]);
 
 
     /*
     |--------------------------------------------------------------------------
-    | PERSIST WISHLIST
+    | PERSIST NORMALIZED WISHLIST
     |--------------------------------------------------------------------------
     */
 
     useEffect(() => {
+
+        const normalized =
+            normalizeWishlistIds(
+                wishlistIds
+            );
+
+
+        if (
+            wishlistIdsSignature(
+                normalized
+            ) !==
+            wishlistIdsSignature(
+                wishlistIds
+            )
+        ) {
+
+            setWishlistIds(
+                normalized
+            );
+
+            return;
+        }
+
+
         writeStorage(
             WISHLIST_STORAGE_KEY,
-            wishlistIds
+            normalized
         );
-    }, [wishlistIds]);
+
+    }, [
+        wishlistIds,
+    ]);
 
 
     /*
@@ -809,41 +1185,79 @@ export default function Profile() {
     */
 
     useEffect(() => {
+
         function syncWishlist() {
-            const savedWishlist =
+
+            const saved =
                 readStorage(
                     WISHLIST_STORAGE_KEY,
                     []
                 );
 
+
+            const normalized =
+                normalizeWishlistIds(
+                    saved
+                );
+
+
             setWishlistIds(
-                Array.isArray(savedWishlist)
-                    ? savedWishlist
-                    : []
+                (current) => {
+
+                    const currentSignature =
+                        wishlistIdsSignature(
+                            current
+                        );
+
+
+                    const nextSignature =
+                        wishlistIdsSignature(
+                            normalized
+                        );
+
+
+                    if (
+                        currentSignature ===
+                        nextSignature
+                    ) {
+                        return current;
+                    }
+
+
+                    return normalized;
+
+                }
             );
         }
+
 
         window.addEventListener(
             "storage",
             syncWishlist
         );
 
+
         window.addEventListener(
             "geeka-wishlist-updated",
             syncWishlist
         );
 
+
         return () => {
+
             window.removeEventListener(
                 "storage",
                 syncWishlist
             );
 
+
             window.removeEventListener(
                 "geeka-wishlist-updated",
                 syncWishlist
             );
+
         };
+
     }, []);
 
 
@@ -854,52 +1268,125 @@ export default function Profile() {
     */
 
     useEffect(() => {
+
         let cancelled = false;
 
+
         async function loadWishlist() {
-            setWishlistLoading(true);
+
+            const normalizedIds =
+                normalizeWishlistIds(
+                    wishlistIds
+                );
+
+
+            if (
+                normalizedIds.length ===
+                0
+            ) {
+
+                setWishlistProducts(
+                    []
+                );
+
+                setWishlistLoading(
+                    false
+                );
+
+                return;
+            }
+
+
+            setWishlistLoading(
+                true
+            );
+
 
             try {
+
                 const products =
                     await getProducts();
 
-                const savedIds =
-                    Array.isArray(wishlistIds)
-                        ? wishlistIds
+
+                const productList =
+                    Array.isArray(
+                        products
+                    )
+                        ? products
                         : [];
 
+
                 const filtered =
-                    products.filter(
+                    productList.filter(
                         (product) =>
-                            savedIds.some(
+                            normalizedIds.some(
                                 (savedId) =>
-                                    String(savedId) ===
-                                    String(product.id)
+                                    String(
+                                        savedId
+                                    ) ===
+                                    String(
+                                        product?.id
+                                    )
                             )
                     );
 
-                if (!cancelled) {
+
+                if (
+                    !cancelled
+                ) {
+
                     setWishlistProducts(
                         filtered
                     );
+
                 }
-            } catch {
-                if (!cancelled) {
-                    setWishlistProducts([]);
+
+            } catch (
+            error
+            ) {
+
+                console.error(
+                    "GEEKA WISHLIST LOAD ERROR:",
+                    error
+                );
+
+
+                if (
+                    !cancelled
+                ) {
+
+                    setWishlistProducts(
+                        []
+                    );
+
                 }
+
             } finally {
-                if (!cancelled) {
-                    setWishlistLoading(false);
+
+                if (
+                    !cancelled
+                ) {
+
+                    setWishlistLoading(
+                        false
+                    );
+
                 }
+
             }
         }
 
+
         loadWishlist();
+
 
         return () => {
             cancelled = true;
         };
-    }, [wishlistIds]);
+
+    }, [
+        wishlistIds,
+    ]);
 
 
     /*
@@ -909,35 +1396,51 @@ export default function Profile() {
     */
 
     useEffect(() => {
+
         writeStorage(
             PROFILE_STORAGE_KEY,
             profile
         );
-    }, [profile]);
+
+    }, [
+        profile,
+    ]);
 
 
     useEffect(() => {
+
         writeStorage(
             ADDRESS_STORAGE_KEY,
             addresses
         );
-    }, [addresses]);
+
+    }, [
+        addresses,
+    ]);
 
 
     useEffect(() => {
+
         writeStorage(
             PAYMENT_STORAGE_KEY,
             paymentMethods
         );
-    }, [paymentMethods]);
+
+    }, [
+        paymentMethods,
+    ]);
 
 
     useEffect(() => {
+
         writeStorage(
             SETTINGS_STORAGE_KEY,
             settings
         );
-    }, [settings]);
+
+    }, [
+        settings,
+    ]);
 
 
     /*
@@ -946,28 +1449,35 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     */
 
-    const initials = useMemo(() => {
-        const name =
-            profile.name?.trim();
+    const initials =
+        useMemo(() => {
 
-        if (!name) {
-            return "G";
-        }
+            const name =
+                profile.name?.trim();
 
-        return (
-            name
-                .split(/\s+/)
-                .filter(Boolean)
-                .map(
-                    (word) =>
-                        word[0]
-                )
-                .join("")
-                .slice(0, 2)
-                .toUpperCase() ||
-            "G"
-        );
-    }, [profile.name]);
+
+            if (!name) {
+                return "G";
+            }
+
+
+            return (
+                name
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .map(
+                        (word) =>
+                            word[0]
+                    )
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase() ||
+                "G"
+            );
+
+        }, [
+            profile.name,
+        ]);
 
 
     const displayName =
@@ -982,38 +1492,51 @@ export default function Profile() {
         "Not added yet";
 
 
-    const formatPrice = (value) => {
-        return `₹${Number(
-            value || 0
-        ).toLocaleString("en-IN")}`;
-    };
+    const formatPrice =
+        (value) => {
+
+            return `₹${Number(
+                value || 0
+            ).toLocaleString(
+                "en-IN"
+            )}`;
+
+        };
 
 
-    const formatDate = (value) => {
-        if (!value) {
-            return "—";
-        }
+    const formatDate =
+        (value) => {
 
-        const date =
-            new Date(value);
-
-        if (
-            Number.isNaN(
-                date.getTime()
-            )
-        ) {
-            return value;
-        }
-
-        return date.toLocaleDateString(
-            "en-IN",
-            {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
+            if (!value) {
+                return "—";
             }
-        );
-    };
+
+
+            const date =
+                new Date(
+                    value
+                );
+
+
+            if (
+                Number.isNaN(
+                    date.getTime()
+                )
+            ) {
+                return value;
+            }
+
+
+            return date.toLocaleDateString(
+                "en-IN",
+                {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                }
+            );
+
+        };
 
 
     /*
@@ -1023,87 +1546,169 @@ export default function Profile() {
     */
 
     function startProfileEditing() {
+
         setProfileDraft({
             ...profile,
         });
 
-        setEditingProfile(true);
 
-        setProfileMessage("");
+        setEditingProfile(
+            true
+        );
 
-        setProfileMessageType("success");
 
-        setOtpSent(false);
+        setProfileMessage(
+            ""
+        );
 
-        setOtp("");
 
-        setOtpError("");
+        setProfileMessageType(
+            "success"
+        );
 
-        setOtpSuccess("");
 
-        setResendSeconds(0);
+        setOtpSent(
+            false
+        );
+
+
+        setOtp(
+            ""
+        );
+
+
+        setOtpError(
+            ""
+        );
+
+
+        setOtpSuccess(
+            ""
+        );
+
+
+        setResendSeconds(
+            0
+        );
     }
 
 
     function cancelProfileEditing() {
+
         setProfileDraft({
             ...profile,
         });
 
-        setEditingProfile(false);
 
-        setProfileMessage("");
+        setEditingProfile(
+            false
+        );
 
-        setOtpSent(false);
 
-        setOtp("");
+        setProfileMessage(
+            ""
+        );
 
-        setOtpError("");
 
-        setOtpSuccess("");
+        setOtpSent(
+            false
+        );
 
-        setResendSeconds(0);
+
+        setOtp(
+            ""
+        );
+
+
+        setOtpError(
+            ""
+        );
+
+
+        setOtpSuccess(
+            ""
+        );
+
+
+        setResendSeconds(
+            0
+        );
     }
 
 
-    function handleProfileChange(event) {
+    function handleProfileChange(
+        event
+    ) {
+
         const {
             name,
             value,
         } = event.target;
 
-        if (name === "phone") {
+
+        if (
+            name === "phone"
+        ) {
+
             const phone =
                 value
-                    .replace(/\D/g, "")
-                    .slice(0, 10);
+                    .replace(
+                        /\D/g,
+                        ""
+                    )
+                    .slice(
+                        0,
+                        10
+                    );
+
 
             setProfileDraft(
                 (current) => ({
                     ...current,
+
                     phone,
+
                     phoneVerified:
                         false,
                 })
             );
 
-            setOtpSent(false);
 
-            setOtp("");
+            setOtpSent(
+                false
+            );
 
-            setOtpError("");
 
-            setOtpSuccess("");
+            setOtp(
+                ""
+            );
 
-            setResendSeconds(0);
+
+            setOtpError(
+                ""
+            );
+
+
+            setOtpSuccess(
+                ""
+            );
+
+
+            setResendSeconds(
+                0
+            );
+
 
             return;
         }
 
+
         setProfileDraft(
             (current) => ({
                 ...current,
-                [name]: value,
+
+                [name]:
+                    value,
             })
         );
     }
@@ -1116,15 +1721,26 @@ export default function Profile() {
     */
 
     function getPhoneDigits() {
+
         return (
-            profileDraft.phone || ""
+            profileDraft.phone ||
+            ""
         )
-            .replace(/\D/g, "")
-            .slice(0, 10);
+            .replace(
+                /\D/g,
+                ""
+            )
+            .slice(
+                0,
+                10
+            );
     }
 
 
-    function isValidPhoneNumber(phone) {
+    function isValidPhoneNumber(
+        phone
+    ) {
+
         return /^[6-9]\d{9}$/.test(
             phone
         );
@@ -1138,20 +1754,35 @@ export default function Profile() {
     */
 
     async function sendPhoneOtp() {
+
         const phone =
             getPhoneDigits();
 
-        setOtpError("");
 
-        setOtpSuccess("");
+        setOtpError(
+            ""
+        );
 
-        if (!isValidPhoneNumber(phone)) {
+
+        setOtpSuccess(
+            ""
+        );
+
+
+        if (
+            !isValidPhoneNumber(
+                phone
+            )
+        ) {
+
             setOtpError(
                 "Enter a valid 10-digit mobile number."
             );
 
+
             return;
         }
+
 
         if (
             otpLoading ||
@@ -1160,14 +1791,20 @@ export default function Profile() {
             return;
         }
 
-        setOtpLoading(true);
+
+        setOtpLoading(
+            true
+        );
+
 
         try {
+
             const response =
                 await fetch(
                     PHONE_SEND_OTP_URL,
                     {
-                        method: "POST",
+                        method:
+                            "POST",
 
                         headers: {
                             "Content-Type":
@@ -1177,59 +1814,91 @@ export default function Profile() {
                         credentials:
                             "include",
 
-                        body: JSON.stringify({
-                            phone:
-                                `+91${phone}`,
-                        }),
+                        body:
+                            JSON.stringify(
+                                {
+                                    phone:
+                                        `+91${phone}`,
+                                }
+                            ),
                     }
                 );
+
 
             const data =
                 await readResponseData(
                     response
                 );
 
+
             if (
-                response.status === 401 ||
-                response.status === 403
+                response.status ===
+                401 ||
+                response.status ===
+                403
             ) {
+
                 navigate(
                     "/login",
                     {
-                        replace: true,
+                        replace:
+                            true,
                     }
                 );
+
 
                 return;
             }
 
-            if (!response.ok) {
+
+            if (
+                !response.ok
+            ) {
+
                 throw new Error(
                     data.message ||
                     data.error ||
                     "Unable to send OTP."
                 );
+
             }
 
-            setOtpSent(true);
 
-            setOtp("");
+            setOtpSent(
+                true
+            );
+
+
+            setOtp(
+                ""
+            );
+
 
             setResendSeconds(
                 OTP_RESEND_SECONDS
             );
 
+
             setOtpSuccess(
                 data.message ||
                 "OTP sent successfully."
             );
-        } catch (error) {
+
+        } catch (
+        error
+        ) {
+
             setOtpError(
                 error.message ||
                 "Unable to send OTP. Please try again."
             );
+
         } finally {
-            setOtpLoading(false);
+
+            setOtpLoading(
+                false
+            );
+
         }
     }
 
@@ -1240,20 +1909,35 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     */
 
-    function handleOtpChange(event) {
+    function handleOtpChange(
+        event
+    ) {
+
         const value =
             event.target.value
-                .replace(/\D/g, "")
+                .replace(
+                    /\D/g,
+                    ""
+                )
                 .slice(
                     0,
                     OTP_LENGTH
                 );
 
-        setOtp(value);
 
-        setOtpError("");
+        setOtp(
+            value
+        );
 
-        setOtpSuccess("");
+
+        setOtpError(
+            ""
+        );
+
+
+        setOtpSuccess(
+            ""
+        );
     }
 
 
@@ -1264,40 +1948,63 @@ export default function Profile() {
     */
 
     async function verifyPhoneOtp() {
+
         const phone =
             getPhoneDigits();
 
-        setOtpError("");
 
-        setOtpSuccess("");
+        setOtpError(
+            ""
+        );
 
-        if (!isValidPhoneNumber(phone)) {
+
+        setOtpSuccess(
+            ""
+        );
+
+
+        if (
+            !isValidPhoneNumber(
+                phone
+            )
+        ) {
+
             setOtpError(
                 "Enter a valid 10-digit mobile number first."
             );
 
+
             return;
         }
+
 
         if (
             otp.length !==
             OTP_LENGTH
         ) {
+
             setOtpError(
                 `Enter the ${OTP_LENGTH}-digit OTP.`
             );
 
+
             return;
         }
 
-        setOtpVerifying(true);
+
+        setOtpVerifying(
+            true
+        );
+
 
         try {
+
             const response =
                 await fetch(
                     PHONE_VERIFY_OTP_URL,
                     {
-                        method: "POST",
+                        method:
+                            "POST",
 
                         headers: {
                             "Content-Type":
@@ -1307,41 +2014,57 @@ export default function Profile() {
                         credentials:
                             "include",
 
-                        body: JSON.stringify({
-                            phone:
-                                `+91${phone}`,
+                        body:
+                            JSON.stringify(
+                                {
+                                    phone:
+                                        `+91${phone}`,
 
-                            otp,
-                        }),
+                                    otp,
+                                }
+                            ),
                     }
                 );
+
 
             const data =
                 await readResponseData(
                     response
                 );
 
+
             if (
-                response.status === 401 ||
-                response.status === 403
+                response.status ===
+                401 ||
+                response.status ===
+                403
             ) {
+
                 navigate(
                     "/login",
                     {
-                        replace: true,
+                        replace:
+                            true,
                     }
                 );
+
 
                 return;
             }
 
-            if (!response.ok) {
+
+            if (
+                !response.ok
+            ) {
+
                 throw new Error(
                     data.message ||
                     data.error ||
                     "OTP verification failed."
                 );
+
             }
+
 
             const verified =
                 data.phone_verified !==
@@ -1350,6 +2073,7 @@ export default function Profile() {
                         data.phone_verified
                     )
                     : true;
+
 
             const verifiedProfile = {
                 ...profileDraft,
@@ -1360,9 +2084,11 @@ export default function Profile() {
                     verified,
             };
 
+
             setProfileDraft(
                 verifiedProfile
             );
+
 
             setProfile(
                 (current) => ({
@@ -1375,16 +2101,19 @@ export default function Profile() {
                 })
             );
 
+
             const existingUser =
                 readStorage(
                     USER_STORAGE_KEY,
                     {}
                 );
 
+
             writeStorage(
                 USER_STORAGE_KEY,
                 {
-                    ...(existingUser || {}),
+                    ...(existingUser ||
+                        {}),
 
                     phone,
 
@@ -1393,26 +2122,47 @@ export default function Profile() {
                 }
             );
 
-            setOtpSent(false);
 
-            setOtp("");
+            setOtpSent(
+                false
+            );
 
-            setOtpError("");
+
+            setOtp(
+                ""
+            );
+
+
+            setOtpError(
+                ""
+            );
+
 
             setOtpSuccess(
                 data.message ||
                 "Mobile number verified successfully."
             );
 
-            setResendSeconds(0);
 
-        } catch (error) {
+            setResendSeconds(
+                0
+            );
+
+        } catch (
+        error
+        ) {
+
             setOtpError(
                 error.message ||
                 "Invalid OTP. Please try again."
             );
+
         } finally {
-            setOtpVerifying(false);
+
+            setOtpVerifying(
+                false
+            );
+
         }
     }
 
@@ -1423,71 +2173,96 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     */
 
-    function saveProfile(event) {
+    function saveProfile(
+        event
+    ) {
+
         event.preventDefault();
+
 
         const name =
             profileDraft.name.trim();
 
+
         const email =
             profileDraft.email.trim();
+
 
         const phone =
             getPhoneDigits();
 
+
         if (!name) {
+
             setProfileMessage(
                 "Please enter your full name."
             );
 
+
             setProfileMessageType(
                 "error"
             );
 
+
             return;
         }
 
+
         if (!email) {
+
             setProfileMessage(
                 "Please enter your email address."
             );
 
+
             setProfileMessageType(
                 "error"
             );
 
+
             return;
         }
 
+
         if (
             phone &&
-            !isValidPhoneNumber(phone)
+            !isValidPhoneNumber(
+                phone
+            )
         ) {
+
             setProfileMessage(
                 "Mobile number must contain exactly 10 digits."
             );
 
+
             setProfileMessageType(
                 "error"
             );
 
+
             return;
         }
+
 
         if (
             phone &&
             !profileDraft.phoneVerified
         ) {
+
             setProfileMessage(
                 "Please verify your mobile number using OTP before saving."
             );
+
 
             setProfileMessageType(
                 "error"
             );
 
+
             return;
         }
+
 
         const updatedProfile = {
             ...profileDraft,
@@ -1499,9 +2274,11 @@ export default function Profile() {
             phone,
         };
 
+
         setProfile(
             updatedProfile
         );
+
 
         const existingUser =
             readStorage(
@@ -1509,19 +2286,27 @@ export default function Profile() {
                 {}
             );
 
+
         writeStorage(
             USER_STORAGE_KEY,
             {
-                ...(existingUser || {}),
+                ...(existingUser ||
+                    {}),
+
                 ...updatedProfile,
             }
         );
 
-        setEditingProfile(false);
+
+        setEditingProfile(
+            false
+        );
+
 
         setProfileMessage(
             "Profile updated successfully."
         );
+
 
         setProfileMessageType(
             "success"
@@ -1536,51 +2321,78 @@ export default function Profile() {
     */
 
     function openAddAddress() {
-        setEditingAddressId(null);
+
+        setEditingAddressId(
+            null
+        );
+
 
         setAddressDraft({
             ...EMPTY_ADDRESS,
 
             fullName:
-                profile.name || "",
+                profile.name ||
+                "",
 
             phone:
-                profile.phone || "",
+                profile.phone ||
+                "",
 
             isDefault:
-                addresses.length === 0,
+                addresses.length ===
+                0,
         });
 
-        setAddressFormOpen(true);
+
+        setAddressFormOpen(
+            true
+        );
     }
 
 
-    function openEditAddress(address) {
+    function openEditAddress(
+        address
+    ) {
+
         setEditingAddressId(
             address.id
         );
+
 
         setAddressDraft({
             ...EMPTY_ADDRESS,
             ...address,
         });
 
-        setAddressFormOpen(true);
+
+        setAddressFormOpen(
+            true
+        );
     }
 
 
     function closeAddressForm() {
-        setEditingAddressId(null);
+
+        setEditingAddressId(
+            null
+        );
+
 
         setAddressDraft(
             EMPTY_ADDRESS
         );
 
-        setAddressFormOpen(false);
+
+        setAddressFormOpen(
+            false
+        );
     }
 
 
-    function handleAddressChange(event) {
+    function handleAddressChange(
+        event
+    ) {
+
         const {
             name,
             value,
@@ -1588,12 +2400,14 @@ export default function Profile() {
             checked,
         } = event.target;
 
+
         setAddressDraft(
             (current) => ({
                 ...current,
 
                 [name]:
-                    type === "checkbox"
+                    type ===
+                        "checkbox"
                         ? checked
                         : value,
             })
@@ -1601,8 +2415,12 @@ export default function Profile() {
     }
 
 
-    function saveAddress(event) {
+    function saveAddress(
+        event
+    ) {
+
         event.preventDefault();
+
 
         if (
             !addressDraft.fullName.trim() ||
@@ -1615,14 +2433,19 @@ export default function Profile() {
             return;
         }
 
+
         const addressId =
             editingAddressId ||
-            createId("address");
+            createId(
+                "address"
+            );
+
 
         const nextAddress = {
             ...addressDraft,
 
-            id: addressId,
+            id:
+                addressId,
 
             fullName:
                 addressDraft.fullName.trim(),
@@ -1646,13 +2469,17 @@ export default function Profile() {
                 addressDraft.postalCode.trim(),
         };
 
+
         setAddresses(
             (current) => {
+
                 let updated;
+
 
                 if (
                     editingAddressId
                 ) {
+
                     updated =
                         current.map(
                             (address) =>
@@ -1661,82 +2488,114 @@ export default function Profile() {
                                     ? nextAddress
                                     : address
                         );
+
                 } else {
+
                     updated = [
                         ...current,
                         nextAddress,
                     ];
+
                 }
+
 
                 if (
                     nextAddress.isDefault
                 ) {
+
                     return updated.map(
                         (address) => ({
                             ...address,
+
                             isDefault:
                                 address.id ===
                                 nextAddress.id,
                         })
                     );
+
                 }
 
+
                 if (
-                    updated.length > 0 &&
+                    updated.length >
+                    0 &&
                     !updated.some(
                         (address) =>
                             address.isDefault
                     )
                 ) {
+
                     return updated.map(
                         (
                             address,
                             index
                         ) => ({
                             ...address,
+
                             isDefault:
-                                index === 0,
+                                index ===
+                                0,
                         })
                     );
+
                 }
 
+
                 return updated;
+
             }
         );
+
 
         closeAddressForm();
     }
 
 
-    function deleteAddress(id) {
+    function deleteAddress(
+        id
+    ) {
+
         setAddresses(
             (current) => {
+
                 const filtered =
                     current.filter(
                         (address) =>
-                            address.id !== id
+                            address.id !==
+                            id
                     );
 
+
                 if (
-                    filtered.length > 0 &&
+                    filtered.length >
+                    0 &&
                     !filtered.some(
                         (address) =>
                             address.isDefault
                     )
                 ) {
+
                     filtered[0] = {
                         ...filtered[0],
-                        isDefault: true,
+
+                        isDefault:
+                            true,
                     };
+
                 }
 
+
                 return filtered;
+
             }
         );
     }
 
 
-    function setDefaultAddress(id) {
+    function setDefaultAddress(
+        id
+    ) {
+
         setAddresses(
             (current) =>
                 current.map(
@@ -1744,7 +2603,8 @@ export default function Profile() {
                         ...address,
 
                         isDefault:
-                            address.id === id,
+                            address.id ===
+                            id,
                     })
                 )
         );
@@ -1753,26 +2613,40 @@ export default function Profile() {
 
     /*
     |--------------------------------------------------------------------------
-    | WISHLIST
+    | WISHLIST MANAGEMENT
     |--------------------------------------------------------------------------
     */
 
-    function removeFromWishlist(productId) {
+    function removeFromWishlist(
+        productId
+    ) {
+
+        const normalizedId =
+            String(
+                productId
+            );
+
+
         const nextWishlist =
-            wishlistIds.filter(
+            normalizeWishlistIds(
+                wishlistIds
+            ).filter(
                 (id) =>
                     String(id) !==
-                    String(productId)
+                    normalizedId
             );
+
 
         setWishlistIds(
             nextWishlist
         );
 
+
         writeStorage(
             WISHLIST_STORAGE_KEY,
             nextWishlist
         );
+
 
         window.dispatchEvent(
             new Event(
@@ -1783,16 +2657,26 @@ export default function Profile() {
 
 
     function clearWishlist() {
-        const nextWishlist = [];
+
+        const nextWishlist =
+            [];
+
 
         setWishlistIds(
             nextWishlist
         );
 
+
+        setWishlistProducts(
+            []
+        );
+
+
         writeStorage(
             WISHLIST_STORAGE_KEY,
             nextWishlist
         );
+
 
         window.dispatchEvent(
             new Event(
@@ -1809,17 +2693,25 @@ export default function Profile() {
     */
 
     function openPaymentForm() {
+
         setPaymentDraft({
             type: "UPI",
             label: "",
         });
 
-        setPaymentFormOpen(true);
+
+        setPaymentFormOpen(
+            true
+        );
     }
 
 
     function closePaymentForm() {
-        setPaymentFormOpen(false);
+
+        setPaymentFormOpen(
+            false
+        );
+
 
         setPaymentDraft({
             type: "UPI",
@@ -1828,30 +2720,42 @@ export default function Profile() {
     }
 
 
-    function handlePaymentChange(event) {
+    function handlePaymentChange(
+        event
+    ) {
+
         const {
             name,
             value,
         } = event.target;
 
+
         setPaymentDraft(
             (current) => ({
                 ...current,
-                [name]: value,
+
+                [name]:
+                    value,
             })
         );
     }
 
 
-    function savePaymentMethod(event) {
+    function savePaymentMethod(
+        event
+    ) {
+
         event.preventDefault();
+
 
         const label =
             paymentDraft.label.trim();
 
+
         if (!label) {
             return;
         }
+
 
         setPaymentMethods(
             (current) => [
@@ -1859,7 +2763,9 @@ export default function Profile() {
 
                 {
                     id:
-                        createId("payment"),
+                        createId(
+                            "payment"
+                        ),
 
                     type:
                         paymentDraft.type,
@@ -1869,16 +2775,21 @@ export default function Profile() {
             ]
         );
 
+
         closePaymentForm();
     }
 
 
-    function removePaymentMethod(id) {
+    function removePaymentMethod(
+        id
+    ) {
+
         setPaymentMethods(
             (current) =>
                 current.filter(
                     (method) =>
-                        method.id !== id
+                        method.id !==
+                        id
                 )
         );
     }
@@ -1890,7 +2801,10 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     */
 
-    function toggleSetting(key) {
+    function toggleSetting(
+        key
+    ) {
+
         setSettings(
             (current) => ({
                 ...current,
@@ -1909,29 +2823,41 @@ export default function Profile() {
     */
 
     async function handleLogout() {
-        if (loggingOut) {
+
+        if (
+            loggingOut
+        ) {
             return;
         }
 
-        setLoggingOut(true);
 
-        setAccountError("");
+        setLoggingOut(
+            true
+        );
 
-        setProfileMessage("");
+
+        setAccountError(
+            ""
+        );
+
+
+        setProfileMessage(
+            ""
+        );
+
 
         try {
-            /*
-            |--------------------------------------------------------------------------
-            | GET CSRF TOKEN / SET CSRF COOKIE
-            |--------------------------------------------------------------------------
-            */
 
             const csrfResponse =
                 await fetch(
                     CSRF_URL,
                     {
-                        method: "GET",
-                        credentials: "include",
+                        method:
+                            "GET",
+
+                        credentials:
+                            "include",
+
                         headers: {
                             Accept:
                                 "application/json",
@@ -1939,12 +2865,17 @@ export default function Profile() {
                     }
                 );
 
+
             const csrfData =
                 await readResponseData(
                     csrfResponse
                 );
 
-            if (!csrfResponse.ok) {
+
+            if (
+                !csrfResponse.ok
+            ) {
+
                 throw new Error(
                     csrfData.message ||
                     csrfData.error ||
@@ -1953,26 +2884,11 @@ export default function Profile() {
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | READ ACTUAL DJANGO CSRF COOKIE
-            |--------------------------------------------------------------------------
-            */
-
             const csrfCookie =
-                getCookie("csrftoken");
+                getCookie(
+                    "csrftoken"
+                );
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | FALLBACK TO TOKEN RETURNED BY API
-            |--------------------------------------------------------------------------
-            |
-            | The backend currently returns csrfToken in JSON as well.
-            | Prefer the actual cookie value because Django expects
-            | the cookie to be present for CSRF validation.
-            |--------------------------------------------------------------------------
-            */
 
             const csrfToken =
                 csrfCookie ||
@@ -1980,24 +2896,22 @@ export default function Profile() {
                 "";
 
 
-            if (!csrfToken) {
+            if (
+                !csrfToken
+            ) {
+
                 throw new Error(
                     "CSRF token is missing. Please refresh the page and try again."
                 );
             }
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | LOG OUT FROM DJANGO
-            |--------------------------------------------------------------------------
-            */
-
             const logoutResponse =
                 await fetch(
                     LOGOUT_URL,
                     {
-                        method: "POST",
+                        method:
+                            "POST",
 
                         credentials:
                             "include",
@@ -2013,16 +2927,24 @@ export default function Profile() {
                                 csrfToken,
                         },
 
-                        body: JSON.stringify({}),
+                        body:
+                            JSON.stringify(
+                                {}
+                            ),
                     }
                 );
+
 
             const logoutData =
                 await readResponseData(
                     logoutResponse
                 );
 
-            if (!logoutResponse.ok) {
+
+            if (
+                !logoutResponse.ok
+            ) {
+
                 throw new Error(
                     logoutData.message ||
                     logoutData.error ||
@@ -2030,12 +2952,6 @@ export default function Profile() {
                 );
             }
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | CLEAR AUTH CACHE
-            |--------------------------------------------------------------------------
-            */
 
             const authKeys = [
                 "geeka-auth",
@@ -2045,38 +2961,34 @@ export default function Profile() {
                 "token",
             ];
 
+
             authKeys.forEach(
                 (key) =>
-                    removeStorage(key)
+                    removeStorage(
+                        key
+                    )
             );
+
 
             removeStorage(
                 PROFILE_STORAGE_KEY
             );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | CLEAR ACCOUNT STATE
-            |--------------------------------------------------------------------------
-            */
+            setAccountUser(
+                null
+            );
 
-            setAccountUser(null);
 
             setProfile({
                 ...DEFAULT_PROFILE,
             });
 
+
             setProfileDraft({
                 ...DEFAULT_PROFILE,
             });
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | INFORM HEADER
-            |--------------------------------------------------------------------------
-            */
 
             window.dispatchEvent(
                 new Event(
@@ -2085,33 +2997,34 @@ export default function Profile() {
             );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | REDIRECT TO LOGIN
-            |--------------------------------------------------------------------------
-            */
-
             navigate(
                 "/login",
                 {
-                    replace: true,
+                    replace:
+                        true,
                 }
             );
 
-        } catch (error) {
+        } catch (
+        error
+        ) {
+
             console.error(
                 "GEEKA LOGOUT ERROR:",
                 error
             );
+
 
             setProfileMessage(
                 error.message ||
                 "Unable to log out. Please try again."
             );
 
+
             setProfileMessageType(
                 "error"
             );
+
 
             setAccountError(
                 error.message ||
@@ -2119,7 +3032,11 @@ export default function Profile() {
             );
 
         } finally {
-            setLoggingOut(false);
+
+            setLoggingOut(
+                false
+            );
+
         }
     }
 
@@ -2160,1658 +3077,1971 @@ export default function Profile() {
 
     /*
     |--------------------------------------------------------------------------
-    | ACTIVE SECTION
+    | CONTENT
     |--------------------------------------------------------------------------
     */
 
-    const renderProfileContent = () => {
+    const renderProfileContent =
+        () => {
 
-        switch (activeSection) {
+            switch (
+            activeSection
+            ) {
 
-            /*
-            |--------------------------------------------------------------------------
-            | ORDERS
-            |--------------------------------------------------------------------------
-            */
+                /*
+                |--------------------------------------------------------------------------
+                | ORDERS
+                |--------------------------------------------------------------------------
+                */
 
-            case "orders":
-                return (
-                    <section className="account-content-panel">
+                case "orders":
 
-                        <div className="account-content-header">
+                    return (
+                        <section className="account-content-panel">
 
-                            <div>
-                                <span>
-                                    SHOPPING
-                                </span>
+                            <div className="account-content-header">
 
-                                <h2>
-                                    My Orders
-                                </h2>
-                            </div>
+                                <div>
+                                    <span>
+                                        SHOPPING
+                                    </span>
 
-                            <Link
-                                to="/shop"
-                                className="account-outline-button"
-                            >
-                                CONTINUE SHOPPING
-                                <ArrowIcon />
-                            </Link>
-
-                        </div>
-
-                        {orders.length === 0 ? (
-                            <div className="account-empty-state">
-
-                                <div className="account-empty-mark">
-                                    —
+                                    <h2>
+                                        My Orders
+                                    </h2>
                                 </div>
 
-                                <h3>
-                                    No orders yet
-                                </h3>
-
-                                <p>
-                                    Your order history will appear
-                                    here after you complete a purchase.
-                                </p>
 
                                 <Link
                                     to="/shop"
-                                    className="account-primary-button"
+                                    className="account-outline-button"
                                 >
-                                    START SHOPPING
+                                    CONTINUE SHOPPING
                                     <ArrowIcon />
                                 </Link>
 
                             </div>
-                        ) : (
-                            <div className="account-order-list">
 
-                                {orders.map(
-                                    (order) => (
-                                        <article
-                                            key={
-                                                order.id ||
-                                                order.orderId
+
+                            {orders.length ===
+                                0 ? (
+
+                                <div className="account-empty-state">
+
+                                    <div className="account-empty-mark">
+                                        —
+                                    </div>
+
+
+                                    <h3>
+                                        No orders yet
+                                    </h3>
+
+
+                                    <p>
+                                        Your order history will appear
+                                        here after you complete a purchase.
+                                    </p>
+
+
+                                    <Link
+                                        to="/shop"
+                                        className="account-primary-button"
+                                    >
+                                        START SHOPPING
+                                        <ArrowIcon />
+                                    </Link>
+
+                                </div>
+
+                            ) : (
+
+                                <div className="account-order-list">
+
+                                    {orders.map(
+                                        (order) => (
+
+                                            <article
+                                                key={
+                                                    order.id ||
+                                                    order.orderId
+                                                }
+                                                className="account-order-card"
+                                            >
+
+                                                <div className="account-order-top">
+
+                                                    <div>
+
+                                                        <span>
+                                                            ORDER
+                                                        </span>
+
+                                                        <strong>
+                                                            {
+                                                                order.orderId ||
+                                                                order.id ||
+                                                                "Order"
+                                                            }
+                                                        </strong>
+
+                                                    </div>
+
+
+                                                    <span className="account-order-status">
+                                                        {
+                                                            order.status ||
+                                                            "Placed"
+                                                        }
+                                                    </span>
+
+                                                </div>
+
+
+                                                <div className="account-order-meta">
+
+                                                    <div>
+                                                        <span>
+                                                            PLACED ON
+                                                        </span>
+
+                                                        <strong>
+                                                            {
+                                                                formatDate(
+                                                                    order.createdAt ||
+                                                                    order.date
+                                                                )
+                                                            }
+                                                        </strong>
+                                                    </div>
+
+
+                                                    <div>
+                                                        <span>
+                                                            ITEMS
+                                                        </span>
+
+                                                        <strong>
+                                                            {
+                                                                order.itemCount ??
+                                                                order.items?.length ??
+                                                                0
+                                                            }
+                                                        </strong>
+                                                    </div>
+
+
+                                                    <div>
+                                                        <span>
+                                                            TOTAL
+                                                        </span>
+
+                                                        <strong>
+                                                            {
+                                                                formatPrice(
+                                                                    order.total
+                                                                )
+                                                            }
+                                                        </strong>
+                                                    </div>
+
+                                                </div>
+
+                                            </article>
+
+                                        )
+                                    )}
+
+                                </div>
+
+                            )}
+
+                        </section>
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | WISHLIST
+                |--------------------------------------------------------------------------
+                */
+
+                case "wishlist":
+
+                    return (
+                        <section className="account-content-panel">
+
+                            <div className="account-content-header">
+
+                                <div>
+
+                                    <span>
+                                        SAVED ITEMS
+                                    </span>
+
+
+                                    <h2>
+                                        Wishlist
+                                    </h2>
+
+                                </div>
+
+
+                                {wishlistProducts.length >
+                                    0 && (
+
+                                        <button
+                                            type="button"
+                                            className="account-outline-button"
+                                            onClick={
+                                                clearWishlist
                                             }
-                                            className="account-order-card"
                                         >
+                                            CLEAR WISHLIST
+                                        </button>
 
-                                            <div className="account-order-top">
-
-                                                <div>
-                                                    <span>
-                                                        ORDER
-                                                    </span>
-
-                                                    <strong>
-                                                        {order.orderId ||
-                                                            order.id ||
-                                                            "Order"}
-                                                    </strong>
-                                                </div>
-
-                                                <span className="account-order-status">
-                                                    {order.status ||
-                                                        "Placed"}
-                                                </span>
-
-                                            </div>
-
-                                            <div className="account-order-meta">
-
-                                                <div>
-                                                    <span>
-                                                        PLACED ON
-                                                    </span>
-
-                                                    <strong>
-                                                        {formatDate(
-                                                            order.createdAt ||
-                                                            order.date
-                                                        )}
-                                                    </strong>
-                                                </div>
-
-                                                <div>
-                                                    <span>
-                                                        ITEMS
-                                                    </span>
-
-                                                    <strong>
-                                                        {order.itemCount ??
-                                                            order.items?.length ??
-                                                            0}
-                                                    </strong>
-                                                </div>
-
-                                                <div>
-                                                    <span>
-                                                        TOTAL
-                                                    </span>
-
-                                                    <strong>
-                                                        {formatPrice(
-                                                            order.total
-                                                        )}
-                                                    </strong>
-                                                </div>
-
-                                            </div>
-
-                                        </article>
-                                    )
-                                )}
+                                    )}
 
                             </div>
-                        )}
-
-                    </section>
-                );
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | WISHLIST
-            |--------------------------------------------------------------------------
-            */
+                            {wishlistLoading ? (
 
-            case "wishlist":
-                return (
-                    <section className="account-content-panel">
+                                <div className="account-empty-state">
 
-                        <div className="account-content-header">
+                                    <div className="account-empty-mark">
+                                        —
+                                    </div>
 
-                            <div>
-                                <span>
-                                    SAVED ITEMS
-                                </span>
 
-                                <h2>
-                                    Wishlist
-                                </h2>
-                            </div>
+                                    <h3>
+                                        Loading wishlist
+                                    </h3>
 
-                            {wishlistProducts.length > 0 && (
+
+                                    <p>
+                                        Fetching your saved products.
+                                    </p>
+
+                                </div>
+
+                            ) : wishlistProducts.length ===
+                                0 ? (
+
+                                <div className="account-empty-state">
+
+                                    <div className="account-empty-mark">
+                                        ♡
+                                    </div>
+
+
+                                    <h3>
+                                        Your wishlist is empty
+                                    </h3>
+
+
+                                    <p>
+                                        Save products from the Shop and
+                                        they will appear here.
+                                    </p>
+
+
+                                    <Link
+                                        to="/shop"
+                                        className="account-primary-button"
+                                    >
+                                        EXPLORE COLLECTION
+                                        <ArrowIcon />
+                                    </Link>
+
+                                </div>
+
+                            ) : (
+
+                                <div className="account-wishlist-grid">
+
+                                    {wishlistProducts.map(
+                                        (product) => (
+
+                                            <article
+                                                key={
+                                                    product.id
+                                                }
+                                                className="account-wishlist-card"
+                                            >
+
+                                                <div className="account-wishlist-image">
+
+                                                    {product.image ? (
+
+                                                        <img
+                                                            src={
+                                                                product.image
+                                                            }
+                                                            alt={
+                                                                product.name
+                                                            }
+                                                        />
+
+                                                    ) : (
+
+                                                        <div className="account-wishlist-image-placeholder" />
+
+                                                    )}
+
+
+                                                    <button
+                                                        type="button"
+                                                        className="account-icon-button"
+                                                        onClick={() =>
+                                                            removeFromWishlist(
+                                                                product.id
+                                                            )
+                                                        }
+                                                        aria-label={`Remove ${product.name} from wishlist`}
+                                                    >
+                                                        <CloseIcon />
+                                                    </button>
+
+                                                </div>
+
+
+                                                <div className="account-wishlist-info">
+
+                                                    <span>
+                                                        {
+                                                            product.category
+                                                        }
+                                                    </span>
+
+
+                                                    <h3>
+                                                        {
+                                                            product.name
+                                                        }
+                                                    </h3>
+
+
+                                                    <strong>
+                                                        {
+                                                            formatPrice(
+                                                                product.price
+                                                            )
+                                                        }
+                                                    </strong>
+
+
+                                                    <Link
+                                                        to="/shop"
+                                                        className="account-text-button"
+                                                    >
+                                                        VIEW PRODUCT
+                                                        <ArrowIcon />
+                                                    </Link>
+
+                                                </div>
+
+                                            </article>
+
+                                        )
+                                    )}
+
+                                </div>
+
+                            )}
+
+                        </section>
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | ADDRESSES
+                |--------------------------------------------------------------------------
+                */
+
+                case "addresses":
+
+                    return (
+                        <section className="account-content-panel">
+
+                            <div className="account-content-header">
+
+                                <div>
+                                    <span>
+                                        DELIVERY
+                                    </span>
+
+                                    <h2>
+                                        Saved Addresses
+                                    </h2>
+                                </div>
+
+
                                 <button
                                     type="button"
                                     className="account-outline-button"
-                                    onClick={
-                                        clearWishlist
-                                    }
-                                >
-                                    CLEAR WISHLIST
-                                </button>
-                            )}
-
-                        </div>
-
-                        {wishlistLoading ? (
-                            <div className="account-empty-state">
-
-                                <div className="account-empty-mark">
-                                    —
-                                </div>
-
-                                <h3>
-                                    Loading wishlist
-                                </h3>
-
-                                <p>
-                                    Fetching your saved products.
-                                </p>
-
-                            </div>
-                        ) : wishlistProducts.length === 0 ? (
-                            <div className="account-empty-state">
-
-                                <div className="account-empty-mark">
-                                    ♡
-                                </div>
-
-                                <h3>
-                                    Your wishlist is empty
-                                </h3>
-
-                                <p>
-                                    Save products from the Shop and
-                                    they will appear here.
-                                </p>
-
-                                <Link
-                                    to="/shop"
-                                    className="account-primary-button"
-                                >
-                                    EXPLORE COLLECTION
-                                    <ArrowIcon />
-                                </Link>
-
-                            </div>
-                        ) : (
-                            <div className="account-wishlist-grid">
-
-                                {wishlistProducts.map(
-                                    (product) => (
-                                        <article
-                                            key={
-                                                product.id
-                                            }
-                                            className="account-wishlist-card"
-                                        >
-
-                                            <div className="account-wishlist-image">
-
-                                                {product.image ? (
-                                                    <img
-                                                        src={
-                                                            product.image
-                                                        }
-                                                        alt={
-                                                            product.name
-                                                        }
-                                                    />
-                                                ) : (
-                                                    <div className="account-wishlist-image-placeholder" />
-                                                )}
-
-                                                <button
-                                                    type="button"
-                                                    className="account-icon-button"
-                                                    onClick={() =>
-                                                        removeFromWishlist(
-                                                            product.id
-                                                        )
-                                                    }
-                                                    aria-label={`Remove ${product.name} from wishlist`}
-                                                >
-                                                    <CloseIcon />
-                                                </button>
-
-                                            </div>
-
-                                            <div className="account-wishlist-info">
-
-                                                <span>
-                                                    {
-                                                        product.category
-                                                    }
-                                                </span>
-
-                                                <h3>
-                                                    {
-                                                        product.name
-                                                    }
-                                                </h3>
-
-                                                <strong>
-                                                    {formatPrice(
-                                                        product.price
-                                                    )}
-                                                </strong>
-
-                                                <Link
-                                                    to="/shop"
-                                                    className="account-text-button"
-                                                >
-                                                    VIEW PRODUCT
-                                                    <ArrowIcon />
-                                                </Link>
-
-                                            </div>
-
-                                        </article>
-                                    )
-                                )}
-
-                            </div>
-                        )}
-
-                    </section>
-                );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | ADDRESSES
-            |--------------------------------------------------------------------------
-            */
-
-            case "addresses":
-                return (
-                    <section className="account-content-panel">
-
-                        <div className="account-content-header">
-
-                            <div>
-                                <span>
-                                    DELIVERY
-                                </span>
-
-                                <h2>
-                                    Saved Addresses
-                                </h2>
-                            </div>
-
-                            <button
-                                type="button"
-                                className="account-outline-button"
-                                onClick={
-                                    openAddAddress
-                                }
-                            >
-                                ADD ADDRESS
-                                <PlusIcon />
-                            </button>
-
-                        </div>
-
-                        {addresses.length === 0 ? (
-                            <div className="account-empty-state">
-
-                                <div className="account-empty-mark">
-                                    +
-                                </div>
-
-                                <h3>
-                                    No saved addresses
-                                </h3>
-
-                                <p>
-                                    Add an address so checkout can be
-                                    faster next time.
-                                </p>
-
-                                <button
-                                    type="button"
-                                    className="account-primary-button"
                                     onClick={
                                         openAddAddress
                                     }
                                 >
-                                    ADD YOUR FIRST ADDRESS
+                                    ADD ADDRESS
                                     <PlusIcon />
                                 </button>
 
                             </div>
-                        ) : (
-                            <div className="account-address-list">
 
-                                {addresses.map(
-                                    (address) => (
-                                        <article
-                                            key={
-                                                address.id
-                                            }
-                                            className={`account-address-card ${address.isDefault
-                                                    ? "default"
-                                                    : ""
-                                                }`}
-                                        >
 
-                                            <div className="account-address-top">
+                            {addresses.length ===
+                                0 ? (
 
-                                                <div>
-                                                    <span>
-                                                        {
-                                                            address.label ||
-                                                            "ADDRESS"
-                                                        }
-                                                    </span>
+                                <div className="account-empty-state">
 
-                                                    {address.isDefault && (
-                                                        <strong className="account-default-badge">
-                                                            DEFAULT
-                                                        </strong>
-                                                    )}
+                                    <div className="account-empty-mark">
+                                        +
+                                    </div>
+
+
+                                    <h3>
+                                        No saved addresses
+                                    </h3>
+
+
+                                    <p>
+                                        Add an address so checkout can be
+                                        faster next time.
+                                    </p>
+
+
+                                    <button
+                                        type="button"
+                                        className="account-primary-button"
+                                        onClick={
+                                            openAddAddress
+                                        }
+                                    >
+                                        ADD YOUR FIRST ADDRESS
+                                        <PlusIcon />
+                                    </button>
+
+                                </div>
+
+                            ) : (
+
+                                <div className="account-address-list">
+
+                                    {addresses.map(
+                                        (address) => (
+
+                                            <article
+                                                key={
+                                                    address.id
+                                                }
+                                                className={`account-address-card ${address.isDefault
+                                                        ? "default"
+                                                        : ""
+                                                    }`}
+                                            >
+
+                                                <div className="account-address-top">
+
+                                                    <div>
+
+                                                        <span>
+                                                            {
+                                                                address.label ||
+                                                                "ADDRESS"
+                                                            }
+                                                        </span>
+
+
+                                                        {address.isDefault && (
+
+                                                            <strong className="account-default-badge">
+                                                                DEFAULT
+                                                            </strong>
+
+                                                        )}
+
+                                                    </div>
+
+
+                                                    <div className="account-address-actions">
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                openEditAddress(
+                                                                    address
+                                                                )
+                                                            }
+                                                            aria-label="Edit address"
+                                                        >
+                                                            <EditIcon />
+                                                        </button>
+
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                deleteAddress(
+                                                                    address.id
+                                                                )
+                                                            }
+                                                            aria-label="Delete address"
+                                                        >
+                                                            <TrashIcon />
+                                                        </button>
+
+                                                    </div>
+
                                                 </div>
 
-                                                <div className="account-address-actions">
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            openEditAddress(
-                                                                address
-                                                            )
+                                                <div className="account-address-body">
+
+                                                    <strong>
+                                                        {
+                                                            address.fullName
                                                         }
-                                                        aria-label="Edit address"
-                                                    >
-                                                        <EditIcon />
-                                                    </button>
+                                                    </strong>
+
+
+                                                    <p>
+                                                        {
+                                                            address.phone
+                                                        }
+                                                    </p>
+
+
+                                                    <p>
+
+                                                        {
+                                                            address.line1
+                                                        }
+
+
+                                                        {address.line2 && (
+                                                            <>
+                                                                <br />
+
+                                                                {
+                                                                    address.line2
+                                                                }
+                                                            </>
+                                                        )}
+
+                                                    </p>
+
+
+                                                    <p>
+                                                        {
+                                                            address.city
+                                                        }
+                                                        ,{" "}
+                                                        {
+                                                            address.state
+                                                        }{" "}
+                                                        {
+                                                            address.postalCode
+                                                        }
+                                                    </p>
+
+                                                </div>
+
+
+                                                {!address.isDefault && (
 
                                                     <button
                                                         type="button"
+                                                        className="account-text-button"
                                                         onClick={() =>
-                                                            deleteAddress(
+                                                            setDefaultAddress(
                                                                 address.id
                                                             )
                                                         }
-                                                        aria-label="Delete address"
                                                     >
-                                                        <TrashIcon />
+                                                        MAKE DEFAULT
+                                                        <CheckIcon />
                                                     </button>
 
-                                                </div>
+                                                )}
 
-                                            </div>
+                                            </article>
 
-                                            <div className="account-address-body">
-
-                                                <strong>
-                                                    {
-                                                        address.fullName
-                                                    }
-                                                </strong>
-
-                                                <p>
-                                                    {
-                                                        address.phone
-                                                    }
-                                                </p>
-
-                                                <p>
-                                                    {
-                                                        address.line1
-                                                    }
-
-                                                    {address.line2 && (
-                                                        <>
-                                                            <br />
-                                                            {
-                                                                address.line2
-                                                            }
-                                                        </>
-                                                    )}
-                                                </p>
-
-                                                <p>
-                                                    {address.city},{" "}
-                                                    {address.state}{" "}
-                                                    {address.postalCode}
-                                                </p>
-
-                                            </div>
-
-                                            {!address.isDefault && (
-                                                <button
-                                                    type="button"
-                                                    className="account-text-button"
-                                                    onClick={() =>
-                                                        setDefaultAddress(
-                                                            address.id
-                                                        )
-                                                    }
-                                                >
-                                                    MAKE DEFAULT
-                                                    <CheckIcon />
-                                                </button>
-                                            )}
-
-                                        </article>
-                                    )
-                                )}
-
-                            </div>
-                        )}
-
-                        {addressFormOpen && (
-                            <div className="account-form-card">
-
-                                <div className="account-form-heading">
-
-                                    <div>
-                                        <span>
-                                            DELIVERY
-                                        </span>
-
-                                        <h3>
-                                            {editingAddressId
-                                                ? "Edit Address"
-                                                : "Add Address"}
-                                        </h3>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        className="account-icon-button"
-                                        onClick={
-                                            closeAddressForm
-                                        }
-                                        aria-label="Close address form"
-                                    >
-                                        <CloseIcon />
-                                    </button>
+                                        )
+                                    )}
 
                                 </div>
 
-                                <form
-                                    className="account-form"
-                                    onSubmit={
-                                        saveAddress
-                                    }
-                                >
+                            )}
 
-                                    <div className="account-form-grid">
 
-                                        <div className="account-form-field">
+                            {addressFormOpen && (
 
-                                            <label>
-                                                Address Label
-                                            </label>
+                                <div className="account-form-card">
 
-                                            <select
-                                                name="label"
-                                                value={
-                                                    addressDraft.label
-                                                }
-                                                onChange={
-                                                    handleAddressChange
-                                                }
-                                            >
-                                                <option value="Home">
-                                                    Home
-                                                </option>
+                                    <div className="account-form-heading">
 
-                                                <option value="Work">
-                                                    Work
-                                                </option>
+                                        <div>
 
-                                                <option value="Other">
-                                                    Other
-                                                </option>
+                                            <span>
+                                                DELIVERY
+                                            </span>
 
-                                            </select>
+
+                                            <h3>
+                                                {editingAddressId
+                                                    ? "Edit Address"
+                                                    : "Add Address"}
+                                            </h3>
 
                                         </div>
 
-                                        <div className="account-form-field">
-
-                                            <label>
-                                                Full Name
-                                            </label>
-
-                                            <input
-                                                type="text"
-                                                name="fullName"
-                                                value={
-                                                    addressDraft.fullName
-                                                }
-                                                onChange={
-                                                    handleAddressChange
-                                                }
-                                                placeholder="Enter full name"
-                                                required
-                                            />
-
-                                        </div>
-
-                                        <div className="account-form-field">
-
-                                            <label>
-                                                Phone Number
-                                            </label>
-
-                                            <input
-                                                type="tel"
-                                                name="phone"
-                                                value={
-                                                    addressDraft.phone
-                                                }
-                                                onChange={
-                                                    handleAddressChange
-                                                }
-                                                placeholder="Enter phone number"
-                                                required
-                                            />
-
-                                        </div>
-
-                                        <div className="account-form-field account-form-field-full">
-
-                                            <label>
-                                                Address Line 1
-                                            </label>
-
-                                            <input
-                                                type="text"
-                                                name="line1"
-                                                value={
-                                                    addressDraft.line1
-                                                }
-                                                onChange={
-                                                    handleAddressChange
-                                                }
-                                                placeholder="House number, street, locality"
-                                                required
-                                            />
-
-                                        </div>
-
-                                        <div className="account-form-field account-form-field-full">
-
-                                            <label>
-                                                Address Line 2
-                                            </label>
-
-                                            <input
-                                                type="text"
-                                                name="line2"
-                                                value={
-                                                    addressDraft.line2
-                                                }
-                                                onChange={
-                                                    handleAddressChange
-                                                }
-                                                placeholder="Apartment, landmark, etc."
-                                            />
-
-                                        </div>
-
-                                        <div className="account-form-field">
-
-                                            <label>
-                                                City
-                                            </label>
-
-                                            <input
-                                                type="text"
-                                                name="city"
-                                                value={
-                                                    addressDraft.city
-                                                }
-                                                onChange={
-                                                    handleAddressChange
-                                                }
-                                                placeholder="City"
-                                                required
-                                            />
-
-                                        </div>
-
-                                        <div className="account-form-field">
-
-                                            <label>
-                                                State
-                                            </label>
-
-                                            <input
-                                                type="text"
-                                                name="state"
-                                                value={
-                                                    addressDraft.state
-                                                }
-                                                onChange={
-                                                    handleAddressChange
-                                                }
-                                                placeholder="State"
-                                                required
-                                            />
-
-                                        </div>
-
-                                        <div className="account-form-field">
-
-                                            <label>
-                                                Postal Code
-                                            </label>
-
-                                            <input
-                                                type="text"
-                                                name="postalCode"
-                                                value={
-                                                    addressDraft.postalCode
-                                                }
-                                                onChange={
-                                                    handleAddressChange
-                                                }
-                                                placeholder="Postal code"
-                                                required
-                                            />
-
-                                        </div>
-
-                                    </div>
-
-                                    <label className="account-checkbox-row">
-
-                                        <input
-                                            type="checkbox"
-                                            name="isDefault"
-                                            checked={
-                                                addressDraft.isDefault
-                                            }
-                                            onChange={
-                                                handleAddressChange
-                                            }
-                                        />
-
-                                        <span>
-                                            Set as default address
-                                        </span>
-
-                                    </label>
-
-                                    <div className="account-form-actions">
 
                                         <button
                                             type="button"
-                                            className="account-secondary-button"
+                                            className="account-icon-button"
                                             onClick={
                                                 closeAddressForm
                                             }
+                                            aria-label="Close address form"
                                         >
-                                            CANCEL
-                                        </button>
-
-                                        <button
-                                            type="submit"
-                                            className="account-primary-button"
-                                        >
-                                            {editingAddressId
-                                                ? "SAVE ADDRESS"
-                                                : "ADD ADDRESS"}
-
-                                            <CheckIcon />
+                                            <CloseIcon />
                                         </button>
 
                                     </div>
 
-                                </form>
 
-                            </div>
-                        )}
+                                    <form
+                                        className="account-form"
+                                        onSubmit={
+                                            saveAddress
+                                        }
+                                    >
 
-                    </section>
-                );
+                                        <div className="account-form-grid">
+
+                                            <div className="account-form-field">
+
+                                                <label>
+                                                    Address Label
+                                                </label>
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | PAYMENTS
-            |--------------------------------------------------------------------------
-            */
-
-            case "payments":
-                return (
-                    <section className="account-content-panel">
-
-                        <div className="account-content-header">
-
-                            <div>
-                                <span>
-                                    CHECKOUT
-                                </span>
-
-                                <h2>
-                                    Payment Methods
-                                </h2>
-                            </div>
-
-                            <button
-                                type="button"
-                                className="account-outline-button"
-                                onClick={
-                                    openPaymentForm
-                                }
-                            >
-                                ADD METHOD
-                                <PlusIcon />
-                            </button>
-
-                        </div>
-
-                        <div className="account-security-note">
-
-                            <span>
-                                SECURE PAYMENT DATA
-                            </span>
-
-                            <p>
-                                Only payment preferences are stored
-                                in this frontend. Sensitive payment
-                                credentials should be handled by your
-                                payment provider or backend.
-                            </p>
-
-                        </div>
-
-                        {paymentMethods.length === 0 ? (
-                            <div className="account-empty-state">
-
-                                <div className="account-empty-mark">
-                                    —
-                                </div>
-
-                                <h3>
-                                    No payment methods saved
-                                </h3>
-
-                                <p>
-                                    Add a payment preference for a faster
-                                    account experience.
-                                </p>
-
-                                <button
-                                    type="button"
-                                    className="account-primary-button"
-                                    onClick={
-                                        openPaymentForm
-                                    }
-                                >
-                                    ADD PAYMENT METHOD
-                                    <PlusIcon />
-                                </button>
-
-                            </div>
-                        ) : (
-                            <div className="account-payment-list">
-
-                                {paymentMethods.map(
-                                    (method) => (
-                                        <article
-                                            key={
-                                                method.id
-                                            }
-                                            className="account-payment-card"
-                                        >
-
-                                            <div>
-                                                <span>
-                                                    {
-                                                        method.type
+                                                <select
+                                                    name="label"
+                                                    value={
+                                                        addressDraft.label
                                                     }
-                                                </span>
-
-                                                <h3>
-                                                    {
-                                                        method.label
+                                                    onChange={
+                                                        handleAddressChange
                                                     }
-                                                </h3>
+                                                >
+
+                                                    <option value="Home">
+                                                        Home
+                                                    </option>
+
+
+                                                    <option value="Work">
+                                                        Work
+                                                    </option>
+
+
+                                                    <option value="Other">
+                                                        Other
+                                                    </option>
+
+                                                </select>
+
                                             </div>
+
+
+                                            <div className="account-form-field">
+
+                                                <label>
+                                                    Full Name
+                                                </label>
+
+
+                                                <input
+                                                    type="text"
+                                                    name="fullName"
+                                                    value={
+                                                        addressDraft.fullName
+                                                    }
+                                                    onChange={
+                                                        handleAddressChange
+                                                    }
+                                                    placeholder="Enter full name"
+                                                    required
+                                                />
+
+                                            </div>
+
+
+                                            <div className="account-form-field">
+
+                                                <label>
+                                                    Phone Number
+                                                </label>
+
+
+                                                <input
+                                                    type="tel"
+                                                    name="phone"
+                                                    value={
+                                                        addressDraft.phone
+                                                    }
+                                                    onChange={
+                                                        handleAddressChange
+                                                    }
+                                                    placeholder="Enter phone number"
+                                                    required
+                                                />
+
+                                            </div>
+
+
+                                            <div className="account-form-field account-form-field-full">
+
+                                                <label>
+                                                    Address Line 1
+                                                </label>
+
+
+                                                <input
+                                                    type="text"
+                                                    name="line1"
+                                                    value={
+                                                        addressDraft.line1
+                                                    }
+                                                    onChange={
+                                                        handleAddressChange
+                                                    }
+                                                    placeholder="House number, street, locality"
+                                                    required
+                                                />
+
+                                            </div>
+
+
+                                            <div className="account-form-field account-form-field-full">
+
+                                                <label>
+                                                    Address Line 2
+                                                </label>
+
+
+                                                <input
+                                                    type="text"
+                                                    name="line2"
+                                                    value={
+                                                        addressDraft.line2
+                                                    }
+                                                    onChange={
+                                                        handleAddressChange
+                                                    }
+                                                    placeholder="Apartment, landmark, etc."
+                                                />
+
+                                            </div>
+
+
+                                            <div className="account-form-field">
+
+                                                <label>
+                                                    City
+                                                </label>
+
+
+                                                <input
+                                                    type="text"
+                                                    name="city"
+                                                    value={
+                                                        addressDraft.city
+                                                    }
+                                                    onChange={
+                                                        handleAddressChange
+                                                    }
+                                                    placeholder="City"
+                                                    required
+                                                />
+
+                                            </div>
+
+
+                                            <div className="account-form-field">
+
+                                                <label>
+                                                    State
+                                                </label>
+
+
+                                                <input
+                                                    type="text"
+                                                    name="state"
+                                                    value={
+                                                        addressDraft.state
+                                                    }
+                                                    onChange={
+                                                        handleAddressChange
+                                                    }
+                                                    placeholder="State"
+                                                    required
+                                                />
+
+                                            </div>
+
+
+                                            <div className="account-form-field">
+
+                                                <label>
+                                                    Postal Code
+                                                </label>
+
+
+                                                <input
+                                                    type="text"
+                                                    name="postalCode"
+                                                    value={
+                                                        addressDraft.postalCode
+                                                    }
+                                                    onChange={
+                                                        handleAddressChange
+                                                    }
+                                                    placeholder="Postal code"
+                                                    required
+                                                />
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <label className="account-checkbox-row">
+
+                                            <input
+                                                type="checkbox"
+                                                name="isDefault"
+                                                checked={
+                                                    addressDraft.isDefault
+                                                }
+                                                onChange={
+                                                    handleAddressChange
+                                                }
+                                            />
+
+
+                                            <span>
+                                                Set as default address
+                                            </span>
+
+                                        </label>
+
+
+                                        <div className="account-form-actions">
 
                                             <button
                                                 type="button"
-                                                onClick={() =>
-                                                    removePaymentMethod(
-                                                        method.id
-                                                    )
+                                                className="account-secondary-button"
+                                                onClick={
+                                                    closeAddressForm
                                                 }
-                                                aria-label="Remove payment method"
                                             >
-                                                <TrashIcon />
+                                                CANCEL
                                             </button>
 
-                                        </article>
-                                    )
-                                )}
 
-                            </div>
-                        )}
-
-                        {paymentFormOpen && (
-                            <div className="account-form-card">
-
-                                <div className="account-form-heading">
-
-                                    <div>
-                                        <span>
-                                            CHECKOUT
-                                        </span>
-
-                                        <h3>
-                                            Add Payment Preference
-                                        </h3>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        className="account-icon-button"
-                                        onClick={
-                                            closePaymentForm
-                                        }
-                                        aria-label="Close payment form"
-                                    >
-                                        <CloseIcon />
-                                    </button>
-
-                                </div>
-
-                                <form
-                                    className="account-form"
-                                    onSubmit={
-                                        savePaymentMethod
-                                    }
-                                >
-
-                                    <div className="account-form-grid">
-
-                                        <div className="account-form-field">
-
-                                            <label>
-                                                Payment Type
-                                            </label>
-
-                                            <select
-                                                name="type"
-                                                value={
-                                                    paymentDraft.type
-                                                }
-                                                onChange={
-                                                    handlePaymentChange
-                                                }
+                                            <button
+                                                type="submit"
+                                                className="account-primary-button"
                                             >
-                                                <option value="UPI">
-                                                    UPI
-                                                </option>
+                                                {editingAddressId
+                                                    ? "SAVE ADDRESS"
+                                                    : "ADD ADDRESS"}
 
-                                                <option value="Card">
-                                                    Card
-                                                </option>
-
-                                                <option value="COD">
-                                                    Cash on Delivery
-                                                </option>
-
-                                            </select>
+                                                <CheckIcon />
+                                            </button>
 
                                         </div>
 
-                                        <div className="account-form-field">
+                                    </form>
 
-                                            <label>
-                                                Display Label
-                                            </label>
-
-                                            <input
-                                                type="text"
-                                                name="label"
-                                                value={
-                                                    paymentDraft.label
-                                                }
-                                                onChange={
-                                                    handlePaymentChange
-                                                }
-                                                placeholder="Example: My UPI"
-                                                required
-                                            />
-
-                                        </div>
-
-                                    </div>
-
-                                    <div className="account-form-actions">
-
-                                        <button
-                                            type="button"
-                                            className="account-secondary-button"
-                                            onClick={
-                                                closePaymentForm
-                                            }
-                                        >
-                                            CANCEL
-                                        </button>
-
-                                        <button
-                                            type="submit"
-                                            className="account-primary-button"
-                                        >
-                                            SAVE METHOD
-                                            <CheckIcon />
-                                        </button>
-
-                                    </div>
-
-                                </form>
-
-                            </div>
-                        )}
-
-                    </section>
-                );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | SETTINGS
-            |--------------------------------------------------------------------------
-            */
-
-            case "settings":
-                return (
-                    <section className="account-content-panel">
-
-                        <div className="account-content-header">
-
-                            <div>
-                                <span>
-                                    ACCOUNT
-                                </span>
-
-                                <h2>
-                                    Settings
-                                </h2>
-                            </div>
-
-                        </div>
-
-                        <div className="account-settings-list">
-
-                            <button
-                                type="button"
-                                onClick={
-                                    startProfileEditing
-                                }
-                            >
-                                <div>
-                                    <span>
-                                        ACCOUNT INFORMATION
-                                    </span>
-
-                                    <strong>
-                                        Personal Details
-                                    </strong>
                                 </div>
 
-                                <ArrowIcon />
-                            </button>
+                            )}
 
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    setProfileMessage(
-                                        "Password management will be connected to your backend authentication system."
-                                    )
-                                }
-                            >
+                        </section>
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | PAYMENTS
+                |--------------------------------------------------------------------------
+                */
+
+                case "payments":
+
+                    return (
+                        <section className="account-content-panel">
+
+                            <div className="account-content-header">
+
                                 <div>
+
                                     <span>
-                                        SECURITY
+                                        CHECKOUT
                                     </span>
 
-                                    <strong>
-                                        Password &amp; Security
-                                    </strong>
+
+                                    <h2>
+                                        Payment Methods
+                                    </h2>
+
                                 </div>
 
-                                <ArrowIcon />
-                            </button>
 
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    document
-                                        .querySelector(
-                                            ".account-preference-card"
-                                        )
-                                        ?.scrollIntoView({
-                                            behavior: "smooth",
-                                            block: "center",
-                                        })
-                                }
-                            >
-                                <div>
-                                    <span>
-                                        PREFERENCES
-                                    </span>
-
-                                    <strong>
-                                        Communication Preferences
-                                    </strong>
-                                </div>
-
-                                <ArrowIcon />
-                            </button>
-
-                        </div>
-
-
-                        <div className="account-preference-card">
-
-                            <div>
-                                <span>
-                                    ORDER UPDATES
-                                </span>
-
-                                <strong>
-                                    Receive order notifications
-                                </strong>
-
-                                <p>
-                                    Get updates about your orders,
-                                    delivery and status changes.
-                                </p>
-                            </div>
-
-                            <button
-                                type="button"
-                                className={`account-toggle ${settings.orderUpdates
-                                        ? "active"
-                                        : ""
-                                    }`}
-                                onClick={() =>
-                                    toggleSetting(
-                                        "orderUpdates"
-                                    )
-                                }
-                                aria-pressed={
-                                    settings.orderUpdates
-                                }
-                            >
-                                <span />
-                            </button>
-
-                        </div>
-
-
-                        <div className="account-preference-card">
-
-                            <div>
-                                <span>
-                                    PROMOTIONS
-                                </span>
-
-                                <strong>
-                                    Promotional communication
-                                </strong>
-
-                                <p>
-                                    Receive occasional updates about
-                                    collections and offers.
-                                </p>
-                            </div>
-
-                            <button
-                                type="button"
-                                className={`account-toggle ${settings.promotionalEmails
-                                        ? "active"
-                                        : ""
-                                    }`}
-                                onClick={() =>
-                                    toggleSetting(
-                                        "promotionalEmails"
-                                    )
-                                }
-                                aria-pressed={
-                                    settings.promotionalEmails
-                                }
-                            >
-                                <span />
-                            </button>
-
-                        </div>
-
-
-                        <div className="account-preference-card">
-
-                            <div>
-                                <span>
-                                    RECOMMENDATIONS
-                                </span>
-
-                                <strong>
-                                    Personalized product suggestions
-                                </strong>
-
-                                <p>
-                                    Allow Geeka to use your shopping
-                                    activity for product recommendations.
-                                </p>
-                            </div>
-
-                            <button
-                                type="button"
-                                className={`account-toggle ${settings.productRecommendations
-                                        ? "active"
-                                        : ""
-                                    }`}
-                                onClick={() =>
-                                    toggleSetting(
-                                        "productRecommendations"
-                                    )
-                                }
-                                aria-pressed={
-                                    settings.productRecommendations
-                                }
-                            >
-                                <span />
-                            </button>
-
-                        </div>
-
-                    </section>
-                );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | PROFILE
-            |--------------------------------------------------------------------------
-            */
-
-            default:
-                return (
-                    <section className="account-content-panel">
-
-                        <div className="account-content-header">
-
-                            <div>
-                                <span>
-                                    ACCOUNT DETAILS
-                                </span>
-
-                                <h2>
-                                    Profile
-                                </h2>
-                            </div>
-
-                            {!editingProfile && (
                                 <button
                                     type="button"
                                     className="account-outline-button"
                                     onClick={
-                                        startProfileEditing
+                                        openPaymentForm
                                     }
                                 >
-                                    EDIT PROFILE
-                                    <EditIcon />
+                                    ADD METHOD
+                                    <PlusIcon />
                                 </button>
-                            )}
 
-                        </div>
+                            </div>
 
 
-                        {!editingProfile ? (
-                            <>
-                                <div className="profile-details">
+                            <div className="account-security-note">
 
-                                    <div className="profile-detail">
+                                <span>
+                                    SECURE PAYMENT DATA
+                                </span>
 
-                                        <span>
-                                            FULL NAME
-                                        </span>
 
-                                        <p>
-                                            {accountLoading
-                                                ? "Loading..."
-                                                : profile.name ||
-                                                "Not added yet"}
-                                        </p>
+                                <p>
+                                    Only payment preferences are stored
+                                    in this frontend. Sensitive payment
+                                    credentials should be handled by your
+                                    payment provider or backend.
+                                </p>
 
+                            </div>
+
+
+                            {paymentMethods.length ===
+                                0 ? (
+
+                                <div className="account-empty-state">
+
+                                    <div className="account-empty-mark">
+                                        —
                                     </div>
 
 
-                                    <div className="profile-detail">
-
-                                        <span>
-                                            EMAIL ADDRESS
-                                        </span>
-
-                                        <p>
-                                            {accountLoading
-                                                ? "Loading..."
-                                                : displayEmail}
-                                        </p>
-
-                                    </div>
+                                    <h3>
+                                        No payment methods saved
+                                    </h3>
 
 
-                                    <div className="profile-detail profile-phone-detail">
+                                    <p>
+                                        Add a payment preference for a faster
+                                        account experience.
+                                    </p>
 
-                                        <span>
-                                            MOBILE NUMBER
-                                        </span>
 
-                                        <div className="profile-phone-value">
-
-                                            <p>
-                                                {profile.phone ||
-                                                    "Not added yet"}
-                                            </p>
-
-                                            {profile.phone &&
-                                                profile.phoneVerified && (
-                                                    <span className="phone-verified-badge">
-                                                        <CheckIcon />
-                                                        VERIFIED
-                                                    </span>
-                                                )}
-
-                                        </div>
-
-                                    </div>
+                                    <button
+                                        type="button"
+                                        className="account-primary-button"
+                                        onClick={
+                                            openPaymentForm
+                                        }
+                                    >
+                                        ADD PAYMENT METHOD
+                                        <PlusIcon />
+                                    </button>
 
                                 </div>
 
+                            ) : (
 
-                                <div className="profile-account-note">
+                                <div className="account-payment-list">
+
+                                    {paymentMethods.map(
+                                        (method) => (
+
+                                            <article
+                                                key={
+                                                    method.id
+                                                }
+                                                className="account-payment-card"
+                                            >
+
+                                                <div>
+
+                                                    <span>
+                                                        {
+                                                            method.type
+                                                        }
+                                                    </span>
+
+
+                                                    <h3>
+                                                        {
+                                                            method.label
+                                                        }
+                                                    </h3>
+
+                                                </div>
+
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        removePaymentMethod(
+                                                            method.id
+                                                        )
+                                                    }
+                                                    aria-label="Remove payment method"
+                                                >
+                                                    <TrashIcon />
+                                                </button>
+
+                                            </article>
+
+                                        )
+                                    )}
+
+                                </div>
+
+                            )}
+
+
+                            {paymentFormOpen && (
+
+                                <div className="account-form-card">
+
+                                    <div className="account-form-heading">
+
+                                        <div>
+
+                                            <span>
+                                                CHECKOUT
+                                            </span>
+
+
+                                            <h3>
+                                                Add Payment Preference
+                                            </h3>
+
+                                        </div>
+
+
+                                        <button
+                                            type="button"
+                                            className="account-icon-button"
+                                            onClick={
+                                                closePaymentForm
+                                            }
+                                            aria-label="Close payment form"
+                                        >
+                                            <CloseIcon />
+                                        </button>
+
+                                    </div>
+
+
+                                    <form
+                                        className="account-form"
+                                        onSubmit={
+                                            savePaymentMethod
+                                        }
+                                    >
+
+                                        <div className="account-form-grid">
+
+                                            <div className="account-form-field">
+
+                                                <label>
+                                                    Payment Type
+                                                </label>
+
+
+                                                <select
+                                                    name="type"
+                                                    value={
+                                                        paymentDraft.type
+                                                    }
+                                                    onChange={
+                                                        handlePaymentChange
+                                                    }
+                                                >
+
+                                                    <option value="UPI">
+                                                        UPI
+                                                    </option>
+
+
+                                                    <option value="Card">
+                                                        Card
+                                                    </option>
+
+
+                                                    <option value="COD">
+                                                        Cash on Delivery
+                                                    </option>
+
+                                                </select>
+
+                                            </div>
+
+
+                                            <div className="account-form-field">
+
+                                                <label>
+                                                    Display Label
+                                                </label>
+
+
+                                                <input
+                                                    type="text"
+                                                    name="label"
+                                                    value={
+                                                        paymentDraft.label
+                                                    }
+                                                    onChange={
+                                                        handlePaymentChange
+                                                    }
+                                                    placeholder="Example: My UPI"
+                                                    required
+                                                />
+
+                                            </div>
+
+                                        </div>
+
+
+                                        <div className="account-form-actions">
+
+                                            <button
+                                                type="button"
+                                                className="account-secondary-button"
+                                                onClick={
+                                                    closePaymentForm
+                                                }
+                                            >
+                                                CANCEL
+                                            </button>
+
+
+                                            <button
+                                                type="submit"
+                                                className="account-primary-button"
+                                            >
+                                                SAVE METHOD
+                                                <CheckIcon />
+                                            </button>
+
+                                        </div>
+
+                                    </form>
+
+                                </div>
+
+                            )}
+
+                        </section>
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | SETTINGS
+                |--------------------------------------------------------------------------
+                */
+
+                case "settings":
+
+                    return (
+                        <section className="account-content-panel">
+
+                            <div className="account-content-header">
+
+                                <div>
 
                                     <span>
-                                        GEEKA ACCOUNT
+                                        ACCOUNT
                                     </span>
 
+
+                                    <h2>
+                                        Settings
+                                    </h2>
+
+                                </div>
+
+                            </div>
+
+
+                            <div className="account-settings-list">
+
+                                <button
+                                    type="button"
+                                    onClick={
+                                        startProfileEditing
+                                    }
+                                >
+
+                                    <div>
+
+                                        <span>
+                                            ACCOUNT INFORMATION
+                                        </span>
+
+
+                                        <strong>
+                                            Personal Details
+                                        </strong>
+
+                                    </div>
+
+
+                                    <ArrowIcon />
+
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setProfileMessage(
+                                            "Password management will be connected to your backend authentication system."
+                                        )
+                                    }
+                                >
+
+                                    <div>
+
+                                        <span>
+                                            SECURITY
+                                        </span>
+
+
+                                        <strong>
+                                            Password &amp; Security
+                                        </strong>
+
+                                    </div>
+
+
+                                    <ArrowIcon />
+
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        document
+                                            .querySelector(
+                                                ".account-preference-card"
+                                            )
+                                            ?.scrollIntoView(
+                                                {
+                                                    behavior:
+                                                        "smooth",
+
+                                                    block:
+                                                        "center",
+                                                }
+                                            )
+                                    }
+                                >
+
+                                    <div>
+
+                                        <span>
+                                            PREFERENCES
+                                        </span>
+
+
+                                        <strong>
+                                            Communication Preferences
+                                        </strong>
+
+                                    </div>
+
+
+                                    <ArrowIcon />
+
+                                </button>
+
+                            </div>
+
+
+                            <div className="account-preference-card">
+
+                                <div>
+
+                                    <span>
+                                        ORDER UPDATES
+                                    </span>
+
+
+                                    <strong>
+                                        Receive order notifications
+                                    </strong>
+
+
                                     <p>
-                                        Your account is connected to
-                                        the Geeka authentication system.
-                                        Your name and email are loaded
-                                        from your authenticated account session.
+                                        Get updates about your orders,
+                                        delivery and status changes.
                                     </p>
 
                                 </div>
 
 
-                                {accountError && (
-                                    <div className="account-success-message error">
-                                        {accountError}
-                                    </div>
-                                )}
+                                <button
+                                    type="button"
+                                    className={`account-toggle ${settings.orderUpdates
+                                            ? "active"
+                                            : ""
+                                        }`}
+                                    onClick={() =>
+                                        toggleSetting(
+                                            "orderUpdates"
+                                        )
+                                    }
+                                    aria-pressed={
+                                        settings.orderUpdates
+                                    }
+                                >
+                                    <span />
+                                </button>
+
+                            </div>
 
 
-                                {profileMessage && (
-                                    <div
-                                        className={`account-success-message ${profileMessageType ===
-                                                "error"
-                                                ? "error"
-                                                : ""
-                                            }`}
+                            <div className="account-preference-card">
+
+                                <div>
+
+                                    <span>
+                                        PROMOTIONS
+                                    </span>
+
+
+                                    <strong>
+                                        Promotional communication
+                                    </strong>
+
+
+                                    <p>
+                                        Receive occasional updates about
+                                        collections and offers.
+                                    </p>
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    className={`account-toggle ${settings.promotionalEmails
+                                            ? "active"
+                                            : ""
+                                        }`}
+                                    onClick={() =>
+                                        toggleSetting(
+                                            "promotionalEmails"
+                                        )
+                                    }
+                                    aria-pressed={
+                                        settings.promotionalEmails
+                                    }
+                                >
+                                    <span />
+                                </button>
+
+                            </div>
+
+
+                            <div className="account-preference-card">
+
+                                <div>
+
+                                    <span>
+                                        RECOMMENDATIONS
+                                    </span>
+
+
+                                    <strong>
+                                        Personalized product suggestions
+                                    </strong>
+
+
+                                    <p>
+                                        Allow Geeka to use your shopping
+                                        activity for product recommendations.
+                                    </p>
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    className={`account-toggle ${settings.productRecommendations
+                                            ? "active"
+                                            : ""
+                                        }`}
+                                    onClick={() =>
+                                        toggleSetting(
+                                            "productRecommendations"
+                                        )
+                                    }
+                                    aria-pressed={
+                                        settings.productRecommendations
+                                    }
+                                >
+                                    <span />
+                                </button>
+
+                            </div>
+
+                        </section>
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | PROFILE
+                |--------------------------------------------------------------------------
+                */
+
+                default:
+
+                    return (
+                        <section className="account-content-panel">
+
+                            <div className="account-content-header">
+
+                                <div>
+
+                                    <span>
+                                        ACCOUNT DETAILS
+                                    </span>
+
+
+                                    <h2>
+                                        Profile
+                                    </h2>
+
+                                </div>
+
+
+                                {!editingProfile && (
+
+                                    <button
+                                        type="button"
+                                        className="account-outline-button"
+                                        onClick={
+                                            startProfileEditing
+                                        }
                                     >
-                                        {profileMessage}
-                                    </div>
+                                        EDIT PROFILE
+                                        <EditIcon />
+                                    </button>
+
                                 )}
 
-                            </>
-                        ) : (
-                            <form
-                                className="account-form profile-edit-form"
-                                onSubmit={
-                                    saveProfile
-                                }
-                            >
-
-                                <div className="account-form-grid">
-
-                                    <div className="account-form-field account-form-field-full">
-
-                                        <label>
-                                            Full Name
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            value={
-                                                profileDraft.name
-                                            }
-                                            onChange={
-                                                handleProfileChange
-                                            }
-                                            placeholder="Enter your full name"
-                                            autoComplete="name"
-                                            required
-                                        />
-
-                                    </div>
+                            </div>
 
 
-                                    <div className="account-form-field">
+                            {!editingProfile ? (
 
-                                        <label>
-                                            Email Address
-                                        </label>
+                                <>
 
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            value={
-                                                profileDraft.email
-                                            }
-                                            onChange={
-                                                handleProfileChange
-                                            }
-                                            placeholder="Enter your email"
-                                            autoComplete="email"
-                                            required
-                                        />
+                                    <div className="profile-details">
 
-                                    </div>
+                                        <div className="profile-detail">
 
-
-                                    <div className="account-form-field">
-
-                                        <label>
-                                            Mobile Number
-                                        </label>
-
-                                        <div className="phone-input-wrapper">
-
-                                            <span className="phone-prefix">
-                                                +91
+                                            <span>
+                                                FULL NAME
                                             </span>
 
+
+                                            <p>
+                                                {
+                                                    accountLoading
+                                                        ? "Loading..."
+                                                        : profile.name ||
+                                                        "Not added yet"
+                                                }
+                                            </p>
+
+                                        </div>
+
+
+                                        <div className="profile-detail">
+
+                                            <span>
+                                                EMAIL ADDRESS
+                                            </span>
+
+
+                                            <p>
+                                                {
+                                                    accountLoading
+                                                        ? "Loading..."
+                                                        : displayEmail
+                                                }
+                                            </p>
+
+                                        </div>
+
+
+                                        <div className="profile-detail profile-phone-detail">
+
+                                            <span>
+                                                MOBILE NUMBER
+                                            </span>
+
+
+                                            <div className="profile-phone-value">
+
+                                                <p>
+                                                    {
+                                                        profile.phone ||
+                                                        "Not added yet"
+                                                    }
+                                                </p>
+
+
+                                                {profile.phone &&
+                                                    profile.phoneVerified && (
+
+                                                        <span className="phone-verified-badge">
+
+                                                            <CheckIcon />
+
+                                                            VERIFIED
+
+                                                        </span>
+
+                                                    )}
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div className="profile-account-note">
+
+                                        <span>
+                                            GEEKA ACCOUNT
+                                        </span>
+
+
+                                        <p>
+                                            Your account is connected to
+                                            the Geeka authentication system.
+                                            Your name and email are loaded
+                                            from your authenticated account session.
+                                        </p>
+
+                                    </div>
+
+
+                                    {accountError && (
+
+                                        <div className="account-success-message error">
+                                            {
+                                                accountError
+                                            }
+                                        </div>
+
+                                    )}
+
+
+                                    {profileMessage && (
+
+                                        <div
+                                            className={`account-success-message ${profileMessageType ===
+                                                    "error"
+                                                    ? "error"
+                                                    : ""
+                                                }`}
+                                        >
+                                            {
+                                                profileMessage
+                                            }
+                                        </div>
+
+                                    )}
+
+                                </>
+
+                            ) : (
+
+                                <form
+                                    className="account-form profile-edit-form"
+                                    onSubmit={
+                                        saveProfile
+                                    }
+                                >
+
+                                    <div className="account-form-grid">
+
+                                        <div className="account-form-field account-form-field-full">
+
+                                            <label>
+                                                Full Name
+                                            </label>
+
+
                                             <input
-                                                type="tel"
-                                                name="phone"
+                                                type="text"
+                                                name="name"
                                                 value={
-                                                    profileDraft.phone || ""
+                                                    profileDraft.name
                                                 }
                                                 onChange={
                                                     handleProfileChange
                                                 }
-                                                placeholder="10-digit mobile number"
-                                                inputMode="numeric"
-                                                maxLength={10}
-                                                autoComplete="tel"
+                                                placeholder="Enter your full name"
+                                                autoComplete="name"
+                                                required
                                             />
 
                                         </div>
 
 
-                                        <div className="phone-verification-row">
+                                        <div className="account-form-field">
 
-                                            {profileDraft.phoneVerified ? (
-                                                <div className="phone-verified-state">
+                                            <label>
+                                                Email Address
+                                            </label>
 
-                                                    <CheckIcon />
 
-                                                    <span>
-                                                        MOBILE VERIFIED
-                                                    </span>
-
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    type="button"
-                                                    className="phone-send-otp-button"
-                                                    onClick={
-                                                        sendPhoneOtp
-                                                    }
-                                                    disabled={
-                                                        otpLoading ||
-                                                        resendSeconds > 0
-                                                    }
-                                                >
-                                                    {otpLoading
-                                                        ? "SENDING..."
-                                                        : resendSeconds > 0
-                                                            ? `RESEND IN ${resendSeconds}s`
-                                                            : "SEND OTP"}
-                                                </button>
-                                            )}
+                                            <input
+                                                type="email"
+                                                name="email"
+                                                value={
+                                                    profileDraft.email
+                                                }
+                                                onChange={
+                                                    handleProfileChange
+                                                }
+                                                placeholder="Enter your email"
+                                                autoComplete="email"
+                                                required
+                                            />
 
                                         </div>
 
 
-                                        {otpSent &&
-                                            !profileDraft.phoneVerified && (
-                                                <div className="phone-otp-box">
+                                        <div className="account-form-field">
 
-                                                    <div className="phone-otp-header">
-
-                                                        <div>
-                                                            <span>
-                                                                VERIFICATION
-                                                            </span>
-
-                                                            <strong>
-                                                                Enter OTP
-                                                            </strong>
-                                                        </div>
-
-                                                        <button
-                                                            type="button"
-                                                            className="account-icon-button"
-                                                            onClick={() => {
-                                                                setOtpSent(false);
-                                                                setOtp("");
-                                                                setOtpError("");
-                                                                setOtpSuccess("");
-                                                            }}
-                                                            aria-label="Close OTP verification"
-                                                        >
-                                                            <CloseIcon />
-                                                        </button>
-
-                                                    </div>
+                                            <label>
+                                                Mobile Number
+                                            </label>
 
 
-                                                    <p>
-                                                        Enter the 6-digit OTP sent
-                                                        to +91{" "}
-                                                        {getPhoneDigits()}
-                                                    </p>
+                                            <div className="phone-input-wrapper">
+
+                                                <span className="phone-prefix">
+                                                    +91
+                                                </span>
 
 
-                                                    <div className="phone-otp-actions">
+                                                <input
+                                                    type="tel"
+                                                    name="phone"
+                                                    value={
+                                                        profileDraft.phone ||
+                                                        ""
+                                                    }
+                                                    onChange={
+                                                        handleProfileChange
+                                                    }
+                                                    placeholder="10-digit mobile number"
+                                                    inputMode="numeric"
+                                                    maxLength={
+                                                        10
+                                                    }
+                                                    autoComplete="tel"
+                                                />
 
-                                                        <input
-                                                            type="text"
-                                                            value={
-                                                                otp
-                                                            }
-                                                            onChange={
-                                                                handleOtpChange
-                                                            }
-                                                            inputMode="numeric"
-                                                            maxLength={
-                                                                OTP_LENGTH
-                                                            }
-                                                            placeholder="000000"
-                                                            autoComplete="one-time-code"
-                                                            className="phone-otp-input"
-                                                        />
+                                            </div>
 
-                                                        <button
-                                                            type="button"
-                                                            className="account-primary-button"
-                                                            onClick={
-                                                                verifyPhoneOtp
-                                                            }
-                                                            disabled={
-                                                                otpVerifying ||
-                                                                otp.length !==
-                                                                OTP_LENGTH
-                                                            }
-                                                        >
-                                                            {otpVerifying
-                                                                ? "VERIFYING..."
-                                                                : "VERIFY OTP"}
 
-                                                            <CheckIcon />
-                                                        </button>
+                                            <div className="phone-verification-row">
+
+                                                {profileDraft.phoneVerified ? (
+
+                                                    <div className="phone-verified-state">
+
+                                                        <CheckIcon />
+
+                                                        <span>
+                                                            MOBILE VERIFIED
+                                                        </span>
 
                                                     </div>
 
-
-                                                    {otpError && (
-                                                        <div className="phone-otp-message error">
-                                                            {otpError}
-                                                        </div>
-                                                    )}
-
-
-                                                    {otpSuccess && (
-                                                        <div className="phone-otp-message success">
-                                                            {otpSuccess}
-                                                        </div>
-                                                    )}
-
+                                                ) : (
 
                                                     <button
                                                         type="button"
-                                                        className="phone-resend-button"
+                                                        className="phone-send-otp-button"
                                                         onClick={
                                                             sendPhoneOtp
                                                         }
                                                         disabled={
+                                                            otpLoading ||
                                                             resendSeconds >
-                                                            0 ||
-                                                            otpLoading
+                                                            0
                                                         }
                                                     >
-                                                        {resendSeconds > 0
-                                                            ? `RESEND OTP IN ${resendSeconds}s`
-                                                            : "RESEND OTP"}
+                                                        {
+                                                            otpLoading
+                                                                ? "SENDING..."
+                                                                : resendSeconds >
+                                                                    0
+                                                                    ? `RESEND IN ${resendSeconds}s`
+                                                                    : "SEND OTP"
+                                                        }
                                                     </button>
 
-                                                </div>
-                                            )}
+                                                )}
+
+                                            </div>
 
 
-                                        {!otpSent &&
-                                            !profileDraft.phoneVerified &&
-                                            otpError && (
-                                                <div className="phone-otp-message error">
-                                                    {otpError}
-                                                </div>
-                                            )}
+                                            {otpSent &&
+                                                !profileDraft.phoneVerified && (
+
+                                                    <div className="phone-otp-box">
+
+                                                        <div className="phone-otp-header">
+
+                                                            <div>
+
+                                                                <span>
+                                                                    VERIFICATION
+                                                                </span>
+
+
+                                                                <strong>
+                                                                    Enter OTP
+                                                                </strong>
+
+                                                            </div>
+
+
+                                                            <button
+                                                                type="button"
+                                                                className="account-icon-button"
+                                                                onClick={() => {
+
+                                                                    setOtpSent(
+                                                                        false
+                                                                    );
+
+                                                                    setOtp(
+                                                                        ""
+                                                                    );
+
+                                                                    setOtpError(
+                                                                        ""
+                                                                    );
+
+                                                                    setOtpSuccess(
+                                                                        ""
+                                                                    );
+
+                                                                }}
+                                                                aria-label="Close OTP verification"
+                                                            >
+                                                                <CloseIcon />
+                                                            </button>
+
+                                                        </div>
+
+
+                                                        <p>
+                                                            Enter the 6-digit OTP sent
+                                                            to +91{" "}
+                                                            {
+                                                                getPhoneDigits()
+                                                            }
+                                                        </p>
+
+
+                                                        <div className="phone-otp-actions">
+
+                                                            <input
+                                                                type="text"
+                                                                value={
+                                                                    otp
+                                                                }
+                                                                onChange={
+                                                                    handleOtpChange
+                                                                }
+                                                                inputMode="numeric"
+                                                                maxLength={
+                                                                    OTP_LENGTH
+                                                                }
+                                                                placeholder="000000"
+                                                                autoComplete="one-time-code"
+                                                                className="phone-otp-input"
+                                                            />
+
+
+                                                            <button
+                                                                type="button"
+                                                                className="account-primary-button"
+                                                                onClick={
+                                                                    verifyPhoneOtp
+                                                                }
+                                                                disabled={
+                                                                    otpVerifying ||
+                                                                    otp.length !==
+                                                                    OTP_LENGTH
+                                                                }
+                                                            >
+                                                                {
+                                                                    otpVerifying
+                                                                        ? "VERIFYING..."
+                                                                        : "VERIFY OTP"
+                                                                }
+
+                                                                <CheckIcon />
+                                                            </button>
+
+                                                        </div>
+
+
+                                                        {otpError && (
+
+                                                            <div className="phone-otp-message error">
+                                                                {
+                                                                    otpError
+                                                                }
+                                                            </div>
+
+                                                        )}
+
+
+                                                        {otpSuccess && (
+
+                                                            <div className="phone-otp-message success">
+                                                                {
+                                                                    otpSuccess
+                                                                }
+                                                            </div>
+
+                                                        )}
+
+
+                                                        <button
+                                                            type="button"
+                                                            className="phone-resend-button"
+                                                            onClick={
+                                                                sendPhoneOtp
+                                                            }
+                                                            disabled={
+                                                                resendSeconds >
+                                                                0 ||
+                                                                otpLoading
+                                                            }
+                                                        >
+                                                            {
+                                                                resendSeconds >
+                                                                    0
+                                                                    ? `RESEND OTP IN ${resendSeconds}s`
+                                                                    : "RESEND OTP"
+                                                            }
+                                                        </button>
+
+                                                    </div>
+
+                                                )}
+
+
+                                            {!otpSent &&
+                                                !profileDraft.phoneVerified &&
+                                                otpError && (
+
+                                                    <div className="phone-otp-message error">
+                                                        {
+                                                            otpError
+                                                        }
+                                                    </div>
+
+                                                )}
+
+                                        </div>
 
                                     </div>
 
-                                </div>
+
+                                    {profileMessage && (
+
+                                        <div
+                                            className={`account-form-error ${profileMessageType ===
+                                                    "success"
+                                                    ? "success"
+                                                    : ""
+                                                }`}
+                                        >
+                                            {
+                                                profileMessage
+                                            }
+                                        </div>
+
+                                    )}
 
 
-                                {profileMessage && (
-                                    <div
-                                        className={`account-form-error ${profileMessageType ===
-                                                "success"
-                                                ? "success"
-                                                : ""
-                                            }`}
-                                    >
-                                        {profileMessage}
+                                    <div className="account-form-actions">
+
+                                        <button
+                                            type="button"
+                                            className="account-secondary-button"
+                                            onClick={
+                                                cancelProfileEditing
+                                            }
+                                        >
+                                            CANCEL
+                                        </button>
+
+
+                                        <button
+                                            type="submit"
+                                            className="account-primary-button"
+                                        >
+                                            SAVE CHANGES
+                                            <CheckIcon />
+                                        </button>
+
                                     </div>
-                                )}
 
+                                </form>
 
-                                <div className="account-form-actions">
+                            )}
 
-                                    <button
-                                        type="button"
-                                        className="account-secondary-button"
-                                        onClick={
-                                            cancelProfileEditing
-                                        }
-                                    >
-                                        CANCEL
-                                    </button>
+                        </section>
+                    );
 
-                                    <button
-                                        type="submit"
-                                        className="account-primary-button"
-                                    >
-                                        SAVE CHANGES
-                                        <CheckIcon />
-                                    </button>
-
-                                </div>
-
-                            </form>
-                        )}
-
-                    </section>
-                );
-        }
-    };
+            }
+        };
 
 
     /*
@@ -3821,6 +5051,7 @@ export default function Profile() {
     */
 
     return (
+
         <main
             className="account-page"
             style={{
@@ -3840,9 +5071,11 @@ export default function Profile() {
                     ACCOUNT
                 </span>
 
+
                 <h1>
                     My Account
                 </h1>
+
 
                 <p>
                     Manage your profile, orders and preferences.
@@ -3861,6 +5094,7 @@ export default function Profile() {
                             GEEKA
                         </span>
 
+
                         <small>
                             ACCOUNT
                         </small>
@@ -3872,6 +5106,7 @@ export default function Profile() {
 
                         {menuItems.map(
                             (item) => (
+
                                 <button
                                     key={
                                         item.id
@@ -3889,27 +5124,37 @@ export default function Profile() {
                                             item.id
                                         );
 
+
                                         setSearchParams({
-                                            section: item.id,
+                                            section:
+                                                item.id,
                                         });
 
-                                        setProfileMessage("");
+
+                                        setProfileMessage(
+                                            ""
+                                        );
+
 
                                         setProfileMessageType(
                                             "success"
                                         );
 
+
                                         if (
                                             item.id !==
                                             "profile"
                                         ) {
+
                                             setEditingProfile(
                                                 false
                                             );
 
+
                                             setOtpSent(
                                                 false
                                             );
+
                                         }
 
                                     }}
@@ -3921,11 +5166,13 @@ export default function Profile() {
                                         }
                                     </span>
 
+
                                     <strong>
                                         →
                                     </strong>
 
                                 </button>
+
                             )
                         )}
 
@@ -3942,9 +5189,13 @@ export default function Profile() {
                             loggingOut
                         }
                     >
-                        {loggingOut
-                            ? "LOGGING OUT..."
-                            : "LOG OUT"}
+
+                        {
+                            loggingOut
+                                ? "LOGGING OUT..."
+                                : "LOG OUT"
+                        }
+
                     </button>
 
                 </aside>
@@ -3955,18 +5206,22 @@ export default function Profile() {
                     <div className="account-welcome">
 
                         <div className="account-avatar">
+
                             <span>
                                 {
                                     initials
                                 }
                             </span>
+
                         </div>
+
 
                         <div className="account-welcome-content">
 
                             <span>
                                 WELCOME
                             </span>
+
 
                             <h2>
                                 {

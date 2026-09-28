@@ -1,4 +1,5 @@
 import {
+    useLayoutEffect,
     useEffect,
     useMemo,
     useState,
@@ -120,9 +121,9 @@ function productBelongsToCollection(
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | CATEGORY MATCH
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     if (
@@ -135,21 +136,16 @@ function productBelongsToCollection(
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | BACKEND COLLECTION FIELD
-    |--------------------------------------------------------------------------
-    |
-    | Also support products that may have:
-    |
-    | product.collection
-    | product.collectionId
-    |
+    |--------------------------------------------------------------------------|
     */
 
     const productCollection =
         normalizeCategory(
             product.collection
         );
+
 
     const productCollectionId =
         normalizeCategory(
@@ -178,7 +174,9 @@ function productBelongsToCollection(
 ========================================================= */
 
 function formatPrice(price) {
-    return `₹${price.toLocaleString("en-IN")}`;
+    return `₹${price.toLocaleString(
+        "en-IN"
+    )}`;
 }
 
 
@@ -187,20 +185,28 @@ function formatPrice(price) {
 ========================================================= */
 
 function SearchIcon() {
+
     return (
+
         <svg
             viewBox="0 0 24 24"
             aria-hidden="true"
         >
+
             <circle
                 cx="10.8"
                 cy="10.8"
                 r="6.2"
             />
 
-            <path d="M15.5 15.5 21 21" />
+            <path
+                d="M15.5 15.5 21 21"
+            />
+
         </svg>
+
     );
+
 }
 
 
@@ -211,7 +217,9 @@ function SearchIcon() {
 function HeartIcon({
     filled = false,
 }) {
+
     return (
+
         <svg
             viewBox="0 0 24 24"
             aria-hidden="true"
@@ -221,9 +229,13 @@ function HeartIcon({
                     : ""
             }
         >
+
             <path d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.7Z" />
+
         </svg>
+
     );
+
 }
 
 
@@ -232,14 +244,20 @@ function HeartIcon({
 ========================================================= */
 
 function CloseIcon() {
+
     return (
+
         <svg
             viewBox="0 0 24 24"
             aria-hidden="true"
         >
+
             <path d="M6 6 18 18M18 6 6 18" />
+
         </svg>
+
     );
+
 }
 
 
@@ -248,14 +266,20 @@ function CloseIcon() {
 ========================================================= */
 
 function PlusIcon() {
+
     return (
+
         <svg
             viewBox="0 0 24 24"
             aria-hidden="true"
         >
+
             <path d="M12 5v14M5 12h14" />
+
         </svg>
+
     );
+
 }
 
 
@@ -264,14 +288,20 @@ function PlusIcon() {
 ========================================================= */
 
 function FilterIcon() {
+
     return (
+
         <svg
             viewBox="0 0 24 24"
             aria-hidden="true"
         >
+
             <path d="M4 7h16M7 12h10M10 17h4" />
+
         </svg>
+
     );
+
 }
 
 
@@ -280,14 +310,20 @@ function FilterIcon() {
 ========================================================= */
 
 function ArrowIcon() {
+
     return (
+
         <svg
             viewBox="0 0 24 24"
             aria-hidden="true"
         >
+
             <path d="M5 12h13M13 6l6 6-6 6" />
+
         </svg>
+
     );
+
 }
 
 
@@ -302,7 +338,9 @@ function ProductCard({
     onQuickView,
     onAddToCart,
 }) {
+
     return (
+
         <article className="shop-product-card">
 
             <div className="shop-product-image">
@@ -315,9 +353,13 @@ function ProductCard({
 
 
                 {product.isNew && (
+
                     <span className="shop-product-new">
+
                         NEW
+
                     </span>
+
                 )}
 
 
@@ -338,11 +380,13 @@ function ProductCard({
                             : `Add ${product.name} to wishlist`
                     }
                 >
+
                     <HeartIcon
                         filled={
                             isWishlisted
                         }
                     />
+
                 </button>
 
 
@@ -356,7 +400,9 @@ function ProductCard({
                             )
                         }
                     >
+
                         QUICK VIEW
+
                     </button>
 
                 </div>
@@ -367,30 +413,48 @@ function ProductCard({
             <div className="shop-product-info">
 
                 <span className="shop-product-category">
-                    {product.category}
+
+                    {
+                        product.category
+                    }
+
                 </span>
 
 
                 <h3>
-                    {product.name}
+
+                    {
+                        product.name
+                    }
+
                 </h3>
 
 
                 <div className="shop-product-price">
 
                     <strong>
-                        {formatPrice(
-                            product.price
-                        )}
+
+                        {
+                            formatPrice(
+                                product.price
+                            )
+                        }
+
                     </strong>
 
 
                     {product.oldPrice && (
+
                         <del>
-                            {formatPrice(
-                                product.oldPrice
-                            )}
+
+                            {
+                                formatPrice(
+                                    product.oldPrice
+                                )
+                            }
+
                         </del>
+
                     )}
 
                 </div>
@@ -409,13 +473,17 @@ function ProductCard({
                     }
                 >
 
-                    {product.inStock
-                        ? "ADD TO CART"
-                        : "SOLD OUT"}
+                    {
+                        product.inStock
+                            ? "ADD TO CART"
+                            : "SOLD OUT"
+                    }
 
 
                     {product.inStock && (
+
                         <PlusIcon />
+
                     )}
 
                 </button>
@@ -423,7 +491,9 @@ function ProductCard({
             </div>
 
         </article>
+
     );
+
 }
 
 
@@ -436,14 +506,32 @@ export default function Shop() {
     const location =
         useLocation();
 
+
     const navigate =
         useNavigate();
 
 
+    /* =====================================================
+       IMPORTANT — ALWAYS START SHOP AT TOP
+    ===================================================== */
+
+    useLayoutEffect(() => {
+
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: "auto",
+        });
+
+    }, [
+        location.pathname,
+    ]);
+
+
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | FILTER STATE
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const [
@@ -453,26 +541,27 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | URL PARAMETERS
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
-    const urlParams = useMemo(
-        () =>
-            new URLSearchParams(
-                location.search
-            ),
-        [
-            location.search,
-        ]
-    );
+    const urlParams =
+        useMemo(
+            () =>
+                new URLSearchParams(
+                    location.search
+                ),
+            [
+                location.search,
+            ]
+        );
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | COLLECTION
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const collectionFilter =
@@ -488,9 +577,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | SEARCH
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const search =
@@ -500,15 +589,16 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | PRICE
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const [
         minPrice,
         setMinPrice,
     ] = useState(0);
+
 
     const [
         maxPrice,
@@ -517,15 +607,16 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | OTHER FILTERS
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const [
         newOnly,
         setNewOnly,
     ] = useState(false);
+
 
     const [
         stockOnly,
@@ -534,9 +625,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | SORT
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const [
@@ -546,9 +637,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | WISHLIST
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const [
@@ -563,9 +654,48 @@ export default function Shop() {
                     "geeka-wishlist"
                 );
 
-            return saved
-                ? JSON.parse(saved)
-                : [];
+
+            if (!saved) {
+                return [];
+            }
+
+
+            const parsed =
+                JSON.parse(
+                    saved
+                );
+
+
+            if (!Array.isArray(parsed)) {
+                return [];
+            }
+
+
+            return parsed.map(
+                (item) => {
+
+                    if (
+                        item !== null &&
+                        typeof item === "object"
+                    ) {
+
+                        return String(
+                            item?.id ??
+                            item?.productId ??
+                            item?._id ??
+                            item?.uuid ??
+                            ""
+                        ).trim();
+
+                    }
+
+
+                    return String(
+                        item ?? ""
+                    ).trim();
+
+                }
+            ).filter(Boolean);
 
         } catch {
 
@@ -577,9 +707,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | QUICK VIEW
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const [
@@ -589,9 +719,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | MOBILE FILTERS
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const [
@@ -601,9 +731,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | CART MESSAGE
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const [
@@ -613,9 +743,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | CART
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const {
@@ -625,9 +755,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | PRODUCTS
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const [
@@ -637,14 +767,15 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | LOAD PRODUCTS
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     useEffect(() => {
 
         let active = true;
+
 
         async function loadProducts() {
 
@@ -652,6 +783,7 @@ export default function Shop() {
 
                 const items =
                     await getProducts();
+
 
                 if (active) {
 
@@ -675,7 +807,9 @@ export default function Shop() {
 
         }
 
+
         loadProducts();
+
 
         return () => {
 
@@ -687,38 +821,40 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | CATEGORIES
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
-    const categories = useMemo(() => {
+    const categories =
+        useMemo(() => {
 
-        const uniqueCategories = [
-            ...new Set(
-                products
-                    .map(
-                        (product) =>
-                            product.category
-                    )
-                    .filter(Boolean)
-            ),
-        ];
+            const uniqueCategories = [
+                ...new Set(
+                    products
+                        .map(
+                            (product) =>
+                                product.category
+                        )
+                        .filter(Boolean)
+                ),
+            ];
 
-        return [
-            "All",
-            ...uniqueCategories,
-        ];
 
-    }, [
-        products,
-    ]);
+            return [
+                "All",
+                ...uniqueCategories,
+            ];
+
+        }, [
+            products,
+        ]);
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | SAVE WISHLIST
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     useEffect(() => {
@@ -729,6 +865,7 @@ export default function Shop() {
                 wishlist
             )
         );
+
 
         window.dispatchEvent(
             new Event(
@@ -742,9 +879,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | BODY OVERFLOW
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     useEffect(() => {
@@ -753,6 +890,7 @@ export default function Shop() {
             mobileFilters || quickView
                 ? "hidden"
                 : "";
+
 
         return () => {
 
@@ -768,9 +906,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | CART MESSAGE
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     useEffect(() => {
@@ -778,6 +916,7 @@ export default function Shop() {
         if (!cartMessage) {
             return;
         }
+
 
         const timer =
             setTimeout(() => {
@@ -787,6 +926,7 @@ export default function Shop() {
                 );
 
             }, 2200);
+
 
         return () =>
             clearTimeout(
@@ -799,9 +939,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | FILTERED PRODUCTS
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const filteredProducts =
@@ -817,23 +957,11 @@ export default function Shop() {
                 products.filter(
                     (product) => {
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | STANDARD CATEGORY FILTER
-                        |--------------------------------------------------------------------------
-                        */
-
                         const matchesCategory =
                             category === "All" ||
                             product.category ===
                             category;
 
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | COLLECTION FILTER
-                        |--------------------------------------------------------------------------
-                        */
 
                         const matchesCollection =
                             productBelongsToCollection(
@@ -842,17 +970,12 @@ export default function Shop() {
                             );
 
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | SEARCH FILTER
-                        |--------------------------------------------------------------------------
-                        */
-
                         const productName =
                             String(
                                 product.name ||
                                 ""
                             ).toLowerCase();
+
 
                         const productCategory =
                             String(
@@ -871,12 +994,6 @@ export default function Shop() {
                             );
 
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | PRICE FILTER
-                        |--------------------------------------------------------------------------
-                        */
-
                         const matchesPrice =
                             product.price >=
                             minPrice &&
@@ -884,22 +1001,10 @@ export default function Shop() {
                             maxPrice;
 
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | NEW FILTER
-                        |--------------------------------------------------------------------------
-                        */
-
                         const matchesNew =
                             !newOnly ||
                             product.isNew;
 
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | STOCK FILTER
-                        |--------------------------------------------------------------------------
-                        */
 
                         const matchesStock =
                             !stockOnly ||
@@ -993,24 +1098,19 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | CATEGORY CHANGE
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
-    function handleCategoryChange(item) {
+    function handleCategoryChange(
+        item
+    ) {
 
         setCategory(
             item
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Selecting a specific category overrides
-        | the collection-level filter.
-        |--------------------------------------------------------------------------
-        */
 
         if (
             collectionFilter
@@ -1021,12 +1121,15 @@ export default function Shop() {
                     location.search
                 );
 
+
             params.delete(
                 "collection"
             );
 
+
             const nextQuery =
                 params.toString();
+
 
             navigate(
                 nextQuery
@@ -1040,9 +1143,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | CLEAR FILTERS
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const clearFilters = () => {
@@ -1051,32 +1154,31 @@ export default function Shop() {
             "All"
         );
 
+
         setMinPrice(
             0
         );
+
 
         setMaxPrice(
             2500
         );
 
+
         setNewOnly(
             false
         );
+
 
         setStockOnly(
             false
         );
 
+
         setSortBy(
             "featured"
         );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Remove collection and search parameters too.
-        |--------------------------------------------------------------------------
-        */
 
         navigate(
             "/shop"
@@ -1086,9 +1188,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | CLEAR SEARCH ONLY
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     function clearSearch() {
@@ -1098,12 +1200,15 @@ export default function Shop() {
                 location.search
             );
 
+
         params.delete(
             "search"
         );
 
+
         const nextQuery =
             params.toString();
+
 
         navigate(
             nextQuery
@@ -1115,9 +1220,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | WISHLIST
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const toggleWishlist =
@@ -1143,9 +1248,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | ADD TO CART
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const addToCart =
@@ -1155,6 +1260,7 @@ export default function Shop() {
                 product
             );
 
+
             setCartMessage(
                 true
             );
@@ -1163,9 +1269,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | CATEGORY COUNT
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const categoryCount =
@@ -1180,6 +1286,7 @@ export default function Shop() {
 
             }
 
+
             return products.filter(
                 (product) =>
                     product.category ===
@@ -1190,9 +1297,9 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | HAS FILTERS
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     const hasFilters =
@@ -1208,12 +1315,13 @@ export default function Shop() {
 
 
     /*
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     | RENDER
-    |--------------------------------------------------------------------------
+    |--------------------------------------------------------------------------|
     */
 
     return (
+
         <>
 
             {/* =================================================
@@ -1246,22 +1354,30 @@ export default function Shop() {
                     <div className="shop-banner-content">
 
                         <span className="shop-banner-eyebrow">
+
                             The Geeka Edit.
+
                         </span>
 
 
                         <h1>
+
                             Made to be
+
                             <br />
+
                             yours.
+
                         </h1>
 
 
                         <p>
+
                             Discover thoughtfully chosen
                             ethnic wear, jewellery and
                             handmade creations designed
                             for everyday expression.
+
                         </p>
 
                     </div>
@@ -1323,7 +1439,9 @@ export default function Shop() {
                             <div className="sort-box">
 
                                 <label htmlFor="sort">
+
                                     SORT BY:
+
                                 </label>
 
 
@@ -1332,9 +1450,7 @@ export default function Shop() {
                                     value={sortBy}
                                     onChange={(event) =>
                                         setSortBy(
-                                            event
-                                                .target
-                                                .value
+                                            event.target.value
                                         )
                                     }
                                 >
@@ -1377,11 +1493,14 @@ export default function Shop() {
                         <div className="active-filter-row">
 
                             <span>
+
                                 FILTERS:
+
                             </span>
 
 
                             {activeCollection && (
+
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -1391,12 +1510,15 @@ export default function Shop() {
                                                 location.search
                                             );
 
+
                                         params.delete(
                                             "collection"
                                         );
 
+
                                         const nextQuery =
                                             params.toString();
+
 
                                         navigate(
                                             nextQuery
@@ -1407,11 +1529,14 @@ export default function Shop() {
                                     }}
                                 >
 
-                                    {activeCollection.label}
+                                    {
+                                        activeCollection.label
+                                    }
 
                                     <CloseIcon />
 
                                 </button>
+
                             )}
 
 
@@ -1426,7 +1551,9 @@ export default function Shop() {
                                     }
                                 >
 
-                                    {category}
+                                    {
+                                        category
+                                    }
 
                                     <CloseIcon />
 
@@ -1464,6 +1591,7 @@ export default function Shop() {
                                                 0
                                             );
 
+
                                             setMaxPrice(
                                                 2500
                                             );
@@ -1471,15 +1599,19 @@ export default function Shop() {
                                         }}
                                     >
 
-                                        {formatPrice(
-                                            minPrice
-                                        )}
+                                        {
+                                            formatPrice(
+                                                minPrice
+                                            )
+                                        }
 
                                         {" - "}
 
-                                        {formatPrice(
-                                            maxPrice
-                                        )}
+                                        {
+                                            formatPrice(
+                                                maxPrice
+                                            )
+                                        }
 
                                         <CloseIcon />
 
@@ -1535,7 +1667,9 @@ export default function Shop() {
                                     clearFilters
                                 }
                             >
+
                                 CLEAR ALL
+
                             </button>
 
                         </div>
@@ -1588,7 +1722,9 @@ export default function Shop() {
                                             >
 
                                                 <span>
-                                                    {item}
+                                                    {
+                                                        item
+                                                    }
                                                 </span>
 
                                                 <span>
@@ -1619,15 +1755,24 @@ export default function Shop() {
                                 <div className="price-values">
 
                                     <span>
-                                        {formatPrice(
-                                            minPrice
-                                        )}
+
+                                        {
+                                            formatPrice(
+                                                minPrice
+                                            )
+                                        }
+
                                     </span>
 
+
                                     <span>
-                                        {formatPrice(
-                                            maxPrice
-                                        )}
+
+                                        {
+                                            formatPrice(
+                                                maxPrice
+                                            )
+                                        }
+
                                     </span>
 
                                 </div>
@@ -1647,10 +1792,9 @@ export default function Shop() {
 
                                             const value =
                                                 Number(
-                                                    event
-                                                        .target
-                                                        .value
+                                                    event.target.value
                                                 );
+
 
                                             setMinPrice(
                                                 Math.min(
@@ -1675,10 +1819,9 @@ export default function Shop() {
 
                                             const value =
                                                 Number(
-                                                    event
-                                                        .target
-                                                        .value
+                                                    event.target.value
                                                 );
+
 
                                             setMaxPrice(
                                                 Math.max(
@@ -1711,9 +1854,7 @@ export default function Shop() {
                                         }
                                         onChange={(event) =>
                                             setStockOnly(
-                                                event
-                                                    .target
-                                                    .checked
+                                                event.target.checked
                                             )
                                         }
                                     />
@@ -1736,9 +1877,7 @@ export default function Shop() {
                                         }
                                         onChange={(event) =>
                                             setNewOnly(
-                                                event
-                                                    .target
-                                                    .checked
+                                                event.target.checked
                                             )
                                         }
                                     />
@@ -1763,7 +1902,9 @@ export default function Shop() {
                                         clearFilters
                                     }
                                 >
+
                                     RESET FILTERS
+
                                 </button>
 
                             )}
@@ -1794,6 +1935,11 @@ export default function Shop() {
                                                 }
                                                 isWishlisted={
                                                     wishlist.includes(
+                                                        String(
+                                                            product.id
+                                                        )
+                                                    ) ||
+                                                    wishlist.includes(
                                                         product.id
                                                     )
                                                 }
@@ -1818,7 +1964,9 @@ export default function Shop() {
                                 <div className="shop-empty">
 
                                     <div className="empty-search-icon">
+
                                         <SearchIcon />
+
                                     </div>
 
 
@@ -1828,9 +1976,11 @@ export default function Shop() {
 
 
                                     <p>
+
                                         No products match your
                                         search. Try different
                                         keywords or filters.
+
                                     </p>
 
 
@@ -1908,7 +2058,9 @@ export default function Shop() {
                                         )
                                     }
                                 >
+
                                     <CloseIcon />
+
                                 </button>
 
                             </div>
@@ -1981,15 +2133,24 @@ export default function Shop() {
                                     <div className="price-values">
 
                                         <span>
-                                            {formatPrice(
-                                                minPrice
-                                            )}
+
+                                            {
+                                                formatPrice(
+                                                    minPrice
+                                                )
+                                            }
+
                                         </span>
 
+
                                         <span>
-                                            {formatPrice(
-                                                maxPrice
-                                            )}
+
+                                            {
+                                                formatPrice(
+                                                    maxPrice
+                                                )
+                                            }
+
                                         </span>
 
                                     </div>
@@ -2009,10 +2170,9 @@ export default function Shop() {
 
                                                 const value =
                                                     Number(
-                                                        event
-                                                            .target
-                                                            .value
+                                                        event.target.value
                                                     );
+
 
                                                 setMinPrice(
                                                     Math.min(
@@ -2037,10 +2197,9 @@ export default function Shop() {
 
                                                 const value =
                                                     Number(
-                                                        event
-                                                            .target
-                                                            .value
+                                                        event.target.value
                                                     );
+
 
                                                 setMaxPrice(
                                                     Math.max(
@@ -2073,9 +2232,7 @@ export default function Shop() {
                                             }
                                             onChange={(event) =>
                                                 setStockOnly(
-                                                    event
-                                                        .target
-                                                        .checked
+                                                    event.target.checked
                                                 )
                                             }
                                         />
@@ -2098,9 +2255,7 @@ export default function Shop() {
                                             }
                                             onChange={(event) =>
                                                 setNewOnly(
-                                                    event
-                                                        .target
-                                                        .checked
+                                                    event.target.checked
                                                 )
                                             }
                                         />
@@ -2126,7 +2281,9 @@ export default function Shop() {
                                         clearFilters
                                     }
                                 >
+
                                     CLEAR
+
                                 </button>
 
 
@@ -2195,7 +2352,9 @@ export default function Shop() {
                                     )
                                 }
                             >
+
                                 <CloseIcon />
+
                             </button>
 
 
@@ -2216,34 +2375,46 @@ export default function Shop() {
                             <div className="quick-view-content">
 
                                 <span>
+
                                     {
                                         quickView.category
                                     }
+
                                 </span>
 
 
                                 <h2>
+
                                     {
                                         quickView.name
                                     }
+
                                 </h2>
 
 
                                 <div className="quick-view-price">
 
                                     <strong>
-                                        {formatPrice(
-                                            quickView.price
-                                        )}
+
+                                        {
+                                            formatPrice(
+                                                quickView.price
+                                            )
+                                        }
+
                                     </strong>
 
 
                                     {quickView.oldPrice && (
 
                                         <del>
-                                            {formatPrice(
-                                                quickView.oldPrice
-                                            )}
+
+                                            {
+                                                formatPrice(
+                                                    quickView.oldPrice
+                                                )
+                                            }
+
                                         </del>
 
                                     )}
@@ -2252,9 +2423,11 @@ export default function Shop() {
 
 
                                 <p>
+
                                     {
                                         quickView.description
                                     }
+
                                 </p>
 
 
@@ -2266,6 +2439,7 @@ export default function Shop() {
                                         addToCart(
                                             quickView
                                         );
+
 
                                         setQuickView(
                                             null
@@ -2298,12 +2472,18 @@ export default function Shop() {
                     <div className="cart-message">
 
                         <span>
+
                             Added to your bag
+
                         </span>
 
 
                         <strong>
-                            {cartCount}
+
+                            {
+                                cartCount
+                            }
+
                         </strong>
 
 
@@ -2315,7 +2495,9 @@ export default function Shop() {
                                 )
                             }
                         >
+
                             ×
+
                         </button>
 
                     </div>
@@ -2325,5 +2507,7 @@ export default function Shop() {
             </main>
 
         </>
+
     );
+
 }
