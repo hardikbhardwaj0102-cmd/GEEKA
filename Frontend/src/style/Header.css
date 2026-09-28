@@ -17,37 +17,19 @@
 .site-header {
     position: relative;
     z-index: 1000;
-
     width: 100%;
-
     min-height: 78px;
-
-    padding:
-        15px 5%;
-
+    margin-bottom: -76px;
+    padding: 15px 5%;
     display: grid;
-
-    grid-template-columns:
-        auto minmax(0, 1fr) auto;
-
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-
     gap: 30px;
-
-    background:
-        rgba(255, 249, 244, 0.96);
-
-    color:
-        var(--brown, #5d3e35);
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.08);
-
-    backdrop-filter:
-        blur(18px);
-
-    -webkit-backdrop-filter:
-        blur(18px);
+    background: rgba(255, 249, 244, 0.96);
+    color: var(--brown, #5d3e35);
+    border-bottom: 1px solid rgba(93, 62, 53, 0.08);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
 }
 
 
