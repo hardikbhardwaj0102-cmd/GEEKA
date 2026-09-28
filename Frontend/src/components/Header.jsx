@@ -1,47 +1,51 @@
-import { useEffect, useRef, useState } from "react";
+import {
+    useEffect,
+    useRef,
+    useState,
+} from "react";
+
 import {
     Link,
     useLocation,
     useNavigate,
 } from "react-router-dom";
+
 import "../style/Header.css";
 
 import geekaLogo from "../assets/logo.png";
+
 import { useCart } from "../hooks/useCart";
 
 
-/*
-|--------------------------------------------------------------------------
-| BACKEND
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   API CONFIGURATION
+========================================================= */
 
 const API_URL =
     import.meta.env.VITE_API_URL ||
     "https://geeka-backend.onrender.com";
 
 
-/*
-|--------------------------------------------------------------------------
-| ICONS
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   LOGO
+========================================================= */
 
 function Logo() {
     return (
-        <Link
-            to="/"
-            className="header-logo"
-            aria-label="GEEKA Home"
-        >
+        <div className="brand-logo">
             <img
                 src={geekaLogo}
-                alt="GEEKA"
+                alt="Geeka"
+                className="brand-logo-image"
             />
-        </Link>
+        </div>
     );
 }
 
+
+/* =========================================================
+   SEARCH ICON
+========================================================= */
 
 function SearchIcon() {
     return (
@@ -54,11 +58,16 @@ function SearchIcon() {
                 cy="11"
                 r="6.5"
             />
-            <path d="m16 16 4.5 4.5" />
+
+            <path d="M16 16L21 21" />
         </svg>
     );
 }
 
+
+/* =========================================================
+   CLOSE ICON
+========================================================= */
 
 function CloseIcon() {
     return (
@@ -66,12 +75,16 @@ function CloseIcon() {
             viewBox="0 0 24 24"
             aria-hidden="true"
         >
-            <path d="m6 6 12 12" />
-            <path d="M18 6 6 18" />
+            <path d="M6 6L18 18" />
+            <path d="M18 6L6 18" />
         </svg>
     );
 }
 
+
+/* =========================================================
+   ACCOUNT ICON
+========================================================= */
 
 function AccountIcon() {
     return (
@@ -84,11 +97,16 @@ function AccountIcon() {
                 cy="8"
                 r="3.5"
             />
-            <path d="M5 20c.9-4 3.2-6 7-6s6.1 2 7 6" />
+
+            <path d="M5 21c.8-4 3.1-6 7-6s6.2 2 7 6" />
         </svg>
     );
 }
 
+
+/* =========================================================
+   WISHLIST ICON
+========================================================= */
 
 function HeartIcon() {
     return (
@@ -96,11 +114,15 @@ function HeartIcon() {
             viewBox="0 0 24 24"
             aria-hidden="true"
         >
-            <path d="M20.8 8.7c0 5.2-8.8 10-8.8 10s-8.8-4.8-8.8-10A4.7 4.7 0 0 1 12 5.6a4.7 4.7 0 0 1 8.8 3.1Z" />
+            <path d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.7Z" />
         </svg>
     );
 }
 
+
+/* =========================================================
+   BAG ICON
+========================================================= */
 
 function BagIcon() {
     return (
@@ -108,88 +130,68 @@ function BagIcon() {
             viewBox="0 0 24 24"
             aria-hidden="true"
         >
-            <path d="M5 8h14l-1 12H6L5 8Z" />
-            <path d="M9 8a3 3 0 0 1 6 0" />
+            <path d="M5 8h14l-1 13H6L5 8Z" />
+
+            <path d="M9 8V6a3 3 0 0 1 6 0v2" />
         </svg>
     );
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| USER HELPERS
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   USER INITIALS
+========================================================= */
 
 function getUserInitials(fullName) {
-    if (!fullName?.trim()) {
-        return "G";
+    if (!fullName) {
+        return "U";
+    }
+
+    const parts = fullName
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean);
+
+    if (parts.length === 1) {
+        return parts[0]
+            .charAt(0)
+            .toUpperCase();
     }
 
     return (
-        fullName
-            .trim()
-            .split(/\s+/)
-            .filter(Boolean)
-            .map((word) => word[0])
-            .join("")
-            .slice(0, 2)
-            .toUpperCase() || "G"
-    );
+        parts[0].charAt(0) +
+        parts[parts.length - 1].charAt(0)
+    ).toUpperCase();
 }
 
 
-/*
-|--------------------------------------------------------------------------
-| HEADER
-|--------------------------------------------------------------------------
-*/
+/* =========================================================
+   HEADER
+========================================================= */
 
 export default function Header() {
+
     const location = useLocation();
+
     const navigate = useNavigate();
 
+    const searchInputRef = useRef(null);
+
+
     /*
     |--------------------------------------------------------------------------
-    | CART
+    | SHARED CART
     |--------------------------------------------------------------------------
     */
 
-    const cartState = useCart() || {};
-
-    /*
-    |--------------------------------------------------------------------------
-    | Support the common shapes your existing useCart hook may expose.
-    |--------------------------------------------------------------------------
-    */
-
-    const cartItems =
-        Array.isArray(cartState.items)
-            ? cartState.items
-            : Array.isArray(cartState.cartItems)
-                ? cartState.cartItems
-                : [];
-
-    const cartCount =
-        typeof cartState.cartCount === "number"
-            ? cartState.cartCount
-            : typeof cartState.itemCount === "number"
-                ? cartState.itemCount
-                : typeof cartState.count === "number"
-                    ? cartState.count
-                    : cartItems.reduce(
-                        (total, item) =>
-                            total +
-                            Number(
-                                item.quantity ?? 1
-                            ),
-                        0
-                    );
+    const {
+        cartCount,
+    } = useCart();
 
 
     /*
     |--------------------------------------------------------------------------
-    | AUTH
+    | AUTHENTICATION STATE
     |--------------------------------------------------------------------------
     */
 
@@ -202,46 +204,105 @@ export default function Header() {
 
     /*
     |--------------------------------------------------------------------------
-    | SEARCH
+    | SEARCH STATE
     |--------------------------------------------------------------------------
     */
 
     const [searchOpen, setSearchOpen] =
         useState(false);
 
-    const [searchValue, setSearchValue] =
-        useState("");
-
-    const searchInputRef =
-        useRef(null);
+    const [
+        searchValue,
+        setSearchValue,
+    ] = useState("");
 
 
     /*
     |--------------------------------------------------------------------------
-    | WISHLIST
+    | WISHLIST STATE
     |--------------------------------------------------------------------------
     */
 
-    const [wishlistCount, setWishlistCount] =
-        useState(0);
+    const [
+        wishlistCount,
+        setWishlistCount,
+    ] = useState(0);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CURRENT ROUTE
+    |--------------------------------------------------------------------------
+    */
+
+    const isHome =
+        location.pathname === "/" ||
+        location.pathname === "";
+
+    const isShop =
+        location.pathname === "/shop" ||
+        location.pathname.startsWith(
+            "/shop/"
+        );
+
+    const isAbout =
+        location.pathname === "/about" ||
+        location.pathname.startsWith(
+            "/about/"
+        );
+
+    const isContact =
+        location.pathname === "/contact" ||
+        location.pathname.startsWith(
+            "/contact/"
+        );
+
+    const isCart =
+        location.pathname === "/cart";
+
+    const isProfile =
+        location.pathname === "/profile";
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | WISHLIST SECTION
+    |--------------------------------------------------------------------------
+    */
+
+    const isWishlist =
+        isProfile &&
+        new URLSearchParams(
+            location.search
+        ).get("section") === "wishlist";
 
 
     /*
     |--------------------------------------------------------------------------
     | LOAD CURRENT USER
     |--------------------------------------------------------------------------
+    |
+    | Django session is checked through:
+    |
+    | GET /api/v1/auth/me/
+    |
+    | No JWT/token is stored on the frontend.
+    |
     */
 
     async function loadCurrentUser() {
+
+        setAuthLoading(true);
+
         try {
-            setAuthLoading(true);
 
             const response =
                 await fetch(
                     `${API_URL}/api/v1/auth/me/`,
                     {
                         method: "GET",
-                        credentials: "include",
+                        credentials:
+                            "include",
                         headers: {
                             Accept:
                                 "application/json",
@@ -250,176 +311,224 @@ export default function Header() {
                 );
 
             if (
-                response.status === 401
+                response.status ===
+                401
             ) {
+
                 setUser(null);
+
                 return;
+            }
+
+            let data = {};
+
+            try {
+                data =
+                    await response.json();
+            } catch {
+                data = {};
             }
 
             if (!response.ok) {
+
                 setUser(null);
+
                 return;
             }
 
-            const data =
-                await response.json();
+            /*
+             * Expected response:
+             *
+             * {
+             *     "user": {
+             *         "id": "...",
+             *         "email": "...",
+             *         "full_name": "...",
+             *         "email_verified": true
+             *     }
+             * }
+             */
 
             if (data?.user) {
+
                 setUser(
                     data.user
                 );
+
             } else {
+
                 setUser(null);
+
             }
-        } catch {
+
+        } catch (error) {
+
+            console.error(
+                "Unable to load current user:",
+                error
+            );
+
             setUser(null);
+
         } finally {
+
             setAuthLoading(false);
+
         }
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | AUTH SESSION CHECK
-    |--------------------------------------------------------------------------
-    |
-    | Check on initial mount and whenever the route changes.
-    | This is important because Header remains mounted while moving
-    | from Login -> Home -> Profile.
+    | CHECK LOGIN SESSION
     |--------------------------------------------------------------------------
     */
 
     useEffect(() => {
+
         loadCurrentUser();
-    }, [location.pathname]);
 
+        /*
+         * Allows Login.jsx / other components
+         * to tell Header to refresh authentication
+         * without storing anything locally.
+         */
 
-    /*
-    |--------------------------------------------------------------------------
-    | AUTH UPDATE EVENT
-    |--------------------------------------------------------------------------
-    |
-    | Login/Profile can notify Header without a full page refresh.
-    |--------------------------------------------------------------------------
-    */
+        function handleAuthUpdated() {
 
-    useEffect(() => {
-        function handleAuthUpdate() {
             loadCurrentUser();
+
         }
 
         window.addEventListener(
             "geeka-auth-updated",
-            handleAuthUpdate
+            handleAuthUpdated
         );
 
         return () => {
+
             window.removeEventListener(
                 "geeka-auth-updated",
-                handleAuthUpdate
+                handleAuthUpdated
             );
+
         };
+
     }, []);
 
 
     /*
     |--------------------------------------------------------------------------
-    | WISHLIST COUNT
+    | READ WISHLIST
     |--------------------------------------------------------------------------
     */
 
-    function loadWishlistCount() {
+    function updateWishlistCount() {
+
         try {
+
             const saved =
                 localStorage.getItem(
                     "geeka-wishlist"
                 );
 
-            if (!saved) {
-                setWishlistCount(0);
-                return;
-            }
-
             const parsed =
-                JSON.parse(saved);
+                saved
+                    ? JSON.parse(saved)
+                    : [];
 
             setWishlistCount(
                 Array.isArray(parsed)
                     ? parsed.length
                     : 0
             );
+
         } catch {
+
             setWishlistCount(0);
+
         }
     }
 
 
     useEffect(() => {
-        loadWishlistCount();
 
-        function syncWishlist() {
-            loadWishlistCount();
+        updateWishlistCount();
+
+        function handleWishlistStorage() {
+            updateWishlistCount();
         }
 
         window.addEventListener(
             "storage",
-            syncWishlist
+            handleWishlistStorage
         );
 
         window.addEventListener(
             "geeka-wishlist-updated",
-            syncWishlist
+            handleWishlistStorage
         );
 
         return () => {
+
             window.removeEventListener(
                 "storage",
-                syncWishlist
+                handleWishlistStorage
             );
 
             window.removeEventListener(
                 "geeka-wishlist-updated",
-                syncWishlist
+                handleWishlistStorage
             );
+
         };
+
     }, []);
 
 
     /*
     |--------------------------------------------------------------------------
-    | SEARCH URL SYNC
+    | READ SEARCH FROM URL
     |--------------------------------------------------------------------------
     */
 
     useEffect(() => {
+
         const params =
             new URLSearchParams(
                 location.search
             );
 
-        const urlSearch =
+        const query =
             params.get("search") || "";
 
-        setSearchValue(
-            urlSearch
-        );
+        setSearchValue(query);
 
-        if (
-            location.pathname ===
-            "/shop"
-        ) {
-            setSearchOpen(
-                true
-            );
+        /*
+        | On Shop the search bar is always visible.
+        | On other pages the search remains closed.
+        */
+
+        if (isShop) {
+
+            setSearchOpen(true);
+
+            setTimeout(() => {
+
+                searchInputRef.current?.focus();
+
+            }, 0);
+
         } else {
-            setSearchOpen(
-                false
-            );
+
+            setSearchOpen(false);
+
         }
+
     }, [
         location.pathname,
         location.search,
+        isShop,
     ]);
 
 
@@ -430,19 +539,15 @@ export default function Header() {
     */
 
     function openSearch() {
-        if (
-            location.pathname !==
-            "/shop"
-        ) {
-            navigate("/shop");
-            return;
-        }
 
         setSearchOpen(true);
 
         setTimeout(() => {
+
             searchInputRef.current?.focus();
-        }, 50);
+
+        }, 0);
+
     }
 
 
@@ -453,125 +558,233 @@ export default function Header() {
     */
 
     function closeSearch() {
+
         setSearchOpen(false);
 
-        const params =
-            new URLSearchParams(
-                location.search
-            );
+        setSearchValue("");
 
-        params.delete("search");
-
-        const query =
-            params.toString();
-
-        navigate(
-            query
-                ? `${location.pathname}?${query}`
-                : location.pathname,
-            {
-                replace: true,
-            }
-        );
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | SEARCH CHANGE
+    | UPDATE SHOP SEARCH
     |--------------------------------------------------------------------------
     */
 
     function handleSearchChange(event) {
+
         const value =
             event.target.value;
 
         setSearchValue(value);
 
-        const params =
-            new URLSearchParams(
-                location.search
-            );
+        if (!isShop) {
 
-        if (value.trim()) {
-            params.set(
-                "search",
-                value
-            );
-        } else {
-            params.delete(
-                "search"
-            );
+            return;
+
         }
 
-        const query =
-            params.toString();
+        const trimmedValue =
+            value.trim();
+
+        if (!trimmedValue) {
+
+            navigate(
+                "/shop",
+                {
+                    replace: true,
+                }
+            );
+
+            return;
+
+        }
 
         navigate(
-            query
-                ? `${location.pathname}?${query}`
-                : location.pathname,
+            `/shop?search=${encodeURIComponent(
+                trimmedValue
+            )}`,
             {
                 replace: true,
             }
         );
+
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | SEARCH SUBMIT
+    | RUN SEARCH
     |--------------------------------------------------------------------------
     */
 
     function handleSearchSubmit(event) {
+
         event.preventDefault();
 
-        const value =
+        const query =
             searchValue.trim();
 
-        const params =
-            new URLSearchParams(
-                location.search
+        if (!query) {
+
+            navigate(
+                "/shop",
+                {
+                    replace: true,
+                }
             );
 
-        if (value) {
-            params.set(
-                "search",
-                value
-            );
-        } else {
-            params.delete(
-                "search"
-            );
+            return;
+
         }
 
-        const query =
-            params.toString();
-
         navigate(
-            query
-                ? `/shop?${query}`
-                : "/shop",
-            {
-                replace: true,
-            }
+            `/shop?search=${encodeURIComponent(
+                query
+            )}`
         );
+
+        setSearchOpen(true);
+
     }
 
 
     /*
     |--------------------------------------------------------------------------
-    | ACCOUNT
+    | SEARCH KEYBOARD
     |--------------------------------------------------------------------------
     */
 
-    function handleAccountClick() {
-        if (user) {
-            navigate("/profile");
-        } else {
-            navigate("/login");
+    function handleSearchKeyDown(event) {
+
+        if (event.key === "Escape") {
+
+            if (isShop) {
+
+                navigate(
+                    "/shop",
+                    {
+                        replace: true,
+                    }
+                );
+
+                return;
+
+            }
+
+            closeSearch();
+
+            return;
         }
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            handleSearchSubmit(event);
+
+        }
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CLOSE SEARCH WHEN CLICKING OUTSIDE
+    |--------------------------------------------------------------------------
+    */
+
+    useEffect(() => {
+
+        /*
+        | Do not close the search on Shop.
+        | The Shop search is permanently visible.
+        */
+
+        if (
+            !searchOpen ||
+            isShop
+        ) {
+
+            return undefined;
+
+        }
+
+        function handleOutsideClick(event) {
+
+            if (
+                !event.target.closest(
+                    ".header-search-wrapper"
+                )
+            ) {
+
+                if (
+                    !searchValue.trim()
+                ) {
+
+                    closeSearch();
+
+                }
+
+            }
+
+        }
+
+        document.addEventListener(
+            "mousedown",
+            handleOutsideClick
+        );
+
+        return () => {
+
+            document.removeEventListener(
+                "mousedown",
+                handleOutsideClick
+            );
+
+        };
+
+    }, [
+        searchOpen,
+        searchValue,
+        isShop,
+    ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | WISHLIST NAVIGATION
+    |--------------------------------------------------------------------------
+    */
+
+    function goToWishlist() {
+
+        navigate(
+            "/profile?section=wishlist"
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ACCOUNT NAVIGATION
+    |--------------------------------------------------------------------------
+    */
+
+    function goToAccount() {
+
+        if (user) {
+
+            navigate("/profile");
+
+            return;
+
+        }
+
+        navigate("/login");
+
     }
 
 
@@ -584,109 +797,172 @@ export default function Header() {
     return (
         <header className="site-header">
 
-            <div className="header-inner">
+            {/* =================================================
+                LOGO
+            ================================================== */}
 
+            <Link
+                to="/"
+                className="header-logo-link"
+                aria-label="Go to Geeka home"
+            >
                 <Logo />
+            </Link>
 
 
-                {searchOpen ? (
-                    <form
-                        className="header-search-form"
-                        onSubmit={
-                            handleSearchSubmit
-                        }
-                    >
+            {/* =================================================
+                NAVIGATION
+            ================================================== */}
 
-                        <SearchIcon />
+            <nav className="main-navigation">
 
-                        <input
-                            ref={
-                                searchInputRef
+                <Link
+                    to="/"
+                    className={
+                        isHome
+                            ? "navigation-active"
+                            : ""
+                    }
+                >
+                    Home
+                </Link>
+
+
+                <Link
+                    to="/shop"
+                    className={`navigation-shop ${isShop
+                        ? "navigation-active"
+                        : ""
+                        }`}
+                >
+
+                    <span>
+                        Shop
+                    </span>
+
+                    <span className="navigation-arrow">
+                        ⌄
+                    </span>
+
+                </Link>
+
+
+                <Link
+                    to="/about"
+                    className={
+                        isAbout
+                            ? "navigation-active"
+                            : ""
+                    }
+                >
+                    About Us
+                </Link>
+
+
+                <Link
+                    to="/contact"
+                    className={
+                        isContact
+                            ? "navigation-active"
+                            : ""
+                    }
+                >
+                    Contact
+                </Link>
+
+            </nav>
+
+
+            {/* =================================================
+                ACTIONS
+            ================================================== */}
+
+            <div className="header-actions">
+
+
+                {/* =============================================
+                    SEARCH
+                ============================================== */}
+
+                <div
+                    className={`header-search-wrapper ${searchOpen
+                        ? "search-expanded"
+                        : ""
+                        } ${isShop
+                            ? "shop-header-search"
+                            : ""
+                        }`}
+                >
+
+                    {searchOpen ? (
+
+                        <form
+                            className="header-search-expanded"
+                            onSubmit={
+                                handleSearchSubmit
                             }
-                            type="search"
-                            value={
-                                searchValue
-                            }
-                            onChange={
-                                handleSearchChange
-                            }
-                            placeholder="Search products"
-                            aria-label="Search products"
-                        />
+                        >
+
+                            <SearchIcon />
+
+                            <input
+                                ref={
+                                    searchInputRef
+                                }
+                                type="search"
+                                value={
+                                    searchValue
+                                }
+                                onChange={
+                                    handleSearchChange
+                                }
+                                onKeyDown={
+                                    handleSearchKeyDown
+                                }
+                                placeholder="Search products..."
+                                aria-label="Search products"
+                            />
+
+
+                            {searchValue && (
+
+                                <button
+                                    type="button"
+                                    className="header-search-clear"
+                                    onClick={() => {
+
+                                        setSearchValue("");
+
+                                        if (isShop) {
+
+                                            navigate(
+                                                "/shop",
+                                                {
+                                                    replace: true,
+                                                }
+                                            );
+
+                                        } else {
+
+                                            closeSearch();
+
+                                        }
+
+                                    }}
+                                    aria-label="Clear search"
+                                >
+                                    <CloseIcon />
+                                </button>
+
+                            )}
+
+                        </form>
+
+                    ) : (
 
                         <button
                             type="button"
-                            className="header-search-close"
-                            onClick={
-                                closeSearch
-                            }
-                            aria-label="Close search"
-                        >
-                            <CloseIcon />
-                        </button>
-
-                    </form>
-                ) : (
-                    <nav className="header-navigation">
-
-                        <Link
-                            to="/"
-                            className={
-                                location.pathname ===
-                                    "/"
-                                    ? "active"
-                                    : ""
-                            }
-                        >
-                            HOME
-                        </Link>
-
-                        <Link
-                            to="/shop"
-                            className={
-                                location.pathname ===
-                                    "/shop"
-                                    ? "active"
-                                    : ""
-                            }
-                        >
-                            SHOP
-                        </Link>
-
-                        <Link
-                            to="/about"
-                            className={
-                                location.pathname ===
-                                    "/about"
-                                    ? "active"
-                                    : ""
-                            }
-                        >
-                            ABOUT
-                        </Link>
-
-                        <Link
-                            to="/contact"
-                            className={
-                                location.pathname ===
-                                    "/contact"
-                                    ? "active"
-                                    : ""
-                            }
-                        >
-                            CONTACT
-                        </Link>
-
-                    </nav>
-                )}
-
-
-                <div className="header-actions">
-
-                    {!searchOpen && (
-                        <button
-                            type="button"
-                            className="header-action-button"
+                            className="header-search-button"
                             onClick={
                                 openSearch
                             }
@@ -694,84 +970,149 @@ export default function Header() {
                         >
                             <SearchIcon />
                         </button>
+
                     )}
-
-
-                    <button
-                        type="button"
-                        className={`header-account-link ${user
-                            ? "header-account-logged-in"
-                            : ""
-                            }`}
-                        onClick={
-                            handleAccountClick
-                        }
-                        aria-label={
-                            user
-                                ? `Open ${user.full_name ||
-                                "account"
-                                }`
-                                : "Login"
-                        }
-                        title={
-                            user
-                                ? user.full_name ||
-                                user.email ||
-                                "Account"
-                                : "Login"
-                        }
-                    >
-
-                        {user && !authLoading ? (
-                            <span className="header-account-avatar">
-                                {getUserInitials(
-                                    user.full_name
-                                )}
-                            </span>
-                        ) : (
-                            <AccountIcon />
-                        )}
-
-                    </button>
-
-
-                    <Link
-                        to="/profile?section=wishlist"
-                        className="header-action-button header-wishlist-link"
-                        aria-label="Wishlist"
-                    >
-
-                        <HeartIcon />
-
-                        {wishlistCount > 0 && (
-                            <span className="header-count">
-                                {wishlistCount}
-                            </span>
-                        )}
-
-                    </Link>
-
-
-                    <Link
-                        to="/cart"
-                        className="header-action-button header-cart-link"
-                        aria-label="Cart"
-                    >
-
-                        <BagIcon />
-
-                        {cartCount > 0 && (
-                            <span className="header-count">
-                                {cartCount}
-                            </span>
-                        )}
-
-                    </Link>
 
                 </div>
 
+
+                {/* =============================================
+                    WISHLIST
+                ============================================== */}
+
+                <button
+                    type="button"
+                    className={`header-wishlist ${isWishlist
+                        ? "header-wishlist-active"
+                        : ""
+                        }`}
+                    onClick={
+                        goToWishlist
+                    }
+                    aria-label="Wishlist"
+                >
+
+                    <HeartIcon />
+
+                    {wishlistCount > 0 && (
+
+                        <span className="header-wishlist-count">
+                            {wishlistCount}
+                        </span>
+
+                    )}
+
+                </button>
+
+
+                {/* =============================================
+                    ACCOUNT
+                ============================================== */}
+
+                <button
+                    type="button"
+                    className={`header-account-link ${user
+                        ? "header-account-logged-in"
+                        : ""
+                        }`}
+                    onClick={
+                        goToAccount
+                    }
+                    aria-label={
+                        user
+                            ? `Open profile for ${user.full_name ||
+                            user.email
+                            }`
+                            : "Account"
+                    }
+                    title={
+                        user
+                            ? user.full_name ||
+                            user.email
+                            : "Login"
+                    }
+                >
+
+                    {user ? (
+
+                        <span
+                            className="header-account-avatar"
+                            aria-hidden="true"
+                            style={{
+                                display:
+                                    "inline-flex",
+                                alignItems:
+                                    "center",
+                                justifyContent:
+                                    "center",
+                                width:
+                                    "32px",
+                                height:
+                                    "32px",
+                                borderRadius:
+                                    "50%",
+                                fontSize:
+                                    "11px",
+                                fontWeight:
+                                    "600",
+                                letterSpacing:
+                                    "0.5px",
+                            }}
+                        >
+                            {getUserInitials(
+                                user.full_name
+                            )}
+                        </span>
+
+                    ) : (
+
+                        <AccountIcon />
+
+                    )}
+
+                </button>
+
+
+                {/* =============================================
+                    CART
+                ============================================== */}
+
+                <Link
+                    to="/cart"
+                    className={`header-bag ${isCart
+                        ? "header-bag-active"
+                        : ""
+                        }`}
+                    aria-label="Shopping bag"
+                >
+
+                    <BagIcon />
+
+                    <span className="header-bag-count">
+                        {cartCount}
+                    </span>
+
+                </Link>
+
             </div>
+
+
+            {/* =================================================
+                MOBILE MENU
+            ================================================== */}
+
+            <button
+                type="button"
+                className="mobile-menu-button"
+                aria-label="Open navigation"
+            >
+
+                <span />
+                <span />
+                <span />
+
+            </button>
 
         </header>
     );
-}
+}   
