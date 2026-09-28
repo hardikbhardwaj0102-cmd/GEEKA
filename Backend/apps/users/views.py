@@ -5,6 +5,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView 
 from django.shortcuts import redirect
 from .google_auth import handle_google_callback
+from django.conf import settings
+
 
 class GoogleLoginView(APIView):
     permission_classes = [AllowAny]
@@ -24,4 +26,4 @@ class GoogleCallbackView(APIView):
     def get(self, request):
         handle_google_callback(request)
 
-        return redirect("http://localhost:5173/")
+        return redirect(settings.FRONTEND_URL)
