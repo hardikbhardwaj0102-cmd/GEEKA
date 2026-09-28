@@ -19,30 +19,43 @@ ALLOWED_EXTENSIONS = {
 }
 
 
+MAX_PRODUCT_IMAGES = 5
+
+
 def create_product_image(product, image_file, display_order=0, is_primary=False):
-    # 1. Validate image
     validate_product_image(image_file)
 
-    # 2. Generate a safe server-side filename
     original_extension = Path(image_file.name).suffix.lower()
 
     if original_extension not in ALLOWED_EXTENSIONS:
         raise ValueError("Unsupported image extension.")
 
     extension = ALLOWED_EXTENSIONS[original_extension]
-
     filename = f"{uuid4().hex}{extension}"
 
-    # 3. Upload to private Supabase Storage
-    storage_path = upload_product_image(
-        image_file,
-        product.id,
-        filename,
-    )
+    with transaction.atomic():
+        image_count = ProductImage.objects.filter(
+            product=product
+        ).count()
 
-    try:
-        # 4. Create database record
-        with transaction.atomic():
+        if image_count >= MAX_PRODUCT_IMAGES:
+            raise ValueError(
+                "A product can have a maximum of 5 images."
+            )
+
+        if is_primary:
+            ProductImage.objects.filter(
+                product=product,
+                is_primary=True,
+            ).update(is_primary=False)
+
+        storage_path = upload_product_image(
+            image_file,
+            product.id,
+            filename,
+        )
+
+        try:
             product_image = ProductImage.objects.create(
                 product=product,
                 image=storage_path,
@@ -50,11 +63,8 @@ def create_product_image(product, image_file, display_order=0, is_primary=False)
                 is_primary=is_primary,
                 is_active=True,
             )
-
-    except Exception:
-        # 5. Database failed after storage upload.
-        # Remove the orphaned storage object.
-        delete_product_image(storage_path)
-        raise
+        except Exception:
+            delete_product_image(storage_path)
+            raise
 
     return product_image

@@ -1,7 +1,5 @@
 from django.contrib import admin
-
-from .models import Category, Product
-
+from .models import Category, Product, ProductImage
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -32,3 +30,31 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ("name", "slug")
     ordering = ("-created_at",)
     readonly_fields = ("id", "created_at", "updated_at")
+
+
+@admin.register(ProductImage)
+class ProductImageAdmin(admin.ModelAdmin):
+    list_display = (
+        "product",
+        "display_order",
+        "is_primary",
+        "is_active",
+        "created_at",
+    )
+    list_filter = (
+        "is_primary",
+        "is_active",
+    )
+    search_fields = (
+        "product__name",
+        "image",
+    )
+    ordering = (
+        "product",
+        "display_order",
+    )
+    readonly_fields = (
+        "id",
+        "created_at",
+        "updated_at",
+    )
