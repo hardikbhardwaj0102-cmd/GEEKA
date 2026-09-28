@@ -162,12 +162,49 @@ async function readResponseData(response) {
         const text =
             await response.text();
 
-        return {
-            message: text,
-        };
+        return text
+            ? { message: text }
+            : {};
     } catch {
         return {};
     }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| COOKIE HELPER
+|--------------------------------------------------------------------------
+*/
+
+function getCookie(name) {
+    if (
+        typeof document === "undefined"
+    ) {
+        return null;
+    }
+
+    const cookies =
+        document.cookie.split(";");
+
+    for (const cookie of cookies) {
+        const trimmed =
+            cookie.trim();
+
+        if (
+            trimmed.startsWith(
+                `${name}=`
+            )
+        ) {
+            return decodeURIComponent(
+                trimmed.substring(
+                    name.length + 1
+                )
+            );
+        }
+    }
+
+    return null;
 }
 
 
@@ -1869,14 +1906,6 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     | LOGOUT
     |--------------------------------------------------------------------------
-    |
-    | Django session logout flow:
-    |
-    | 1. Get CSRF token
-    | 2. POST logout with X-CSRFToken
-    | 3. Verify /me/ is no longer authenticated
-    | 4. Only then clear frontend auth state
-    |
     */
 
     async function handleLogout() {
@@ -1893,7 +1922,7 @@ export default function Profile() {
         try {
             /*
             |--------------------------------------------------------------------------
-            | STEP 1 — GET CSRF TOKEN
+            | GET CSRF TOKEN / SET CSRF COOKIE
             |--------------------------------------------------------------------------
             */
 
@@ -1903,7 +1932,6 @@ export default function Profile() {
                     {
                         method: "GET",
                         credentials: "include",
-                        cache: "no-store",
                         headers: {
                             Accept:
                                 "application/json",
@@ -1916,33 +1944,52 @@ export default function Profile() {
                     csrfResponse
                 );
 
-            console.log(
-                "GEEKA CSRF RESPONSE:",
-                csrfResponse.status,
-                csrfData
-            );
-
             if (!csrfResponse.ok) {
                 throw new Error(
                     csrfData.message ||
                     csrfData.error ||
-                    `CSRF request failed with status ${csrfResponse.status}.`
-                );
-            }
-
-            const csrfToken =
-                csrfData?.csrfToken;
-
-            if (!csrfToken) {
-                throw new Error(
-                    "Django did not return a CSRF token."
+                    `Unable to initialize CSRF protection (${csrfResponse.status}).`
                 );
             }
 
 
             /*
             |--------------------------------------------------------------------------
-            | STEP 2 — LOGOUT
+            | READ ACTUAL DJANGO CSRF COOKIE
+            |--------------------------------------------------------------------------
+            */
+
+            const csrfCookie =
+                getCookie("csrftoken");
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | FALLBACK TO TOKEN RETURNED BY API
+            |--------------------------------------------------------------------------
+            |
+            | The backend currently returns csrfToken in JSON as well.
+            | Prefer the actual cookie value because Django expects
+            | the cookie to be present for CSRF validation.
+            |--------------------------------------------------------------------------
+            */
+
+            const csrfToken =
+                csrfCookie ||
+                csrfData?.csrfToken ||
+                "";
+
+
+            if (!csrfToken) {
+                throw new Error(
+                    "CSRF token is missing. Please refresh the page and try again."
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | LOG OUT FROM DJANGO
             |--------------------------------------------------------------------------
             */
 
@@ -1959,9 +2006,14 @@ export default function Profile() {
                             Accept:
                                 "application/json",
 
+                            "Content-Type":
+                                "application/json",
+
                             "X-CSRFToken":
                                 csrfToken,
                         },
+
+                        body: JSON.stringify({}),
                     }
                 );
 
@@ -1969,19 +2021,6 @@ export default function Profile() {
                 await readResponseData(
                     logoutResponse
                 );
-
-            console.log(
-                "GEEKA LOGOUT RESPONSE:",
-                logoutResponse.status,
-                logoutData
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | LOGOUT REQUEST FAILED
-            |--------------------------------------------------------------------------
-            */
 
             if (!logoutResponse.ok) {
                 throw new Error(
@@ -1994,68 +2033,7 @@ export default function Profile() {
 
             /*
             |--------------------------------------------------------------------------
-            | STEP 3 — VERIFY DJANGO SESSION
-            |--------------------------------------------------------------------------
-            |
-            | This is important.
-            |
-            | If /me/ still returns 200 here,
-            | Django did NOT actually destroy the session.
-            |--------------------------------------------------------------------------
-            */
-
-            const verifyResponse =
-                await fetch(
-                    `${ME_URL}?logout_check=${Date.now()}`,
-                    {
-                        method: "GET",
-
-                        credentials:
-                            "include",
-
-                        cache: "no-store",
-
-                        headers: {
-                            Accept:
-                                "application/json",
-
-                            "Cache-Control":
-                                "no-cache",
-                        },
-                    }
-                );
-
-            const verifyData =
-                await readResponseData(
-                    verifyResponse
-                );
-
-            console.log(
-                "GEEKA SESSION AFTER LOGOUT:",
-                verifyResponse.status,
-                verifyData
-            );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | SESSION IS STILL ACTIVE
-            |--------------------------------------------------------------------------
-            */
-
-            if (
-                verifyResponse.ok &&
-                verifyData?.user
-            ) {
-                throw new Error(
-                    "Logout endpoint returned success, but the Django session is still active."
-                );
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | STEP 4 — CLEAR FRONTEND AUTH DATA
+            | CLEAR AUTH CACHE
             |--------------------------------------------------------------------------
             */
 
@@ -2079,7 +2057,7 @@ export default function Profile() {
 
             /*
             |--------------------------------------------------------------------------
-            | STEP 5 — CLEAR REACT AUTH STATE
+            | CLEAR ACCOUNT STATE
             |--------------------------------------------------------------------------
             */
 
@@ -2096,7 +2074,7 @@ export default function Profile() {
 
             /*
             |--------------------------------------------------------------------------
-            | STEP 6 — NOTIFY HEADER
+            | INFORM HEADER
             |--------------------------------------------------------------------------
             */
 
@@ -2109,7 +2087,7 @@ export default function Profile() {
 
             /*
             |--------------------------------------------------------------------------
-            | STEP 7 — REDIRECT
+            | REDIRECT TO LOGIN
             |--------------------------------------------------------------------------
             */
 

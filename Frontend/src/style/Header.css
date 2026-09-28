@@ -22,10 +22,6 @@
     width: 100%;
     min-height: 78px;
 
-    /*
-    Removes the extra vertical space appearing between
-    the navbar and the first section.
-    */
     margin-bottom: -78px;
 
     padding: 15px 5%;
@@ -91,7 +87,7 @@
     align-items: center;
     justify-content: center;
 
-    gap: 34px;
+    gap: 30px;
 }
 
 .main-navigation a {
@@ -102,21 +98,23 @@
 
     gap: 5px;
 
-    padding: 9px 0;
+    padding: 8px 0;
 
     font-family:
         "DM Sans",
         sans-serif;
 
-    font-size: 11px;
+    font-size: 13px;
 
     font-weight: 500;
 
-    letter-spacing: 0.02em;
+    letter-spacing: 0.015em;
 
     color: #725b51;
 
     text-decoration: none;
+
+    white-space: nowrap;
 
     transition:
         color 0.2s ease;
@@ -128,7 +126,7 @@
     position: absolute;
 
     left: 0;
-    bottom: 3px;
+    bottom: 2px;
 
     width: 100%;
     height: 1px;
@@ -169,12 +167,14 @@
 
 .navigation-arrow {
     position: relative;
+
     top: -1px;
 
-    font-size: 11px;
+    font-size: 10px;
+
     line-height: 1;
 
-    opacity: 0.7;
+    opacity: 0.65;
 }
 
 
@@ -195,15 +195,28 @@
 
 /* =========================================================
    SEARCH WRAPPER
+   IMPORTANT:
+   Fixed width prevents the navbar from shifting when
+   the search field expands.
 ========================================================= */
 
 .header-search-wrapper {
     position: relative;
 
+    width: 38px;
+    height: 40px;
+
+    flex-shrink: 0;
+
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
+
+/* =========================================================
+   SEARCH BUTTON
+========================================================= */
 
 .header-search-button {
     width: 38px;
@@ -256,9 +269,18 @@
 
 /* =========================================================
    EXPANDED SEARCH
+   Opens as an overlay instead of expanding the header grid.
 ========================================================= */
 
 .header-search-expanded {
+    position: absolute;
+
+    top: 50%;
+    right: 0;
+
+    transform:
+        translateY(-50%);
+
     width: 260px;
     height: 40px;
 
@@ -275,14 +297,20 @@
     border-radius: 7px;
 
     background:
-        rgba(255, 255, 255, 0.70);
+        rgba(255, 255, 255, 0.96);
 
     color:
         #5d3e35;
 
+    box-shadow:
+        0 8px 25px rgba(55, 35, 30, 0.08);
+
+    z-index: 20;
+
     transition:
         border-color 0.2s ease,
-        background 0.2s ease;
+        background 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .header-search-expanded:focus-within {
@@ -290,7 +318,10 @@
         rgba(93, 62, 53, 0.35);
 
     background:
-        rgba(255, 255, 255, 0.90);
+        rgba(255, 255, 255, 0.98);
+
+    box-shadow:
+        0 10px 28px rgba(55, 35, 30, 0.11);
 }
 
 .header-search-expanded>svg {
@@ -774,10 +805,6 @@
     .site-header {
         min-height: 70px;
 
-        /*
-        Keep the first section directly below
-        the visible header.
-        */
         margin-bottom: -70px;
 
         padding: 12px 4%;
@@ -790,11 +817,20 @@
     }
 
     .main-navigation {
-        gap: 22px;
+        gap: 23px;
     }
 
     .main-navigation a {
-        font-size: 10px;
+        font-size: 12px;
+        letter-spacing: 0.01em;
+    }
+
+    .navigation-arrow {
+        font-size: 9px;
+    }
+
+    .header-search-wrapper {
+        width: 38px;
     }
 
     .header-search-expanded {
@@ -812,9 +848,6 @@
     .site-header {
         min-height: 62px;
 
-        /*
-        Same correction for mobile.
-        */
         margin-bottom: -62px;
 
         padding: 9px 4%;
@@ -837,6 +870,11 @@
         gap: 2px;
     }
 
+    .header-search-wrapper {
+        width: 34px;
+        height: 34px;
+    }
+
     .header-search-button,
     .header-wishlist,
     .header-account-link,
@@ -856,12 +894,21 @@
     .header-account-avatar {
         width: 28px;
         height: 28px;
+
         font-size: 8.5px;
     }
 
+    /*
+    Search still opens as an overlay on mobile.
+    It does not move the logo or other header items.
+    */
     .header-search-expanded {
-        width: 100%;
+        width: min(260px,
+                calc(100vw - 120px));
+
         height: 37px;
+
+        right: 0;
     }
 
     .header-search-expanded input {
@@ -894,9 +941,6 @@
     .site-header {
         min-height: 62px;
 
-        /*
-        Preserve the no-gap behavior on very small screens.
-        */
         margin-bottom: -62px;
 
         padding: 8px 3.5%;
@@ -912,6 +956,11 @@
         gap: 0;
     }
 
+    .header-search-wrapper {
+        width: 31px;
+        height: 31px;
+    }
+
     .header-search-button,
     .header-wishlist,
     .header-account-link,
@@ -923,11 +972,16 @@
     .header-account-avatar {
         width: 26px;
         height: 26px;
+
         font-size: 7.5px;
     }
 
     .header-search-expanded {
+        width: min(240px,
+                calc(100vw - 70px));
+
         height: 35px;
+
         padding: 0 8px;
     }
 }
