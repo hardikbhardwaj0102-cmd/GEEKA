@@ -136,6 +136,43 @@ function createId(prefix = "item") {
 
 /*
 |--------------------------------------------------------------------------
+| RESPONSE HELPER
+|--------------------------------------------------------------------------
+*/
+
+async function readResponseData(response) {
+    const contentType =
+        response.headers.get(
+            "content-type"
+        ) || "";
+
+    if (
+        contentType.includes(
+            "application/json"
+        )
+    ) {
+        try {
+            return await response.json();
+        } catch {
+            return {};
+        }
+    }
+
+    try {
+        const text =
+            await response.text();
+
+        return {
+            message: text,
+        };
+    } catch {
+        return {};
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | DEFAULT DATA
 |--------------------------------------------------------------------------
 */
@@ -365,12 +402,6 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     | LOAD CURRENT AUTHENTICATED USER
     |--------------------------------------------------------------------------
-    |
-    | Django session is the source of truth for:
-    | - Full name
-    | - Email
-    | - Email verification status
-    |
     */
 
     useEffect(() => {
@@ -387,6 +418,7 @@ export default function Profile() {
                         {
                             method: "GET",
                             credentials: "include",
+                            cache: "no-store",
                             headers: {
                                 Accept:
                                     "application/json",
@@ -394,17 +426,10 @@ export default function Profile() {
                         }
                     );
 
-                const contentType =
-                    response.headers.get(
-                        "content-type"
-                    ) || "";
-
                 const data =
-                    contentType.includes(
-                        "application/json"
-                    )
-                        ? await response.json()
-                        : {};
+                    await readResponseData(
+                        response
+                    );
 
                 if (
                     response.status === 401 ||
@@ -412,6 +437,7 @@ export default function Profile() {
                 ) {
                     if (!cancelled) {
                         setAccountUser(null);
+
                         setAccountError(
                             "Your session has expired. Please log in again."
                         );
@@ -720,7 +746,8 @@ export default function Profile() {
             );
         }, 1000);
 
-        return () => clearInterval(timer);
+        return () =>
+            clearInterval(timer);
     }, [resendSeconds]);
 
 
@@ -1120,17 +1147,10 @@ export default function Profile() {
                     }
                 );
 
-            const contentType =
-                response.headers.get(
-                    "content-type"
-                ) || "";
-
             const data =
-                contentType.includes(
-                    "application/json"
-                )
-                    ? await response.json()
-                    : {};
+                await readResponseData(
+                    response
+                );
 
             if (
                 response.status === 401 ||
@@ -1259,17 +1279,10 @@ export default function Profile() {
                     }
                 );
 
-            const contentType =
-                response.headers.get(
-                    "content-type"
-                ) || "";
-
             const data =
-                contentType.includes(
-                    "application/json"
-                )
-                    ? await response.json()
-                    : {};
+                await readResponseData(
+                    response
+                );
 
             if (
                 response.status === 401 ||
@@ -1857,14 +1870,12 @@ export default function Profile() {
     | LOGOUT
     |--------------------------------------------------------------------------
     |
-    | IMPORTANT:
-    | Django requires the CSRF token for logout.
+    | Django session logout flow:
     |
-    | Flow:
-    | 1. GET CSRF endpoint
-    | 2. Read csrfToken from JSON response
-    | 3. POST logout using X-CSRFToken
-    | 4. Only clear frontend auth state after successful logout
+    | 1. Get CSRF token
+    | 2. POST logout with X-CSRFToken
+    | 3. Verify /me/ is no longer authenticated
+    | 4. Only then clear frontend auth state
     |
     */
 
@@ -1882,7 +1893,7 @@ export default function Profile() {
         try {
             /*
             |--------------------------------------------------------------------------
-            | STEP 1: GET CSRF TOKEN
+            | STEP 1 — GET CSRF TOKEN
             |--------------------------------------------------------------------------
             */
 
@@ -1892,6 +1903,7 @@ export default function Profile() {
                     {
                         method: "GET",
                         credentials: "include",
+                        cache: "no-store",
                         headers: {
                             Accept:
                                 "application/json",
@@ -1899,23 +1911,22 @@ export default function Profile() {
                     }
                 );
 
-            const csrfContentType =
-                csrfResponse.headers.get(
-                    "content-type"
-                ) || "";
-
             const csrfData =
-                csrfContentType.includes(
-                    "application/json"
-                )
-                    ? await csrfResponse.json()
-                    : {};
+                await readResponseData(
+                    csrfResponse
+                );
+
+            console.log(
+                "GEEKA CSRF RESPONSE:",
+                csrfResponse.status,
+                csrfData
+            );
 
             if (!csrfResponse.ok) {
                 throw new Error(
                     csrfData.message ||
                     csrfData.error ||
-                    "Unable to obtain CSRF token."
+                    `CSRF request failed with status ${csrfResponse.status}.`
                 );
             }
 
@@ -1924,14 +1935,14 @@ export default function Profile() {
 
             if (!csrfToken) {
                 throw new Error(
-                    "CSRF token was not returned by the server."
+                    "Django did not return a CSRF token."
                 );
             }
 
 
             /*
             |--------------------------------------------------------------------------
-            | STEP 2: LOG OUT FROM DJANGO SESSION
+            | STEP 2 — LOGOUT
             |--------------------------------------------------------------------------
             */
 
@@ -1948,26 +1959,29 @@ export default function Profile() {
                             Accept:
                                 "application/json",
 
-                            "Content-Type":
-                                "application/json",
-
                             "X-CSRFToken":
                                 csrfToken,
                         },
                     }
                 );
 
-            const logoutContentType =
-                logoutResponse.headers.get(
-                    "content-type"
-                ) || "";
-
             const logoutData =
-                logoutContentType.includes(
-                    "application/json"
-                )
-                    ? await logoutResponse.json()
-                    : {};
+                await readResponseData(
+                    logoutResponse
+                );
+
+            console.log(
+                "GEEKA LOGOUT RESPONSE:",
+                logoutResponse.status,
+                logoutData
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | LOGOUT REQUEST FAILED
+            |--------------------------------------------------------------------------
+            */
 
             if (!logoutResponse.ok) {
                 throw new Error(
@@ -1980,7 +1994,68 @@ export default function Profile() {
 
             /*
             |--------------------------------------------------------------------------
-            | STEP 3: CLEAR FRONTEND AUTH CACHE
+            | STEP 3 — VERIFY DJANGO SESSION
+            |--------------------------------------------------------------------------
+            |
+            | This is important.
+            |
+            | If /me/ still returns 200 here,
+            | Django did NOT actually destroy the session.
+            |--------------------------------------------------------------------------
+            */
+
+            const verifyResponse =
+                await fetch(
+                    `${ME_URL}?logout_check=${Date.now()}`,
+                    {
+                        method: "GET",
+
+                        credentials:
+                            "include",
+
+                        cache: "no-store",
+
+                        headers: {
+                            Accept:
+                                "application/json",
+
+                            "Cache-Control":
+                                "no-cache",
+                        },
+                    }
+                );
+
+            const verifyData =
+                await readResponseData(
+                    verifyResponse
+                );
+
+            console.log(
+                "GEEKA SESSION AFTER LOGOUT:",
+                verifyResponse.status,
+                verifyData
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | SESSION IS STILL ACTIVE
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                verifyResponse.ok &&
+                verifyData?.user
+            ) {
+                throw new Error(
+                    "Logout endpoint returned success, but the Django session is still active."
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 4 — CLEAR FRONTEND AUTH DATA
             |--------------------------------------------------------------------------
             */
 
@@ -2004,7 +2079,7 @@ export default function Profile() {
 
             /*
             |--------------------------------------------------------------------------
-            | STEP 4: CLEAR LOCAL ACCOUNT STATE
+            | STEP 5 — CLEAR REACT AUTH STATE
             |--------------------------------------------------------------------------
             */
 
@@ -2021,7 +2096,7 @@ export default function Profile() {
 
             /*
             |--------------------------------------------------------------------------
-            | STEP 5: TELL HEADER THAT AUTH CHANGED
+            | STEP 6 — NOTIFY HEADER
             |--------------------------------------------------------------------------
             */
 
@@ -2034,7 +2109,7 @@ export default function Profile() {
 
             /*
             |--------------------------------------------------------------------------
-            | STEP 6: REDIRECT TO LOGIN
+            | STEP 7 — REDIRECT
             |--------------------------------------------------------------------------
             */
 
@@ -2046,13 +2121,10 @@ export default function Profile() {
             );
 
         } catch (error) {
-            /*
-            |--------------------------------------------------------------------------
-            | IMPORTANT:
-            | Do NOT clear auth data when logout fails.
-            | The Django session may still be active.
-            |--------------------------------------------------------------------------
-            */
+            console.error(
+                "GEEKA LOGOUT ERROR:",
+                error
+            );
 
             setProfileMessage(
                 error.message ||
