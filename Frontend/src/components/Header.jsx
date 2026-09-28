@@ -143,18 +143,19 @@ function BagIcon() {
 ========================================================= */
 
 function getUserInitials(fullName) {
-    if (!fullName) {
+    if (!fullName?.trim()) {
         return "U";
     }
 
-    const parts = fullName
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean);
+    const parts =
+        fullName
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
 
     if (parts.length === 1) {
         return parts[0]
-            .charAt(0)
+            .slice(0, 2)
             .toUpperCase();
     }
 
@@ -175,7 +176,8 @@ export default function Header() {
 
     const navigate = useNavigate();
 
-    const searchInputRef = useRef(null);
+    const searchInputRef =
+        useRef(null);
 
 
     /*
@@ -200,9 +202,6 @@ export default function Header() {
 
     const [authLoading, setAuthLoading] =
         useState(true);
-
-    const [loggingOut, setLoggingOut] =
-        useState(false);
 
 
     /*
@@ -284,12 +283,6 @@ export default function Header() {
     |--------------------------------------------------------------------------
     | LOAD CURRENT USER
     |--------------------------------------------------------------------------
-    |
-    | Django session is checked through:
-    |
-    | GET /api/v1/auth/me/
-    |
-    |--------------------------------------------------------------------------
     */
 
     async function loadCurrentUser() {
@@ -303,8 +296,10 @@ export default function Header() {
                     `${API_URL}/api/v1/auth/me/`,
                     {
                         method: "GET",
+
                         credentials:
                             "include",
+
                         headers: {
                             Accept:
                                 "application/json",
@@ -314,7 +309,9 @@ export default function Header() {
 
             if (
                 response.status ===
-                401
+                401 ||
+                response.status ===
+                403
             ) {
 
                 setUser(null);
@@ -325,10 +322,14 @@ export default function Header() {
             let data = {};
 
             try {
+
                 data =
                     await response.json();
+
             } catch {
+
                 data = {};
+
             }
 
             if (!response.ok) {
@@ -338,7 +339,9 @@ export default function Header() {
                 return;
             }
 
-            if (data?.user) {
+            if (
+                data?.user
+            ) {
 
                 setUser(
                     data.user
@@ -439,7 +442,9 @@ export default function Header() {
         updateWishlistCount();
 
         function handleWishlistStorage() {
+
             updateWishlistCount();
+
         }
 
         window.addEventListener(
@@ -485,12 +490,9 @@ export default function Header() {
         const query =
             params.get("search") || "";
 
-        setSearchValue(query);
-
-        /*
-         * On Shop the search bar is always visible.
-         * On other pages the search remains closed.
-         */
+        setSearchValue(
+            query
+        );
 
         if (isShop) {
 
@@ -641,7 +643,10 @@ export default function Header() {
 
     function handleSearchKeyDown(event) {
 
-        if (event.key === "Escape") {
+        if (
+            event.key ===
+            "Escape"
+        ) {
 
             if (isShop) {
 
@@ -659,13 +664,17 @@ export default function Header() {
             closeSearch();
 
             return;
+
         }
 
         if (
-            event.key === "Enter"
+            event.key ===
+            "Enter"
         ) {
 
-            handleSearchSubmit(event);
+            handleSearchSubmit(
+                event
+            );
 
         }
 
@@ -679,11 +688,6 @@ export default function Header() {
     */
 
     useEffect(() => {
-
-        /*
-         * Do not close the search on Shop.
-         * The Shop search is permanently visible.
-         */
 
         if (
             !searchOpen ||
@@ -752,22 +756,7 @@ export default function Header() {
 
     /*
     |--------------------------------------------------------------------------
-    | PROFILE NAVIGATION
-    |--------------------------------------------------------------------------
-    */
-
-    function goToProfile() {
-
-        navigate(
-            "/profile"
-        );
-
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ACCOUNT NAVIGATION
+    | ACCOUNT / PROFILE
     |--------------------------------------------------------------------------
     */
 
@@ -787,96 +776,6 @@ export default function Header() {
             "/login"
         );
 
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOGOUT
-    |--------------------------------------------------------------------------
-    */
-
-    async function handleLogout() {
-
-        if (loggingOut) {
-            return;
-        }
-
-        setLoggingOut(true);
-
-        try {
-
-            await fetch(
-                `${API_URL}/api/v1/auth/logout/`,
-                {
-                    method: "POST",
-                    credentials:
-                        "include",
-                    headers: {
-                        Accept:
-                            "application/json",
-                    },
-                }
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Logout request failed:",
-                error
-            );
-
-        } finally {
-
-            /*
-             * Clear any old frontend auth
-             * leftovers as well.
-             */
-
-            const authKeys = [
-                "geeka-auth",
-                "geeka-user",
-                "access_token",
-                "refresh_token",
-                "token",
-            ];
-
-            authKeys.forEach(
-                (key) => {
-                    try {
-                        localStorage.removeItem(
-                            key
-                        );
-                    } catch {
-                        // Ignore storage errors.
-                    }
-                }
-            );
-
-            setUser(null);
-
-            /*
-             * Tell any other component,
-             * including Profile, that the
-             * authentication state changed.
-             */
-
-            window.dispatchEvent(
-                new Event(
-                    "geeka-auth-updated"
-                )
-            );
-
-            navigate(
-                "/login",
-                {
-                    replace: true,
-                }
-            );
-
-            setLoggingOut(false);
-
-        }
     }
 
 
@@ -1098,60 +997,16 @@ export default function Header() {
 
 
                 {/* =============================================
-                    LOGGED-IN PROFILE BUTTON
-                ============================================== */}
-
-                {user && !authLoading && (
-
-                    <button
-                        type="button"
-                        className={`header-profile-button ${isProfile &&
-                                !isWishlist
-                                ? "header-profile-active"
-                                : ""
-                            }`}
-                        onClick={
-                            goToProfile
-                        }
-                    >
-                        Profile
-                    </button>
-
-                )}
-
-
-                {/* =============================================
-                    LOGOUT BUTTON
-                ============================================== */}
-
-                {user && !authLoading && (
-
-                    <button
-                        type="button"
-                        className="header-logout-button"
-                        onClick={
-                            handleLogout
-                        }
-                        disabled={
-                            loggingOut
-                        }
-                    >
-                        {loggingOut
-                            ? "Logging out..."
-                            : "Log out"}
-                    </button>
-
-                )}
-
-
-                {/* =============================================
-                    ACCOUNT
+                    ACCOUNT / PROFILE
                 ============================================== */}
 
                 <button
                     type="button"
                     className={`header-account-link ${user
                             ? "header-account-logged-in"
+                            : ""
+                        } ${isProfile
+                            ? "header-account-active"
                             : ""
                         }`}
                     onClick={
@@ -1160,51 +1015,25 @@ export default function Header() {
                     aria-label={
                         user
                             ? `Open profile for ${user.full_name ||
-                            user.email
+                            user.email ||
+                            "account"
                             }`
-                            : "Account"
+                            : "Login"
                     }
                     title={
                         user
                             ? user.full_name ||
-                            user.email
+                            user.email ||
+                            "Profile"
                             : "Login"
                     }
                 >
 
-                    {user ? (
+                    {user && !authLoading ? (
 
                         <span
                             className="header-account-avatar"
                             aria-hidden="true"
-                            style={{
-                                display:
-                                    "inline-flex",
-
-                                alignItems:
-                                    "center",
-
-                                justifyContent:
-                                    "center",
-
-                                width:
-                                    "32px",
-
-                                height:
-                                    "32px",
-
-                                borderRadius:
-                                    "50%",
-
-                                fontSize:
-                                    "11px",
-
-                                fontWeight:
-                                    "600",
-
-                                letterSpacing:
-                                    "0.5px",
-                            }}
                         >
                             {getUserInitials(
                                 user.full_name

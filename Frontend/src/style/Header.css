@@ -2,37 +2,52 @@
    GEEKA HEADER
 ========================================================= */
 
-.site-header {
-    position: fixed;
+.site-header,
+.site-header *,
+.site-header *::before,
+.site-header *::after {
+    box-sizing: border-box;
+}
 
-    top: 0;
-    left: 0;
-    right: 0;
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.site-header {
+    position: relative;
+    z-index: 1000;
 
     width: 100%;
-    height: 76px;
 
-    padding: 0 5.8%;
+    min-height: 78px;
+
+    padding:
+        15px 5%;
 
     display: grid;
 
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns:
+        auto minmax(0, 1fr) auto;
 
     align-items: center;
 
+    gap: 30px;
+
     background:
-        rgba(248, 241, 235, 0.94);
+        rgba(255, 249, 244, 0.96);
+
+    color:
+        var(--brown, #5d3e35);
 
     border-bottom:
-        1px solid rgba(71, 43, 43, 0.08);
+        1px solid rgba(93, 62, 53, 0.08);
 
-    box-shadow:
-        0 5px 22px rgba(71, 43, 43, 0.05);
+    backdrop-filter:
+        blur(18px);
 
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-
-    z-index: 1000;
+    -webkit-backdrop-filter:
+        blur(18px);
 }
 
 
@@ -41,69 +56,31 @@
 ========================================================= */
 
 .header-logo-link {
-    justify-self: start;
+    display: flex;
+
+    align-items: center;
+
+    width: fit-content;
 
     text-decoration: none;
 }
 
 .brand-logo {
-    width: fit-content;
-
     display: flex;
-    flex-direction: column;
 
     align-items: center;
 
-    color: var(--brown);
+    justify-content: center;
 }
 
-.brand-logo-mark {
-    position: relative;
+.brand-logo-image {
+    display: block;
 
-    font-family: "Cormorant Garamond", serif;
+    width: 86px;
 
-    font-size: 50px;
+    height: auto;
 
-    font-weight: 500;
-
-    line-height: 34px;
-
-    letter-spacing: -5px;
-}
-
-.brand-logo-flower {
-    position: absolute;
-
-    top: -6px;
-    right: -17px;
-
-    font-family: serif;
-
-    font-size: 24px;
-
-    color: var(--brown);
-
-    transform: rotate(-20deg);
-}
-
-.brand-logo-tagline {
-    margin-top: 7px;
-
-    white-space: nowrap;
-
-    font-family: "DM Sans", sans-serif;
-
-    font-size: 7px;
-
-    letter-spacing: 1.15px;
-
-    text-transform: uppercase;
-}
-
-.brand-logo-tagline span {
-    margin: 0 4px;
-
-    color: var(--rose);
+    object-fit: contain;
 }
 
 
@@ -112,69 +89,114 @@
 ========================================================= */
 
 .main-navigation {
+    min-width: 0;
+
     display: flex;
 
     align-items: center;
 
-    gap: 42px;
-}
+    justify-content: center;
 
-.brand-logo-image {
-    display: block;
-    width: 72px;
-    height: auto;
-    max-height: 58px;
-    object-fit: contain;
+    gap: 34px;
 }
 
 .main-navigation a {
     position: relative;
 
-    font-family: "DM Sans", sans-serif;
+    display: inline-flex;
 
-    font-size: 12px;
+    align-items: center;
 
-    font-weight: 500;
+    gap: 5px;
 
-    color: var(--brown);
+    padding:
+        9px 0;
 
-    text-decoration: none;
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size:
+        11px;
+
+    font-weight:
+        500;
+
+    letter-spacing:
+        0.02em;
+
+    color:
+        #725b51;
+
+    text-decoration:
+        none;
 
     transition:
         color 0.2s ease;
 }
 
-.main-navigation a:hover {
-    color: var(--rose);
-}
-
-.navigation-active::after {
+.main-navigation a::after {
     content: "";
 
     position: absolute;
 
     left: 0;
-    right: 0;
 
-    bottom: -9px;
+    bottom: 3px;
+
+    width: 100%;
 
     height: 1px;
 
-    background: var(--brown);
+    background:
+        #5d3e35;
+
+    transform:
+        scaleX(0);
+
+    transform-origin:
+        right;
+
+    transition:
+        transform 0.22s ease;
+}
+
+.main-navigation a:hover,
+.main-navigation a.navigation-active {
+    color:
+        #5d3e35;
+}
+
+.main-navigation a:hover::after,
+.main-navigation a.navigation-active::after {
+    transform:
+        scaleX(1);
+
+    transform-origin:
+        left;
 }
 
 .navigation-shop {
-    display: flex;
+    display: inline-flex;
 
     align-items: center;
 
     gap: 5px;
 }
 
-.navigation-shop span {
-    font-size: 14px;
+.navigation-arrow {
+    position: relative;
 
-    margin-top: -2px;
+    top: -1px;
+
+    font-size:
+        11px;
+
+    line-height:
+        1;
+
+    opacity:
+        0.7;
 }
 
 
@@ -183,206 +205,894 @@
 ========================================================= */
 
 .header-actions {
-    justify-self: end;
-
     display: flex;
 
     align-items: center;
 
-    gap: 17px;
-}
+    justify-content: flex-end;
 
-.header-actions button {
-    width: 25px;
-    height: 25px;
+    gap: 5px;
 
-    padding: 2px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border: none;
-
-    background: transparent;
-
-    color: var(--brown);
-
-    cursor: pointer;
-
-    position: relative;
-
-    transition:
-        color 0.2s ease;
-}
-
-.header-actions svg {
-    width: 20px;
-    height: 20px;
-
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.25;
-
-    transition:
-        color 0.2s ease,
-        transform 0.2s ease;
-}
-
-.header-actions button:hover {
-    color: var(--rose);
-}
-
-.header-actions button:hover svg {
-    transform: translateY(-1px);
+    min-width: 0;
 }
 
 
 /* =========================================================
-   ACCOUNT LINK
+   SEARCH WRAPPER
 ========================================================= */
 
-.header-account-link {
-    width: 25px;
-    height: 25px;
-
-    padding: 2px;
+.header-search-wrapper {
+    position: relative;
 
     display: flex;
 
     align-items: center;
+
+    justify-content: center;
+}
+
+.header-search-button {
+    width: 38px;
+
+    height: 38px;
+
+    padding: 0;
+
+    display: flex;
+
+    align-items: center;
+
     justify-content: center;
 
-    color: var(--brown);
+    border: none;
 
-    text-decoration: none;
+    border-radius: 50%;
+
+    background:
+        transparent;
+
+    color:
+        #5d3e35;
+
+    cursor:
+        pointer;
 
     transition:
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.header-search-button:hover {
+    background:
+        rgba(93, 62, 53, 0.07);
+
+    transform:
+        translateY(-1px);
+}
+
+.header-search-button svg {
+    width:
+        18px;
+
+    height:
+        18px;
+
+    fill:
+        none;
+
+    stroke:
+        currentColor;
+
+    stroke-width:
+        1.4;
+}
+
+
+/* =========================================================
+   EXPANDED SEARCH
+========================================================= */
+
+.header-search-expanded {
+    width:
+        260px;
+
+    height:
+        40px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        9px;
+
+    padding:
+        0 11px;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.17);
+
+    border-radius:
+        7px;
+
+    background:
+        rgba(255, 255, 255, 0.70);
+
+    color:
+        #5d3e35;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+.header-search-expanded:focus-within {
+    border-color:
+        rgba(93, 62, 53, 0.35);
+
+    background:
+        rgba(255, 255, 255, 0.90);
+}
+
+.header-search-expanded>svg {
+    width:
+        16px;
+
+    height:
+        16px;
+
+    flex-shrink:
+        0;
+
+    fill:
+        none;
+
+    stroke:
+        currentColor;
+
+    stroke-width:
+        1.4;
+}
+
+.header-search-expanded input {
+    min-width:
+        0;
+
+    flex:
+        1;
+
+    height:
+        100%;
+
+    border:
+        none;
+
+    outline:
+        none;
+
+    background:
+        transparent;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size:
+        11px;
+
+    color:
+        #5d3e35;
+}
+
+.header-search-expanded input::placeholder {
+    color:
+        rgba(93, 62, 53, 0.45);
+}
+
+.header-search-expanded input::-webkit-search-cancel-button {
+    display:
+        none;
+}
+
+
+/* =========================================================
+   SEARCH CLEAR
+========================================================= */
+
+.header-search-clear {
+    width:
+        26px;
+
+    height:
+        26px;
+
+    padding:
+        0;
+
+    flex-shrink:
+        0;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border:
+        none;
+
+    border-radius:
+        50%;
+
+    background:
+        transparent;
+
+    color:
+        #7a6259;
+
+    cursor:
+        pointer;
+}
+
+.header-search-clear:hover {
+    background:
+        rgba(93, 62, 53, 0.07);
+
+    color:
+        #5d3e35;
+}
+
+.header-search-clear svg {
+    width:
+        14px;
+
+    height:
+        14px;
+
+    fill:
+        none;
+
+    stroke:
+        currentColor;
+
+    stroke-width:
+        1.4;
+}
+
+
+/* =========================================================
+   WISHLIST
+========================================================= */
+
+.header-wishlist {
+    position:
+        relative;
+
+    width:
+        38px;
+
+    height:
+        38px;
+
+    padding:
+        0;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border:
+        none;
+
+    border-radius:
+        50%;
+
+    background:
+        transparent;
+
+    color:
+        #5d3e35;
+
+    cursor:
+        pointer;
+
+    transition:
+        background 0.2s ease,
         color 0.2s ease,
         transform 0.2s ease;
 }
 
-.header-account-link svg {
-    width: 20px;
-    height: 20px;
+.header-wishlist:hover {
+    background:
+        rgba(93, 62, 53, 0.07);
 
-    fill: none;
+    transform:
+        translateY(-1px);
+}
 
-    stroke: currentColor;
+.header-wishlist-active {
+    background:
+        rgba(93, 62, 53, 0.08);
+}
 
-    stroke-width: 1.25;
+.header-wishlist svg {
+    width:
+        18px;
+
+    height:
+        18px;
+
+    fill:
+        none;
+
+    stroke:
+        currentColor;
+
+    stroke-width:
+        1.35;
+}
+
+
+/* =========================================================
+   WISHLIST COUNT
+========================================================= */
+
+.header-wishlist-count {
+    position:
+        absolute;
+
+    top:
+        2px;
+
+    right:
+        1px;
+
+    min-width:
+        15px;
+
+    height:
+        15px;
+
+    padding:
+        0 4px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        50px;
+
+    background:
+        #5d3e35;
+
+    color:
+        #fff9f4;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size:
+        7px;
+
+    font-weight:
+        700;
+
+    line-height:
+        1;
+}
+
+
+/* =========================================================
+   ACCOUNT BUTTON
+========================================================= */
+
+.header-account-link {
+    position:
+        relative;
+
+    width:
+        40px;
+
+    height:
+        40px;
+
+    padding:
+        0;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border:
+        none;
+
+    border-radius:
+        50%;
+
+    outline:
+        none;
+
+    background:
+        transparent;
+
+    color:
+        #5d3e35;
+
+    cursor:
+        pointer;
 
     transition:
+        background 0.2s ease,
         transform 0.2s ease;
 }
 
 .header-account-link:hover {
-    color: var(--rose);
+    background:
+        rgba(93, 62, 53, 0.07);
 
-    transform: translateY(-1px);
+    transform:
+        translateY(-1px);
+}
+
+.header-account-link:focus-visible {
+    box-shadow:
+        0 0 0 3px rgba(93, 62, 53, 0.12);
+}
+
+.header-account-link svg {
+    width:
+        19px;
+
+    height:
+        19px;
+
+    fill:
+        none;
+
+    stroke:
+        currentColor;
+
+    stroke-width:
+        1.35;
 }
 
 
 /* =========================================================
-   BAG
+   LOGGED-IN PROFILE AVATAR
+========================================================= */
+
+.header-account-logged-in {
+    background:
+        transparent;
+}
+
+.header-account-logged-in:hover {
+    background:
+        rgba(93, 62, 53, 0.06);
+}
+
+.header-account-avatar {
+    width:
+        32px;
+
+    height:
+        32px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border:
+        1px solid rgba(93, 62, 53, 0.22);
+
+    border-radius:
+        50%;
+
+    background:
+        linear-gradient(135deg,
+            #f7eee8 0%,
+            #ead9d0 100%);
+
+    color:
+        #5d3e35;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size:
+        10px;
+
+    font-weight:
+        700;
+
+    letter-spacing:
+        0.05em;
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.92),
+        0 3px 10px rgba(55, 35, 30, 0.08);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.header-account-link:hover .header-account-avatar {
+    transform:
+        scale(1.04);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 5px 14px rgba(55, 35, 30, 0.13);
+}
+
+.header-account-active .header-account-avatar {
+    border-color:
+        rgba(93, 62, 53, 0.34);
+
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 4px 13px rgba(55, 35, 30, 0.13);
+}
+
+
+/* =========================================================
+   CART
 ========================================================= */
 
 .header-bag {
-    position: relative;
-}
+    position:
+        relative;
 
-.header-bag>span {
-    position: absolute;
+    width:
+        38px;
 
-    top: -5px;
-    right: -6px;
+    height:
+        38px;
 
-    width: 14px;
-    height: 14px;
+    padding:
+        0;
 
-    display: flex;
+    display:
+        flex;
 
-    align-items: center;
-    justify-content: center;
+    align-items:
+        center;
 
-    border-radius: 50%;
+    justify-content:
+        center;
 
-    background: var(--brown);
+    border:
+        none;
 
-    color: white;
+    border-radius:
+        50%;
 
-    font-family: "DM Sans", sans-serif;
+    background:
+        transparent;
 
-    font-size: 7px;
+    color:
+        #5d3e35;
 
-    line-height: 1;
-}
-
-
-/* =========================================================
-   MOBILE MENU
-========================================================= */
-
-.mobile-menu-button {
-    display: none;
-
-    width: 30px;
-    height: 30px;
-
-    padding: 0;
-
-    flex-direction: column;
-
-    justify-content: center;
-
-    gap: 5px;
-
-    border: none;
-
-    background: transparent;
-
-    cursor: pointer;
-}
-
-.mobile-menu-button span {
-    width: 22px;
-    height: 1px;
-
-    background: var(--brown);
+    text-decoration:
+        none;
 
     transition:
+        background 0.2s ease,
         transform 0.2s ease;
 }
 
+.header-bag:hover {
+    background:
+        rgba(93, 62, 53, 0.07);
+
+    transform:
+        translateY(-1px);
+}
+
+.header-bag-active {
+    background:
+        rgba(93, 62, 53, 0.08);
+}
+
+.header-bag svg {
+    width:
+        18px;
+
+    height:
+        18px;
+
+    fill:
+        none;
+
+    stroke:
+        currentColor;
+
+    stroke-width:
+        1.35;
+}
+
 
 /* =========================================================
-   TABLET / MOBILE
+   CART COUNT
 ========================================================= */
 
-@media (max-width: 800px) {
+.header-bag-count {
+    position:
+        absolute;
+
+    top:
+        2px;
+
+    right:
+        1px;
+
+    min-width:
+        15px;
+
+    height:
+        15px;
+
+    padding:
+        0 4px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        50px;
+
+    background:
+        #5d3e35;
+
+    color:
+        #fff9f4;
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    font-size:
+        7px;
+
+    font-weight:
+        700;
+
+    line-height:
+        1;
+}
+
+
+/* =========================================================
+   MOBILE MENU BUTTON
+========================================================= */
+
+.mobile-menu-button {
+    display:
+        none;
+
+    width:
+        38px;
+
+    height:
+        38px;
+
+    padding:
+        0;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    flex-direction:
+        column;
+
+    gap:
+        4px;
+
+    border:
+        none;
+
+    background:
+        transparent;
+
+    cursor:
+        pointer;
+}
+
+.mobile-menu-button span {
+    display:
+        block;
+
+    width:
+        17px;
+
+    height:
+        1px;
+
+    background:
+        #5d3e35;
+}
+
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 950px) {
 
     .site-header {
-        height: 72px;
+        min-height:
+            70px;
 
-        display: flex;
+        padding:
+            12px 4%;
 
-        align-items: center;
-
-        justify-content: space-between;
-
-        padding: 0 6%;
+        gap:
+            20px;
     }
 
-    .main-navigation,
+    .brand-logo-image {
+        width:
+            78px;
+    }
+
+    .main-navigation {
+        gap:
+            22px;
+    }
+
+    .main-navigation a {
+        font-size:
+            10px;
+    }
+
+    .header-search-expanded {
+        width:
+            220px;
+    }
+
+}
+
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+
+    .site-header {
+        min-height:
+            62px;
+
+        padding:
+            9px 4%;
+
+        grid-template-columns:
+            auto minmax(0, 1fr) auto;
+
+        gap:
+            10px;
+    }
+
+    .brand-logo-image {
+        width:
+            68px;
+    }
+
+    .main-navigation {
+        display:
+            none;
+    }
+
     .header-actions {
-        display: none;
+        gap:
+            2px;
+    }
+
+    .header-search-button,
+    .header-wishlist,
+    .header-account-link,
+    .header-bag {
+        width:
+            34px;
+
+        height:
+            34px;
+    }
+
+    .header-search-button svg,
+    .header-wishlist svg,
+    .header-account-link svg,
+    .header-bag svg {
+        width:
+            16px;
+
+        height:
+            16px;
+    }
+
+    .header-account-avatar {
+        width:
+            28px;
+
+        height:
+            28px;
+
+        font-size:
+            8.5px;
+    }
+
+    .header-search-expanded {
+        width:
+            100%;
+
+        height:
+            37px;
+    }
+
+    .header-search-expanded input {
+        font-size:
+            10px;
+    }
+
+    .header-wishlist-count,
+    .header-bag-count {
+        min-width:
+            13px;
+
+        height:
+            13px;
+
+        top:
+            1px;
+
+        right:
+            0;
+
+        font-size:
+            6px;
     }
 
     .mobile-menu-button {
-        display: flex;
+        display:
+            none;
     }
 }
 
@@ -394,520 +1104,50 @@
 @media (max-width: 420px) {
 
     .site-header {
-        height: 68px;
+        padding:
+            8px 3.5%;
 
-        padding: 0 5%;
+        gap:
+            6px;
     }
 
-    .brand-logo-mark {
-        font-size: 45px;
-
-        line-height: 31px;
-    }
-
-    .brand-logo-flower {
-        top: -5px;
-
-        right: -16px;
-
-        font-size: 22px;
-    }
-
-    .brand-logo-tagline {
-        margin-top: 6px;
-
-        font-size: 6px;
-
-        letter-spacing: 1px;
-    }
-
-    .mobile-menu-button {
-        width: 28px;
-        height: 28px;
-    }
-
-    .mobile-menu-button span {
-        width: 21px;
-    }
-}
-
-.brand-logo {
-    display: flex;
-    align-items: center;
-}
-
-.brand-logo-image {
-    display: block;
-    width: 72px;
-    height: auto;
-    max-height: 58px;
-    object-fit: contain;
-}
-
-/* =========================================================
-   EXPANDING HEADER SEARCH
-========================================================= */
-
-.header-search-wrapper {
-    position: relative;
-
-    display: flex;
-    align-items: center;
-
-    width: 38px;
-    height: 38px;
-
-    transition:
-        width 0.28s ease;
-}
-
-.header-search-wrapper.search-expanded {
-    width: 250px;
-}
-
-
-/* =========================================================
-   NORMAL SEARCH BUTTON
-========================================================= */
-
-.header-search-button {
-    width: 38px;
-    height: 38px;
-
-    padding: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border: none;
-
-    background: transparent;
-
-    color: inherit;
-
-    cursor: pointer;
-}
-
-.header-search-button svg {
-    width: 19px;
-    height: 19px;
-
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.45;
-}
-
-
-/* =========================================================
-   EXPANDED SEARCH
-========================================================= */
-
-.header-search-expanded {
-    width: 100%;
-    height: 38px;
-
-    padding: 0 9px;
-
-    display: flex;
-    align-items: center;
-
-    gap: 8px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.20);
-
-    border-radius: 20px;
-
-    background:
-        rgba(255, 255, 255, 0.72);
-
-    box-shadow:
-        0 7px 20px rgba(55, 35, 30, 0.08);
-
-    backdrop-filter:
-        blur(12px);
-
-    -webkit-backdrop-filter:
-        blur(12px);
-
-    animation:
-        header-search-open 0.25s ease both;
-}
-
-@keyframes header-search-open {
-
-    from {
-        opacity: 0;
-
-        transform:
-            scaleX(0.82);
-    }
-
-    to {
-        opacity: 1;
-
-        transform:
-            scaleX(1);
-    }
-}
-
-.header-search-expanded>svg {
-    width: 17px;
-    height: 17px;
-
-    flex-shrink: 0;
-
-    fill: none;
-
-    stroke: var(--brown);
-
-    stroke-width: 1.45;
-}
-
-.header-search-expanded input {
-    width: 100%;
-    min-width: 0;
-
-    height: 100%;
-
-    padding: 0;
-
-    border: none;
-
-    outline: none;
-
-    background: transparent;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 11px;
-
-    color: var(--brown);
-}
-
-.header-search-expanded input::placeholder {
-    color:
-        rgba(93, 62, 53, 0.45);
-}
-
-
-/* Remove browser search decoration */
-
-.header-search-expanded input::-webkit-search-decoration,
-.header-search-expanded input::-webkit-search-cancel-button,
-.header-search-expanded input::-webkit-search-results-button,
-.header-search-expanded input::-webkit-search-results-decoration {
-    display: none;
-}
-
-
-/* =========================================================
-   SEARCH CLEAR
-========================================================= */
-
-.header-search-clear {
-    width: 25px;
-    height: 25px;
-
-    flex-shrink: 0;
-
-    padding: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border: none;
-
-    border-radius: 50%;
-
-    background:
-        rgba(93, 62, 53, 0.07);
-
-    color: var(--brown);
-
-    cursor: pointer;
-}
-
-.header-search-clear svg {
-    width: 13px;
-    height: 13px;
-
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.4;
-}
-
-
-/* =========================================================
-   WISHLIST
-========================================================= */
-
-.header-wishlist {
-    position: relative;
-
-    width: 38px;
-    height: 38px;
-
-    padding: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border: none;
-
-    background: transparent;
-
-    color: inherit;
-
-    cursor: pointer;
-}
-
-.header-wishlist svg {
-    width: 19px;
-    height: 19px;
-
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.35;
-
-    transition:
-        transform 0.2s ease,
-        stroke-width 0.2s ease;
-}
-
-.header-wishlist:hover svg {
-    transform:
-        translateY(-1px);
-
-    stroke-width: 1.7;
-}
-
-.header-wishlist-active svg {
-    stroke-width: 1.8;
-}
-
-
-/* =========================================================
-   WISHLIST COUNT
-========================================================= */
-
-.header-wishlist-count {
-    position: absolute;
-
-    top: 3px;
-    right: 1px;
-
-    min-width: 14px;
-    height: 14px;
-
-    padding: 0 3px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    border-radius: 20px;
-
-    background:
-        var(--brown);
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 7px;
-    font-weight: 700;
-
-    color: #fff9f4;
-
-    line-height: 1;
-}
-
-
-/* =========================================================
-   EXISTING CART COUNT IMPROVEMENT
-========================================================= */
-
-.header-bag {
-    position: relative;
-}
-
-.header-bag-count {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    min-width: 15px;
-    height: 15px;
-
-    padding: 0 3px;
-
-    border-radius: 20px;
-
-    background:
-        var(--brown);
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 7px;
-    font-weight: 700;
-
-    color: #fff9f4;
-
-    line-height: 1;
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 700px) {
-
-    .header-search-wrapper.search-expanded {
-        width: 190px;
-    }
-
-    .header-search-expanded {
-        height: 34px;
-    }
-
-    .header-search-wrapper {
-        width: 34px;
-        height: 34px;
-    }
-
-    .header-search-button,
-    .header-wishlist {
-        width: 34px;
-        height: 34px;
-    }
-
-    .header-search-expanded input {
-        font-size: 10px;
-    }
-}
-
-
-@media (max-width: 430px) {
-
-    .header-search-wrapper.search-expanded {
-        position: absolute;
-
-        top: 50%;
-        right: 50px;
-
-        width: calc(100vw - 100px);
-
-        transform:
-            translateY(-50%);
+    .brand-logo-image {
+        width:
+            62px;
     }
 
     .header-actions {
-        position: relative;
+        gap:
+            0;
+    }
+
+    .header-search-button,
+    .header-wishlist,
+    .header-account-link,
+    .header-bag {
+        width:
+            31px;
+
+        height:
+            31px;
+    }
+
+    .header-account-avatar {
+        width:
+            26px;
+
+        height:
+            26px;
+
+        font-size:
+            7.5px;
     }
 
     .header-search-expanded {
-        width: 100%;
-    }
-}
+        height:
+            35px;
 
-/* =========================================================
-   SHOP PAGE NAVBAR SEARCH
-   Search stays permanently expanded on Shop.
-========================================================= */
-
-.shop-header-search {
-    width: 250px;
-}
-
-.shop-header-search .header-search-expanded {
-    width: 100%;
-}
-
-
-/* =========================================================
-   SHOP SEARCH - MOBILE
-========================================================= */
-
-@media (max-width: 700px) {
-
-    .shop-header-search {
-        width: 190px;
-    }
-
-}
-
-
-@media (max-width: 430px) {
-
-    .shop-header-search {
-        position: absolute;
-        top: 50%;
-        right: 50px;
-        width: calc(100vw - 100px);
-        transform: translateY(-50%);
-    }
-
-}
-
-.header-profile-button,
-.header-logout-button {
-    border: none;
-    background: transparent;
-    font-family: "DM Sans", sans-serif;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: var(--brown);
-    cursor: pointer;
-    white-space: nowrap;
-    padding: 7px 4px;
-    transition:
-        color 0.2s ease,
-        opacity 0.2s ease;
-}
-
-.header-profile-button:hover,
-.header-logout-button:hover {
-    color: var(--brown-muted);
-}
-
-.header-profile-active {
-    text-decoration: underline;
-    text-underline-offset: 5px;
-}
-
-.header-logout-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-@media (max-width: 900px) {
-
-    .header-profile-button,
-    .header-logout-button {
-        font-size: 9px;
-    }
-}
-
-@media (max-width: 700px) {
-
-    .header-profile-button,
-    .header-logout-button {
-        display: none;
+        padding:
+            0 8px;
     }
 }
