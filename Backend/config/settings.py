@@ -51,6 +51,7 @@ CORS_ALLOW_CREDENTIALS = True
 INSTALLED_APPS = [
     "apps.users",
     "apps.authentication",
+    "apps.catalog",
 
     "rest_framework",
     "corsheaders",

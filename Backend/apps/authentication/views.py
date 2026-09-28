@@ -118,7 +118,8 @@ class LoginView(APIView):
         user = serializer.validated_data["user"]
 
         login(request, user)
-
+        print("SESSION KEY:", request.session.session_key)
+        print("SESSION DATA:", dict(request.session))
         return Response(
             {
                 "message": "Login successful.",
