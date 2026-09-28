@@ -17,6 +17,10 @@ import geekaLogo from "../assets/logo.png";
 import { useCart } from "../hooks/useCart";
 
 
+/* =========================================================
+   LOGO
+========================================================= */
+
 function Logo() {
     return (
         <div className="brand-logo">
@@ -271,11 +275,6 @@ export default function Header() {
             handleWishlistStorage
         );
 
-        /*
-        | Custom event for changes made in the
-        | same browser tab.
-        */
-
         window.addEventListener(
             "geeka-wishlist-updated",
             handleWishlistStorage
@@ -300,6 +299,52 @@ export default function Header() {
 
     /*
     |--------------------------------------------------------------------------
+    | READ SEARCH FROM URL
+    |--------------------------------------------------------------------------
+    */
+
+    useEffect(() => {
+
+        const params =
+            new URLSearchParams(
+                location.search
+            );
+
+        const query =
+            params.get("search") || "";
+
+        setSearchValue(query);
+
+        /*
+        | On Shop the search bar is always visible.
+        | On other pages the search remains closed.
+        */
+
+        if (isShop) {
+
+            setSearchOpen(true);
+
+            setTimeout(() => {
+
+                searchInputRef.current?.focus();
+
+            }, 0);
+
+        } else {
+
+            setSearchOpen(false);
+
+        }
+
+    }, [
+        location.pathname,
+        location.search,
+        isShop,
+    ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
     | OPEN SEARCH
     |--------------------------------------------------------------------------
     */
@@ -313,6 +358,7 @@ export default function Header() {
             searchInputRef.current?.focus();
 
         }, 0);
+
     }
 
 
@@ -333,6 +379,58 @@ export default function Header() {
 
     /*
     |--------------------------------------------------------------------------
+    | UPDATE SHOP SEARCH
+    |--------------------------------------------------------------------------
+    |
+    | The search value is written directly into the Shop URL.
+    | Shop.jsx reads ?search= and applies the exact same
+    | product filtering logic.
+    |
+    */
+
+    function handleSearchChange(event) {
+
+        const value =
+            event.target.value;
+
+        setSearchValue(value);
+
+        if (!isShop) {
+
+            return;
+
+        }
+
+        const trimmedValue =
+            value.trim();
+
+        if (!trimmedValue) {
+
+            navigate(
+                "/shop",
+                {
+                    replace: true,
+                }
+            );
+
+            return;
+
+        }
+
+        navigate(
+            `/shop?search=${encodeURIComponent(
+                trimmedValue
+            )}`,
+            {
+                replace: true,
+            }
+        );
+
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
     | RUN SEARCH
     |--------------------------------------------------------------------------
     */
@@ -346,13 +444,16 @@ export default function Header() {
 
         if (!query) {
 
-            navigate("/shop");
-
-            closeSearch();
+            navigate(
+                "/shop",
+                {
+                    replace: true,
+                }
+            );
 
             return;
-        }
 
+        }
 
         navigate(
             `/shop?search=${encodeURIComponent(
@@ -360,8 +461,7 @@ export default function Header() {
             )}`
         );
 
-
-        setSearchOpen(false);
+        setSearchOpen(true);
 
     }
 
@@ -375,6 +475,19 @@ export default function Header() {
     function handleSearchKeyDown(event) {
 
         if (event.key === "Escape") {
+
+            if (isShop) {
+
+                navigate(
+                    "/shop",
+                    {
+                        replace: true,
+                    }
+                );
+
+                return;
+
+            }
 
             closeSearch();
 
@@ -400,10 +513,19 @@ export default function Header() {
 
     useEffect(() => {
 
-        if (!searchOpen) {
-            return undefined;
-        }
+        /*
+        | Do not close the search on Shop.
+        | The Shop search is permanently visible.
+        */
 
+        if (
+            !searchOpen ||
+            isShop
+        ) {
+
+            return undefined;
+
+        }
 
         function handleOutsideClick(event) {
 
@@ -416,19 +538,19 @@ export default function Header() {
                 if (
                     !searchValue.trim()
                 ) {
+
                     closeSearch();
+
                 }
 
             }
 
         }
 
-
         document.addEventListener(
             "mousedown",
             handleOutsideClick
         );
-
 
         return () => {
 
@@ -442,39 +564,7 @@ export default function Header() {
     }, [
         searchOpen,
         searchValue,
-    ]);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | KEEP SEARCH VALUE WHEN ON SHOP
-    |--------------------------------------------------------------------------
-    */
-
-    useEffect(() => {
-
-        const params =
-            new URLSearchParams(
-                location.search
-            );
-
-        const query =
-            params.get("search") || "";
-
-        if (
-            location.pathname ===
-            "/shop"
-        ) {
-
-            setSearchValue(
-                query
-            );
-
-        }
-
-    }, [
-        location.pathname,
-        location.search,
+        isShop,
     ]);
 
 
@@ -492,6 +582,12 @@ export default function Header() {
 
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | RENDER
+    |--------------------------------------------------------------------------
+    */
 
     return (
         <header className="site-header">
@@ -534,6 +630,7 @@ export default function Header() {
                             : ""
                         }`}
                 >
+
                     <span>
                         Shop
                     </span>
@@ -541,6 +638,7 @@ export default function Header() {
                     <span className="navigation-arrow">
                         ⌄
                     </span>
+
                 </Link>
 
 
@@ -585,6 +683,9 @@ export default function Header() {
                     className={`header-search-wrapper ${searchOpen
                             ? "search-expanded"
                             : ""
+                        } ${isShop
+                            ? "shop-header-search"
+                            : ""
                         }`}
                 >
 
@@ -607,13 +708,8 @@ export default function Header() {
                                 value={
                                     searchValue
                                 }
-                                onChange={(
-                                    event
-                                ) =>
-                                    setSearchValue(
-                                        event.target
-                                            .value
-                                    )
+                                onChange={
+                                    handleSearchChange
                                 }
                                 onKeyDown={
                                     handleSearchKeyDown
@@ -628,11 +724,26 @@ export default function Header() {
                                 <button
                                     type="button"
                                     className="header-search-clear"
-                                    onClick={() =>
-                                        setSearchValue(
-                                            ""
-                                        )
-                                    }
+                                    onClick={() => {
+
+                                        setSearchValue("");
+
+                                        if (isShop) {
+
+                                            navigate(
+                                                "/shop",
+                                                {
+                                                    replace: true,
+                                                }
+                                            );
+
+                                        } else {
+
+                                            closeSearch();
+
+                                        }
+
+                                    }}
                                     aria-label="Clear search"
                                 >
                                     <CloseIcon />
@@ -679,9 +790,11 @@ export default function Header() {
                     <HeartIcon />
 
                     {wishlistCount > 0 && (
+
                         <span className="header-wishlist-count">
                             {wishlistCount}
                         </span>
+
                     )}
 
                 </button>
@@ -733,9 +846,11 @@ export default function Header() {
                 className="mobile-menu-button"
                 aria-label="Open navigation"
             >
+
                 <span />
                 <span />
                 <span />
+
             </button>
 
         </header>

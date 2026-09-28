@@ -1,503 +1,716 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../style/ForgotPassword.css";
-import geekaLogo from "../assets/logo.png";
-import forgotPassImage from "../assets/ForgotPass.png";
 
-function Logo() {
-    return (
-        <Link to="/" className="forgot-logo-link">
-            <img
-                src={geekaLogo}
-                alt="Geeka"
-                className="forgot-logo-image"
-            />
-        </Link>
-    );
-}
+import forgotPasswordBackground from "../assets/ForgotPass.png";
+import logo from "../assets/logo.png";
 
-function ArrowIcon() {
-    return (
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            className="forgot-arrow-icon"
-        >
-            <path d="M5 12h14" />
-            <path d="m13 6 6 6-6 6" />
-        </svg>
-    );
-}
+/*
+|--------------------------------------------------------------------------
+| API CONFIGURATION
+|--------------------------------------------------------------------------
+*/
 
-function EyeIcon({ hidden = false }) {
-    return hidden ? (
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            className="forgot-eye-icon"
-        >
-            <path d="M3 3l18 18" />
-            <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
-            <path d="M9.9 5.1A10.9 10.9 0 0 1 12 4.9c5.4 0 9 5.1 9 7.1a9.7 9.7 0 0 1-2.4 3.6" />
-            <path d="M6.2 6.4C4.2 7.8 3 10.1 3 12c0 2 3.6 7.1 9 7.1 1.4 0 2.7-.3 3.8-.8" />
-        </svg>
-    ) : (
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            className="forgot-eye-icon"
-        >
-            <path d="M3 12s3.3-6 9-6 9 6 9 6-3.3 6-9 6-9-6-9-6Z" />
-            <circle cx="12" cy="12" r="2.5" />
-        </svg>
-    );
-}
+const API_URL =
+    import.meta.env.VITE_API_URL || "https://geeka-backend.onrender.com";
+
+/*
+|--------------------------------------------------------------------------
+| FORGOT PASSWORD COMPONENT
+|--------------------------------------------------------------------------
+*/
 
 export default function ForgotPassword() {
+    const navigate = useNavigate();
+
+    /*
+     * Steps:
+     *
+     * email
+     * otp
+     * password
+     * success
+     */
+
     const [step, setStep] = useState("email");
 
-    const [email, setEmail] = useState("");
-    const [otp, setOtp] = useState("");
+    const [formData, setFormData] = useState({
+        email: "",
+        otp: "",
+        password: "",
+        passwordConfirm: "",
+    });
 
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
 
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    /*
+    |--------------------------------------------------------------------------
+    | HANDLE INPUT
+    |--------------------------------------------------------------------------
+    */
 
-    const handleEmailSubmit = (event) => {
-        event.preventDefault();
+    const handleChange = (event) => {
+        const { name, value } = event.target;
 
-        if (!email.trim()) {
-            return;
+        setFormData((previous) => ({
+            ...previous,
+            [name]: value,
+        }));
+
+        if (error) {
+            setError("");
         }
 
-        setStep("otp");
+        if (successMessage) {
+            setSuccessMessage("");
+        }
     };
 
-    const handleOtpSubmit = (event) => {
-        event.preventDefault();
+    /*
+    |--------------------------------------------------------------------------
+    | GET CSRF TOKEN
+    |--------------------------------------------------------------------------
+    */
 
-        if (otp.length !== 6) {
-            return;
+    const getCsrfToken = async () => {
+        const response = await fetch(`${API_URL}/api/v1/auth/csrf/`, {
+            method: "GET",
+            credentials: "include",
+            headers: {
+                Accept: "application/json",
+            },
+        });
+
+        let data = {};
+
+        try {
+            data = await response.json();
+        } catch {
+            data = {};
         }
 
-        setStep("password");
+        if (!response.ok) {
+            throw new Error(
+                data?.detail ||
+                data?.message ||
+                "Unable to initialize secure password reset."
+            );
+        }
+
+        if (!data?.csrfToken) {
+            throw new Error("CSRF token was not received from the server.");
+        }
+
+        return data.csrfToken;
     };
 
-    const handlePasswordSubmit = (event) => {
+    /*
+    |--------------------------------------------------------------------------
+    | EXTRACT API ERROR
+    |--------------------------------------------------------------------------
+    */
+
+    const getApiError = (data, fallbackMessage) => {
+        if (!data) {
+            return fallbackMessage;
+        }
+
+        if (typeof data === "string") {
+            return data;
+        }
+
+        if (data.detail) {
+            return data.detail;
+        }
+
+        if (data.message) {
+            return data.message;
+        }
+
+        if (data.error) {
+            return data.error;
+        }
+
+        if (data.errors && typeof data.errors === "object") {
+            const messages = [];
+
+            Object.entries(data.errors).forEach(([field, value]) => {
+                if (Array.isArray(value)) {
+                    value.forEach((message) => {
+                        messages.push(message);
+                    });
+                } else if (typeof value === "string") {
+                    messages.push(value);
+                }
+            });
+
+            if (messages.length > 0) {
+                return messages.join(" ");
+            }
+        }
+
+        if (Array.isArray(data.non_field_errors)) {
+            return data.non_field_errors.join(" ");
+        }
+
+        return fallbackMessage;
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | STEP 1 — REQUEST PASSWORD RESET OTP
+    |--------------------------------------------------------------------------
+    */
+
+    const handleEmailSubmit = async (event) => {
         event.preventDefault();
 
-        if (!password || !confirmPassword) {
+        setError("");
+        setSuccessMessage("");
+
+        const email = formData.email.trim().toLowerCase();
+
+        if (!email) {
+            setError("Please enter your email address.");
             return;
         }
 
-        if (password !== confirmPassword) {
+        setLoading(true);
+
+        try {
+            /*
+             * Password reset request requires CSRF.
+             */
+            const csrfToken = await getCsrfToken();
+
+            const response = await fetch(
+                `${API_URL}/api/v1/auth/password-reset/request/`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                    body: JSON.stringify({
+                        email,
+                    }),
+                }
+            );
+
+            let data = {};
+
+            try {
+                data = await response.json();
+            } catch {
+                data = {};
+            }
+
+            if (!response.ok) {
+                throw new Error(
+                    getApiError(
+                        data,
+                        "Unable to process the password reset request."
+                    )
+                );
+            }
+
+            /*
+             * The backend contract intentionally returns a generic
+             * response regardless of whether the email exists.
+             */
+
+            setFormData((previous) => ({
+                ...previous,
+                email,
+            }));
+
+            setSuccessMessage(
+                "If an account exists for this email, a verification code has been sent."
+            );
+
+            setStep("otp");
+        } catch (err) {
+            console.error("Password reset request error:", err);
+
+            if (err instanceof TypeError) {
+                setError(
+                    "Unable to connect to the Geeka server. Please try again."
+                );
+            } else {
+                setError(
+                    err.message ||
+                    "Unable to request a password reset. Please try again."
+                );
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | STEP 2 — VERIFY OTP
+    |--------------------------------------------------------------------------
+    */
+
+    const handleOtpSubmit = async (event) => {
+        event.preventDefault();
+
+        setError("");
+        setSuccessMessage("");
+
+        const otp = formData.otp.trim();
+
+        if (!/^\d{6}$/.test(otp)) {
+            setError("Please enter the 6-digit verification code.");
             return;
         }
 
-        setStep("success");
+        setLoading(true);
+
+        try {
+            const csrfToken = await getCsrfToken();
+
+            const response = await fetch(
+                `${API_URL}/api/v1/auth/password-reset/verify/`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                    body: JSON.stringify({
+                        email: formData.email,
+                        otp,
+                    }),
+                }
+            );
+
+            let data = {};
+
+            try {
+                data = await response.json();
+            } catch {
+                data = {};
+            }
+
+            if (!response.ok) {
+                throw new Error(
+                    getApiError(
+                        data,
+                        "The verification code is invalid or expired."
+                    )
+                );
+            }
+
+            setStep("password");
+        } catch (err) {
+            console.error("Password reset OTP verification error:", err);
+
+            if (err instanceof TypeError) {
+                setError(
+                    "Unable to connect to the Geeka server. Please try again."
+                );
+            } else {
+                setError(
+                    err.message ||
+                    "Unable to verify the code. Please try again."
+                );
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | STEP 3 — SET NEW PASSWORD
+    |--------------------------------------------------------------------------
+    */
+
+    const handlePasswordSubmit = async (event) => {
+        event.preventDefault();
+
+        setError("");
+        setSuccessMessage("");
+
+        const password = formData.password;
+        const passwordConfirm = formData.passwordConfirm;
+
+        if (password.length < 8) {
+            setError("Password must be at least 8 characters long.");
+            return;
+        }
+
+        if (password !== passwordConfirm) {
+            setError("Passwords do not match.");
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const csrfToken = await getCsrfToken();
+
+            const response = await fetch(
+                `${API_URL}/api/v1/auth/password-reset/confirm/`,
+                {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                    body: JSON.stringify({
+                        email: formData.email,
+                        otp: formData.otp,
+                        password,
+                        password_confirm: passwordConfirm,
+                    }),
+                }
+            );
+
+            let data = {};
+
+            try {
+                data = await response.json();
+            } catch {
+                data = {};
+            }
+
+            if (!response.ok) {
+                throw new Error(
+                    getApiError(
+                        data,
+                        "Unable to reset your password. Please try again."
+                    )
+                );
+            }
+
+            setStep("success");
+        } catch (err) {
+            console.error("Password reset confirmation error:", err);
+
+            if (err instanceof TypeError) {
+                setError(
+                    "Unable to connect to the Geeka server. Please try again."
+                );
+            } else {
+                setError(
+                    err.message ||
+                    "Unable to reset your password. Please try again."
+                );
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | GO TO LOGIN
+    |--------------------------------------------------------------------------
+    */
+
+    const handleLoginRedirect = () => {
+        navigate("/login", {
+            replace: true,
+            state: {
+                passwordResetSuccess: true,
+                message: "Your password has been reset successfully.",
+            },
+        });
+    };
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHANGE EMAIL
+    |--------------------------------------------------------------------------
+    */
+
+    const handleChangeEmail = () => {
+        setError("");
+        setSuccessMessage("");
+
+        setFormData((previous) => ({
+            ...previous,
+            otp: "",
+            password: "",
+            passwordConfirm: "",
+        }));
+
+        setStep("email");
     };
 
     return (
-        <main className="forgot-page">
-            <section className="forgot-auth-layout">
-
-                {/* =========================
-                    LEFT SIDE
-                ========================= */}
-
-                <div className="forgot-form-side">
-
-                    <Link to="/" className="forgot-back-store">
-                        <span>←</span>
-                        Back to Store
+        <div
+            className="forgot-password-page"
+            style={{
+                "--forgot-password-background-image": `url(${forgotPasswordBackground})`,
+            }}
+        >
+            <div className="forgot-password-left">
+                <div className="forgot-password-content">
+                    <Link to="/" className="forgot-password-logo-link">
+                        <img
+                            src={logo}
+                            alt="Geeka"
+                            className="forgot-password-logo"
+                        />
                     </Link>
 
-                    <div className="forgot-form-wrapper">
+                    <div className="forgot-password-heading">
+                        <h1>
+                            {step === "email" && "Forgot Password?"}
 
-                        <Logo />
+                            {step === "otp" && "Verify Your Email"}
 
-                        {/* =========================
-                            STEP 1 — EMAIL
-                        ========================= */}
+                            {step === "password" && "Create New Password"}
 
-                        {step === "email" && (
-                            <>
-                                <span className="forgot-eyebrow">
-                                    ACCOUNT RECOVERY
-                                </span>
+                            {step === "success" && "Password Updated"}
+                        </h1>
 
-                                <h1>
-                                    Forgot your
-                                    <br />
-                                    password?
-                                </h1>
+                        <p>
+                            {step === "email" &&
+                                "Enter your email and we'll help you reset your password."}
 
-                                <p className="forgot-description">
-                                    Enter your email address and we'll
-                                    send you a verification code to
-                                    reset your password.
-                                </p>
+                            {step === "otp" &&
+                                "Enter the verification code sent to your email."}
 
-                                <form
-                                    className="forgot-form"
-                                    onSubmit={handleEmailSubmit}
-                                >
-                                    <div className="forgot-field">
-                                        <label htmlFor="forgot-email">
-                                            EMAIL ADDRESS
-                                        </label>
+                            {step === "password" &&
+                                "Choose a new password for your Geeka account."}
 
-                                        <input
-                                            id="forgot-email"
-                                            type="email"
-                                            value={email}
-                                            onChange={(event) =>
-                                                setEmail(event.target.value)
-                                            }
-                                            placeholder="Enter your email"
-                                            autoComplete="email"
-                                            required
-                                        />
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        className="forgot-submit-button"
-                                    >
-                                        <span>
-                                            SEND VERIFICATION CODE
-                                        </span>
-
-                                        <ArrowIcon />
-                                    </button>
-                                </form>
-                            </>
-                        )}
-
-                        {/* =========================
-                            STEP 2 — OTP
-                        ========================= */}
-
-                        {step === "otp" && (
-                            <>
-                                <span className="forgot-eyebrow">
-                                    VERIFY YOUR EMAIL
-                                </span>
-
-                                <h1>
-                                    Enter the
-                                    <br />
-                                    verification code.
-                                </h1>
-
-                                <p className="forgot-description">
-                                    We've sent a 6-digit code to{" "}
-                                    <strong>{email}</strong>.
-                                </p>
-
-                                <form
-                                    className="forgot-form"
-                                    onSubmit={handleOtpSubmit}
-                                >
-                                    <div className="forgot-field">
-                                        <label htmlFor="forgot-otp">
-                                            VERIFICATION CODE
-                                        </label>
-
-                                        <input
-                                            id="forgot-otp"
-                                            type="text"
-                                            inputMode="numeric"
-                                            maxLength={6}
-                                            value={otp}
-                                            onChange={(event) =>
-                                                setOtp(
-                                                    event.target.value.replace(
-                                                        /\D/g,
-                                                        ""
-                                                    )
-                                                )
-                                            }
-                                            placeholder="Enter 6-digit code"
-                                            autoComplete="one-time-code"
-                                            required
-                                        />
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        className="forgot-submit-button"
-                                    >
-                                        <span>VERIFY CODE</span>
-                                        <ArrowIcon />
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        className="forgot-secondary-button"
-                                        onClick={() => {
-                                            setOtp("");
-                                            setStep("email");
-                                        }}
-                                    >
-                                        Change email address
-                                    </button>
-                                </form>
-                            </>
-                        )}
-
-                        {/* =========================
-                            STEP 3 — NEW PASSWORD
-                        ========================= */}
-
-                        {step === "password" && (
-                            <>
-                                <span className="forgot-eyebrow">
-                                    CREATE NEW PASSWORD
-                                </span>
-
-                                <h1>
-                                    Create a new
-                                    <br />
-                                    password.
-                                </h1>
-
-                                <p className="forgot-description">
-                                    Choose a new password for your Geeka
-                                    account.
-                                </p>
-
-                                <form
-                                    className="forgot-form"
-                                    onSubmit={handlePasswordSubmit}
-                                >
-                                    <div className="forgot-field">
-                                        <label htmlFor="new-password">
-                                            NEW PASSWORD
-                                        </label>
-
-                                        <div className="forgot-password-input">
-                                            <input
-                                                id="new-password"
-                                                type={
-                                                    showPassword
-                                                        ? "text"
-                                                        : "password"
-                                                }
-                                                value={password}
-                                                onChange={(event) =>
-                                                    setPassword(
-                                                        event.target.value
-                                                    )
-                                                }
-                                                placeholder="Enter your new password"
-                                                autoComplete="new-password"
-                                                required
-                                            />
-
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setShowPassword(
-                                                        (current) =>
-                                                            !current
-                                                    )
-                                                }
-                                                aria-label={
-                                                    showPassword
-                                                        ? "Hide password"
-                                                        : "Show password"
-                                                }
-                                            >
-                                                <EyeIcon
-                                                    hidden={showPassword}
-                                                />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="forgot-field">
-                                        <label htmlFor="confirm-password">
-                                            CONFIRM PASSWORD
-                                        </label>
-
-                                        <div className="forgot-password-input">
-                                            <input
-                                                id="confirm-password"
-                                                type={
-                                                    showConfirmPassword
-                                                        ? "text"
-                                                        : "password"
-                                                }
-                                                value={confirmPassword}
-                                                onChange={(event) =>
-                                                    setConfirmPassword(
-                                                        event.target.value
-                                                    )
-                                                }
-                                                placeholder="Confirm your new password"
-                                                autoComplete="new-password"
-                                                required
-                                            />
-
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    setShowConfirmPassword(
-                                                        (current) =>
-                                                            !current
-                                                    )
-                                                }
-                                                aria-label={
-                                                    showConfirmPassword
-                                                        ? "Hide password"
-                                                        : "Show password"
-                                                }
-                                            >
-                                                <EyeIcon
-                                                    hidden={
-                                                        showConfirmPassword
-                                                    }
-                                                />
-                                            </button>
-                                        </div>
-
-                                        {confirmPassword &&
-                                            password !==
-                                            confirmPassword && (
-                                                <span className="forgot-error">
-                                                    Passwords do not match.
-                                                </span>
-                                            )}
-                                    </div>
-
-                                    <button
-                                        type="submit"
-                                        className="forgot-submit-button"
-                                        disabled={
-                                            !password ||
-                                            !confirmPassword ||
-                                            password !== confirmPassword
-                                        }
-                                    >
-                                        <span>RESET PASSWORD</span>
-                                        <ArrowIcon />
-                                    </button>
-                                </form>
-                            </>
-                        )}
-
-                        {/* =========================
-                            STEP 4 — SUCCESS
-                        ========================= */}
-
-                        {step === "success" && (
-                            <div className="forgot-success">
-
-                                <div className="forgot-success-mark">
-                                    ✓
-                                </div>
-
-                                <span className="forgot-eyebrow">
-                                    PASSWORD UPDATED
-                                </span>
-
-                                <h1>
-                                    You're all
-                                    <br />
-                                    set.
-                                </h1>
-
-                                <p className="forgot-description">
-                                    Your password has been successfully
-                                    changed. You can now sign in to your
-                                    Geeka account.
-                                </p>
-
-                                <Link
-                                    to="/login"
-                                    className="forgot-submit-button forgot-login-button"
-                                >
-                                    <span>BACK TO SIGN IN</span>
-                                    <ArrowIcon />
-                                </Link>
-
-                            </div>
-                        )}
-
-                        {/* =========================
-                            LOGIN LINK
-                        ========================= */}
-
-                        {step !== "success" && (
-                            <div className="forgot-login-link">
-                                <span>Remember your password?</span>
-
-                                <Link to="/login">
-                                    Sign in
-                                    <span> →</span>
-                                </Link>
-                            </div>
-                        )}
-
-                        <p className="forgot-terms">
-                            By continuing, you agree to our Terms &
-                            Conditions and Privacy Policy.
+                            {step === "success" &&
+                                "Your password has been changed successfully."}
                         </p>
-
-                    </div>
-                </div>
-
-                {/* =========================
-                    RIGHT IMAGE SIDE
-                ========================= */}
-
-                <div
-                    className="forgot-image-side"
-                    style={{
-                        backgroundImage: `url(${forgotPassImage})`,
-                    }}
-                >
-
-                    <div className="forgot-image-top">
-                        <span>GEEKA</span>
-                        <span>EST. 2026</span>
                     </div>
 
-                    <div className="forgot-image-overlay">
-                        <div className="forgot-image-copy">
+                    {error && (
+                        <div className="forgot-password-error" role="alert">
+                            {error}
+                        </div>
+                    )}
 
-                            <span className="forgot-image-eyebrow">
-                                A FRESH START.
-                            </span>
+                    {successMessage && (
+                        <div
+                            className="forgot-password-success"
+                            role="status"
+                        >
+                            {successMessage}
+                        </div>
+                    )}
 
-                            <h2>
-                                Begins
-                                <br />
-                                <em>Here.</em>
-                            </h2>
+                    {/* ==========================================================
+              STEP 1 — EMAIL
+          ========================================================== */}
+
+                    {step === "email" && (
+                        <form
+                            onSubmit={handleEmailSubmit}
+                            className="forgot-password-form"
+                        >
+                            <div className="forgot-password-field">
+                                <label htmlFor="email">Email Address</label>
+
+                                <input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    placeholder="Enter your email"
+                                    autoComplete="email"
+                                    disabled={loading}
+                                    required
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="forgot-password-submit"
+                                disabled={loading}
+                            >
+                                {loading ? "Sending..." : "Send Verification Code"}
+                            </button>
+
+                            <Link
+                                to="/login"
+                                className="forgot-password-back-link"
+                            >
+                                Back to Login
+                            </Link>
+                        </form>
+                    )}
+
+                    {/* ==========================================================
+              STEP 2 — OTP
+          ========================================================== */}
+
+                    {step === "otp" && (
+                        <form
+                            onSubmit={handleOtpSubmit}
+                            className="forgot-password-form"
+                        >
+                            <div className="forgot-password-otp-info">
+                                <span>Verification code sent to</span>
+
+                                <strong>{formData.email}</strong>
+                            </div>
+
+                            <div className="forgot-password-field">
+                                <label htmlFor="otp">Verification Code</label>
+
+                                <input
+                                    id="otp"
+                                    name="otp"
+                                    type="text"
+                                    value={formData.otp}
+                                    onChange={handleChange}
+                                    placeholder="Enter 6-digit code"
+                                    inputMode="numeric"
+                                    maxLength={6}
+                                    autoComplete="one-time-code"
+                                    disabled={loading}
+                                    required
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="forgot-password-submit"
+                                disabled={loading}
+                            >
+                                {loading ? "Verifying..." : "Verify Code"}
+                            </button>
+
+                            <button
+                                type="button"
+                                className="forgot-password-secondary-button"
+                                onClick={handleChangeEmail}
+                                disabled={loading}
+                            >
+                                Change Email
+                            </button>
+                        </form>
+                    )}
+
+                    {/* ==========================================================
+              STEP 3 — NEW PASSWORD
+          ========================================================== */}
+
+                    {step === "password" && (
+                        <form
+                            onSubmit={handlePasswordSubmit}
+                            className="forgot-password-form"
+                        >
+                            <div className="forgot-password-field">
+                                <label htmlFor="password">New Password</label>
+
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    placeholder="Enter new password"
+                                    autoComplete="new-password"
+                                    disabled={loading}
+                                    required
+                                />
+
+                                <small>
+                                    Password must be at least 8 characters.
+                                </small>
+                            </div>
+
+                            <div className="forgot-password-field">
+                                <label htmlFor="passwordConfirm">
+                                    Confirm New Password
+                                </label>
+
+                                <input
+                                    id="passwordConfirm"
+                                    name="passwordConfirm"
+                                    type="password"
+                                    value={formData.passwordConfirm}
+                                    onChange={handleChange}
+                                    placeholder="Confirm new password"
+                                    autoComplete="new-password"
+                                    disabled={loading}
+                                    required
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                className="forgot-password-submit"
+                                disabled={loading}
+                            >
+                                {loading ? "Updating..." : "Reset Password"}
+                            </button>
+                        </form>
+                    )}
+
+                    {/* ==========================================================
+              STEP 4 — SUCCESS
+          ========================================================== */}
+
+                    {step === "success" && (
+                        <div className="forgot-password-success-container">
+                            <div className="forgot-password-success-icon">
+                                ✓
+                            </div>
+
+                            <h2>Password Reset Successfully</h2>
 
                             <p>
-                                Reset your password and return to
-                                everything you love about Geeka.
+                                Your password has been updated. You can now log in
+                                using your new password.
                             </p>
 
-                            <div className="forgot-image-line" />
-
+                            <button
+                                type="button"
+                                className="forgot-password-submit"
+                                onClick={handleLoginRedirect}
+                            >
+                                Continue to Login
+                            </button>
                         </div>
-                    </div>
+                    )}
 
-                    <div className="forgot-image-decoration">
-                        <span />
-                        <span />
-                        <span />
-                    </div>
+                    {step !== "success" && (
+                        <div className="forgot-password-register">
+                            <span>Remember your password?</span>
 
+                            <Link to="/login">Sign In</Link>
+                        </div>
+                    )}
                 </div>
+            </div>
 
-            </section>
-        </main>
+            <div className="forgot-password-right">
+                <div className="forgot-password-image-overlay"></div>
+
+                <div className="forgot-password-image-content">
+                    <span className="forgot-password-image-small-text">
+                        GEEKA
+                    </span>
+
+                    <h2>Everything you love, all in one place.</h2>
+
+                    <p>
+                        Your account keeps your Geeka experience personal,
+                        simple and secure.
+                    </p>
+                </div>
+            </div>
+        </div>
     );
 }

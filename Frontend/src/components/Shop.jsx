@@ -1,68 +1,152 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import {
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+
+import {
+    Link,
+    useLocation,
+} from "react-router-dom";
+
 import "../style/Shop.css";
 
 import Header from "./Header";
-import { useCart } from "../hooks/useCart";
-import { getProducts } from "../services/productService";
+
+import {
+    useCart,
+} from "../hooks/useCart";
+
+import {
+    getProducts,
+} from "../services/productService";
 
 import shopBanner from "../assets/top-banner.jpg";
+
+
+/* =========================================================
+   PRICE FORMAT
+========================================================= */
+
 function formatPrice(price) {
     return `₹${price.toLocaleString("en-IN")}`;
 }
 
+
+/* =========================================================
+   SEARCH ICON
+========================================================= */
+
 function SearchIcon() {
     return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="10.8" cy="10.8" r="6.2" />
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
+            <circle
+                cx="10.8"
+                cy="10.8"
+                r="6.2"
+            />
+
             <path d="M15.5 15.5 21 21" />
         </svg>
     );
 }
 
-function HeartIcon({ filled = false }) {
+
+/* =========================================================
+   HEART ICON
+========================================================= */
+
+function HeartIcon({
+    filled = false,
+}) {
     return (
         <svg
             viewBox="0 0 24 24"
             aria-hidden="true"
-            className={filled ? "filled" : ""}
+            className={
+                filled
+                    ? "filled"
+                    : ""
+            }
         >
+
             <path d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.7Z" />
+
         </svg>
     );
 }
 
+
+/* =========================================================
+   CLOSE ICON
+========================================================= */
+
 function CloseIcon() {
     return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
             <path d="M6 6 18 18M18 6 6 18" />
         </svg>
     );
 }
 
+
+/* =========================================================
+   PLUS ICON
+========================================================= */
+
 function PlusIcon() {
     return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
             <path d="M12 5v14M5 12h14" />
         </svg>
     );
 }
 
+
+/* =========================================================
+   FILTER ICON
+========================================================= */
+
 function FilterIcon() {
     return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
             <path d="M4 7h16M7 12h10M10 17h4" />
         </svg>
     );
 }
 
+
+/* =========================================================
+   ARROW ICON
+========================================================= */
+
 function ArrowIcon() {
     return (
-        <svg viewBox="0 0 24 24" aria-hidden="true">
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+        >
             <path d="M5 12h13M13 6l6 6-6 6" />
         </svg>
     );
 }
+
+
+/* =========================================================
+   PRODUCT CARD
+========================================================= */
 
 function ProductCard({
     product,
@@ -71,7 +155,9 @@ function ProductCard({
     onQuickView,
     onAddToCart,
 }) {
+
     return (
+
         <article className="shop-product-card">
 
             <div className="shop-product-image">
@@ -82,18 +168,26 @@ function ProductCard({
                     loading="lazy"
                 />
 
+
                 {product.isNew && (
+
                     <span className="shop-product-new">
                         NEW
                     </span>
+
                 )}
+
 
                 <button
                     type="button"
-                    className={`shop-product-heart ${isWishlisted ? "active" : ""
+                    className={`shop-product-heart ${isWishlisted
+                        ? "active"
+                        : ""
                         }`}
                     onClick={() =>
-                        onToggleWishlist(product.id)
+                        onToggleWishlist(
+                            product.id
+                        )
                     }
                     aria-label={
                         isWishlisted
@@ -101,18 +195,29 @@ function ProductCard({
                             : `Add ${product.name} to wishlist`
                     }
                 >
-                    <HeartIcon filled={isWishlisted} />
+
+                    <HeartIcon
+                        filled={
+                            isWishlisted
+                        }
+                    />
+
                 </button>
 
+
                 <div className="shop-image-actions">
+
                     <button
                         type="button"
                         onClick={() =>
-                            onQuickView(product)
+                            onQuickView(
+                                product
+                            )
                         }
                     >
                         QUICK VIEW
                     </button>
+
                 </div>
 
             </div>
@@ -124,132 +229,343 @@ function ProductCard({
                     {product.category}
                 </span>
 
+
                 <h3>
                     {product.name}
                 </h3>
 
+
                 <div className="shop-product-price">
 
                     <strong>
-                        {formatPrice(product.price)}
+                        {formatPrice(
+                            product.price
+                        )}
                     </strong>
 
+
                     {product.oldPrice && (
+
                         <del>
-                            {formatPrice(product.oldPrice)}
+                            {formatPrice(
+                                product.oldPrice
+                            )}
                         </del>
+
                     )}
 
                 </div>
 
+
                 <button
                     type="button"
                     className="shop-add-cart"
-                    disabled={!product.inStock}
+                    disabled={
+                        !product.inStock
+                    }
                     onClick={() =>
-                        onAddToCart(product)
+                        onAddToCart(
+                            product
+                        )
                     }
                 >
+
                     {product.inStock
                         ? "ADD TO CART"
                         : "SOLD OUT"}
 
+
                     {product.inStock && (
                         <PlusIcon />
                     )}
+
                 </button>
 
             </div>
 
         </article>
+
     );
 }
 
+
+/* =========================================================
+   SHOP
+========================================================= */
+
 export default function Shop() {
 
-    const [category, setCategory] = useState("All");
-    const [search, setSearch] = useState("");
+    const location = useLocation();
 
-    const [minPrice, setMinPrice] = useState(0);
-    const [maxPrice, setMaxPrice] = useState(2500);
 
-    const [newOnly, setNewOnly] = useState(false);
-    const [stockOnly, setStockOnly] = useState(false);
+    /*
+    |--------------------------------------------------------------------------
+    | FILTER STATE
+    |--------------------------------------------------------------------------
+    */
 
-    const [sortBy, setSortBy] = useState("featured");
+    const [
+        category,
+        setCategory,
+    ] = useState("All");
 
-    const [wishlist, setWishlist] = useState(() => {
+
+    /*
+    |--------------------------------------------------------------------------
+    | SEARCH
+    |--------------------------------------------------------------------------
+    |
+    | Search now comes from the navbar through ?search=
+    |
+    */
+
+    const search = useMemo(() => {
+
+        const params =
+            new URLSearchParams(
+                location.search
+            );
+
+        return (
+            params.get("search") || ""
+        );
+
+    }, [
+        location.search,
+    ]);
+
+
+    const [
+        minPrice,
+        setMinPrice,
+    ] = useState(0);
+
+    const [
+        maxPrice,
+        setMaxPrice,
+    ] = useState(2500);
+
+    const [
+        newOnly,
+        setNewOnly,
+    ] = useState(false);
+
+    const [
+        stockOnly,
+        setStockOnly,
+    ] = useState(false);
+
+    const [
+        sortBy,
+        setSortBy,
+    ] = useState("featured");
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | WISHLIST
+    |--------------------------------------------------------------------------
+    */
+
+    const [
+        wishlist,
+        setWishlist,
+    ] = useState(() => {
+
         try {
-            const saved =
-                localStorage.getItem("geeka-wishlist");
 
-            return saved ? JSON.parse(saved) : [];
+            const saved =
+                localStorage.getItem(
+                    "geeka-wishlist"
+                );
+
+            return saved
+                ? JSON.parse(saved)
+                : [];
+
         } catch {
+
             return [];
+
         }
+
     });
 
-    const [quickView, setQuickView] = useState(null);
 
-    const [mobileFilters, setMobileFilters] =
-        useState(false);
+    /*
+    |--------------------------------------------------------------------------
+    | QUICK VIEW
+    |--------------------------------------------------------------------------
+    */
 
-    const [cartMessage, setCartMessage] =
-        useState(false);
+    const [
+        quickView,
+        setQuickView,
+    ] = useState(null);
 
-    const { addItem, cartCount } = useCart();
 
-    const [products, setProducts] = useState([]);
+    /*
+    |--------------------------------------------------------------------------
+    | MOBILE FILTERS
+    |--------------------------------------------------------------------------
+    */
+
+    const [
+        mobileFilters,
+        setMobileFilters,
+    ] = useState(false);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CART MESSAGE
+    |--------------------------------------------------------------------------
+    */
+
+    const [
+        cartMessage,
+        setCartMessage,
+    ] = useState(false);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CART
+    |--------------------------------------------------------------------------
+    */
+
+    const {
+        addItem,
+        cartCount,
+    } = useCart();
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PRODUCTS
+    |--------------------------------------------------------------------------
+    */
+
+    const [
+        products,
+        setProducts,
+    ] = useState([]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD PRODUCTS
+    |--------------------------------------------------------------------------
+    */
 
     useEffect(() => {
+
         let active = true;
 
         async function loadProducts() {
+
             try {
-                const items = await getProducts();
+
+                const items =
+                    await getProducts();
 
                 if (active) {
-                    setProducts(Array.isArray(items) ? items : []);
+
+                    setProducts(
+                        Array.isArray(items)
+                            ? items
+                            : []
+                    );
+
                 }
+
             } catch {
+
                 if (active) {
+
                     setProducts([]);
+
                 }
+
             }
+
         }
 
         loadProducts();
 
         return () => {
+
             active = false;
+
         };
+
     }, []);
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | CATEGORIES
+    |--------------------------------------------------------------------------
+    */
+
     const categories = useMemo(() => {
+
         const uniqueCategories = [
+
             ...new Set(
+
                 products
-                    .map((product) => product.category)
+                    .map(
+                        (product) =>
+                            product.category
+                    )
                     .filter(Boolean)
+
             ),
+
         ];
 
-        return ["All", ...uniqueCategories];
-    }, [products]);
+        return [
+            "All",
+            ...uniqueCategories,
+        ];
 
+    }, [
+        products,
+    ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SAVE WISHLIST
+    |--------------------------------------------------------------------------
+    */
 
     useEffect(() => {
+
         localStorage.setItem(
             "geeka-wishlist",
-            JSON.stringify(wishlist)
+            JSON.stringify(
+                wishlist
+            )
         );
 
         window.dispatchEvent(
-            new Event("geeka-wishlist-updated")
+            new Event(
+                "geeka-wishlist-updated"
+            )
         );
-    }, [wishlist]);
+
+    }, [
+        wishlist,
+    ]);
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | BODY OVERFLOW
+    |--------------------------------------------------------------------------
+    */
 
     useEffect(() => {
 
@@ -259,173 +575,305 @@ export default function Shop() {
                 : "";
 
         return () => {
-            document.body.style.overflow = "";
+
+            document.body.style.overflow =
+                "";
+
         };
 
-    }, [mobileFilters, quickView]);
+    }, [
+        mobileFilters,
+        quickView,
+    ]);
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | CART MESSAGE
+    |--------------------------------------------------------------------------
+    */
 
     useEffect(() => {
 
-        if (!cartMessage) return;
+        if (!cartMessage) {
+            return;
+        }
 
-        const timer = setTimeout(() => {
-            setCartMessage(false);
-        }, 2200);
+        const timer =
+            setTimeout(() => {
 
-        return () => clearTimeout(timer);
-
-    }, [cartMessage]);
-
-
-    const filteredProducts = useMemo(() => {
-
-        const query = search
-            .trim()
-            .toLowerCase();
-
-        const results = products.filter(
-            (product) => {
-
-                const matchesCategory =
-                    category === "All" ||
-                    product.category === category;
-
-                const matchesSearch =
-                    !query ||
-                    product.name
-                        .toLowerCase()
-                        .includes(query) ||
-                    product.category
-                        .toLowerCase()
-                        .includes(query);
-
-                const matchesPrice =
-                    product.price >= minPrice &&
-                    product.price <= maxPrice;
-
-                const matchesNew =
-                    !newOnly || product.isNew;
-
-                const matchesStock =
-                    !stockOnly ||
-                    product.inStock;
-
-                return (
-                    matchesCategory &&
-                    matchesSearch &&
-                    matchesPrice &&
-                    matchesNew &&
-                    matchesStock
+                setCartMessage(
+                    false
                 );
-            }
-        );
 
+            }, 2200);
 
-        return [...results].sort(
-            (a, b) => {
-
-                switch (sortBy) {
-
-                    case "newest":
-                        return (
-                            Number(b.isNew) -
-                            Number(a.isNew)
-                        );
-
-                    case "price-low":
-                        return (
-                            a.price -
-                            b.price
-                        );
-
-                    case "price-high":
-                        return (
-                            b.price -
-                            a.price
-                        );
-
-                    case "name":
-                        return a.name.localeCompare(
-                            b.name
-                        );
-
-                    case "featured":
-                    default:
-                        return (
-                            Number(b.featured) -
-                            Number(a.featured)
-                        );
-                }
-            }
-        );
+        return () =>
+            clearTimeout(
+                timer
+            );
 
     }, [
-        category,
-        search,
-        minPrice,
-        maxPrice,
-        newOnly,
-        stockOnly,
-        sortBy,
-        products,
+        cartMessage,
     ]);
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | FILTERED PRODUCTS
+    |--------------------------------------------------------------------------
+    |
+    | EXACT SAME SEARCH LOGIC AS BEFORE:
+    |
+    | Product name OR product category
+    |
+    */
+
+    const filteredProducts =
+        useMemo(() => {
+
+            const query =
+                search
+                    .trim()
+                    .toLowerCase();
+
+
+            const results =
+                products.filter(
+                    (product) => {
+
+                        const matchesCategory =
+                            category === "All" ||
+                            product.category ===
+                            category;
+
+
+                        const matchesSearch =
+                            !query ||
+                            product.name
+                                .toLowerCase()
+                                .includes(
+                                    query
+                                ) ||
+                            product.category
+                                .toLowerCase()
+                                .includes(
+                                    query
+                                );
+
+
+                        const matchesPrice =
+                            product.price >=
+                            minPrice &&
+                            product.price <=
+                            maxPrice;
+
+
+                        const matchesNew =
+                            !newOnly ||
+                            product.isNew;
+
+
+                        const matchesStock =
+                            !stockOnly ||
+                            product.inStock;
+
+
+                        return (
+
+                            matchesCategory &&
+                            matchesSearch &&
+                            matchesPrice &&
+                            matchesNew &&
+                            matchesStock
+
+                        );
+
+                    }
+                );
+
+
+            return [
+                ...results,
+            ].sort(
+                (a, b) => {
+
+                    switch (sortBy) {
+
+                        case "newest":
+
+                            return (
+                                Number(
+                                    b.isNew
+                                ) -
+                                Number(
+                                    a.isNew
+                                )
+                            );
+
+
+                        case "price-low":
+
+                            return (
+                                a.price -
+                                b.price
+                            );
+
+
+                        case "price-high":
+
+                            return (
+                                b.price -
+                                a.price
+                            );
+
+
+                        case "name":
+
+                            return a.name.localeCompare(
+                                b.name
+                            );
+
+
+                        case "featured":
+
+                        default:
+
+                            return (
+                                Number(
+                                    b.featured
+                                ) -
+                                Number(
+                                    a.featured
+                                )
+                            );
+
+                    }
+
+                }
+            );
+
+        }, [
+            category,
+            search,
+            minPrice,
+            maxPrice,
+            newOnly,
+            stockOnly,
+            sortBy,
+            products,
+        ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CLEAR FILTERS
+    |--------------------------------------------------------------------------
+    |
+    | Search itself is now controlled by Header.
+    | The Header clears ?search= from the URL.
+    |
+    */
 
     const clearFilters = () => {
 
         setCategory("All");
-        setSearch("");
+
         setMinPrice(0);
+
         setMaxPrice(2500);
+
         setNewOnly(false);
+
         setStockOnly(false);
+
         setSortBy("featured");
 
     };
 
 
-    const toggleWishlist = (productId) => {
+    /*
+    |--------------------------------------------------------------------------
+    | WISHLIST
+    |--------------------------------------------------------------------------
+    */
 
-        setWishlist((current) =>
+    const toggleWishlist =
+        (productId) => {
 
-            current.includes(productId)
+            setWishlist(
+                (current) =>
 
-                ? current.filter(
-                    (id) =>
-                        id !== productId
-                )
+                    current.includes(
+                        productId
+                    )
 
-                : [
-                    ...current,
-                    productId,
-                ]
+                        ? current.filter(
+                            (id) =>
+                                id !==
+                                productId
+                        )
 
-        );
-    };
+                        : [
+                            ...current,
+                            productId,
+                        ]
+
+            );
+
+        };
 
 
-    const addToCart = (product) => {
-        addItem(product);
-        setCartMessage(true);
-    };
+    /*
+    |--------------------------------------------------------------------------
+    | ADD TO CART
+    |--------------------------------------------------------------------------
+    */
+
+    const addToCart =
+        (product) => {
+
+            addItem(product);
+
+            setCartMessage(
+                true
+            );
+
+        };
 
 
-    const categoryCount = (
-        selectedCategory
-    ) => {
+    /*
+    |--------------------------------------------------------------------------
+    | CATEGORY COUNT
+    |--------------------------------------------------------------------------
+    */
 
-        if (selectedCategory === "All") {
-            return products.length;
-        }
+    const categoryCount =
+        (selectedCategory) => {
 
-        return products.filter(
-            (product) =>
-                product.category ===
-                selectedCategory
-        ).length;
-    };
+            if (
+                selectedCategory ===
+                "All"
+            ) {
 
+                return products.length;
+
+            }
+
+            return products.filter(
+                (product) =>
+                    product.category ===
+                    selectedCategory
+            ).length;
+
+        };
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | HAS FILTERS
+    |--------------------------------------------------------------------------
+    */
 
     const hasFilters =
         category !== "All" ||
@@ -436,19 +884,25 @@ export default function Shop() {
         search.trim() !== "";
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | RENDER
+    |--------------------------------------------------------------------------
+    */
+
     return (
         <>
-            {/* =====================================================
-                SAME GEEKA NAVBAR
-                This is your existing Header component.
-            ====================================================== */}
+
+            {/* =================================================
+                NAVBAR
+            ================================================== */}
 
             <Header />
 
 
-            {/* =====================================================
+            {/* =================================================
                 SHOP PAGE
-            ====================================================== */}
+            ================================================== */}
 
             <main className="shop-page">
 
@@ -499,41 +953,11 @@ export default function Shop() {
                 <section className="shop-container">
 
 
-                    {/* TOOLBAR */}
+                    {/* =================================================
+                        TOOLBAR
+                    ================================================== */}
 
                     <div className="shop-toolbar">
-
-                        <div className="shop-search-box">
-
-                            <SearchIcon />
-
-                            <input
-                                type="text"
-                                value={search}
-                                placeholder="Search products..."
-                                onChange={(event) =>
-                                    setSearch(
-                                        event.target.value
-                                    )
-                                }
-                            />
-
-                            {search && (
-
-                                <button
-                                    type="button"
-                                    className="clear-search"
-                                    onClick={() =>
-                                        setSearch("")
-                                    }
-                                >
-                                    <CloseIcon />
-                                </button>
-
-                            )}
-
-                        </div>
-
 
                         <div className="shop-toolbar-right">
 
@@ -541,22 +965,33 @@ export default function Shop() {
                                 type="button"
                                 className="mobile-filter-btn"
                                 onClick={() =>
-                                    setMobileFilters(true)
+                                    setMobileFilters(
+                                        true
+                                    )
                                 }
                             >
+
                                 <FilterIcon />
+
                                 FILTER
+
                             </button>
 
 
                             <span className="showing-count">
 
                                 Showing 1 -{" "}
+
                                 {
                                     filteredProducts.length
                                 }{" "}
+
                                 of{" "}
-                                {products.length}{" "}
+
+                                {
+                                    products.length
+                                }{" "}
+
                                 products
 
                             </span>
@@ -574,7 +1009,8 @@ export default function Shop() {
                                     value={sortBy}
                                     onChange={(event) =>
                                         setSortBy(
-                                            event.target.value
+                                            event.target
+                                                .value
                                         )
                                     }
                                 >
@@ -608,7 +1044,9 @@ export default function Shop() {
                     </div>
 
 
-                    {/* ACTIVE FILTERS */}
+                    {/* =================================================
+                        ACTIVE FILTERS
+                    ================================================== */}
 
                     {hasFilters && (
 
@@ -629,6 +1067,7 @@ export default function Shop() {
                                         )
                                     }
                                 >
+
                                     {category}
 
                                     <CloseIcon />
@@ -642,10 +1081,31 @@ export default function Shop() {
 
                                 <button
                                     type="button"
-                                    onClick={() =>
-                                        setSearch("")
-                                    }
+                                    onClick={() => {
+
+                                        /*
+                                        | Search is controlled
+                                        | by Header.
+                                        |
+                                        | Navigate to /shop
+                                        | without search query.
+                                        */
+
+                                        window.history.pushState(
+                                            {},
+                                            "",
+                                            "/shop"
+                                        );
+
+                                        window.dispatchEvent(
+                                            new PopStateEvent(
+                                                "popstate"
+                                            )
+                                        );
+
+                                    }}
                                 >
+
                                     Search: {search}
 
                                     <CloseIcon />
@@ -661,14 +1121,24 @@ export default function Shop() {
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            setMinPrice(0);
-                                            setMaxPrice(2500);
+
+                                            setMinPrice(
+                                                0
+                                            );
+
+                                            setMaxPrice(
+                                                2500
+                                            );
+
                                         }}
                                     >
+
                                         {formatPrice(
                                             minPrice
                                         )}
+
                                         {" - "}
+
                                         {formatPrice(
                                             maxPrice
                                         )}
@@ -685,9 +1155,12 @@ export default function Shop() {
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        setNewOnly(false)
+                                        setNewOnly(
+                                            false
+                                        )
                                     }
                                 >
+
                                     New Arrivals
 
                                     <CloseIcon />
@@ -702,9 +1175,12 @@ export default function Shop() {
                                 <button
                                     type="button"
                                     onClick={() =>
-                                        setStockOnly(false)
+                                        setStockOnly(
+                                            false
+                                        )
                                     }
                                 >
+
                                     In Stock
 
                                     <CloseIcon />
@@ -736,7 +1212,9 @@ export default function Shop() {
                     <div className="shop-main-layout">
 
 
-                        {/* SIDEBAR */}
+                        {/* =================================================
+                            SIDEBAR
+                        ================================================== */}
 
                         <aside className="shop-filters">
 
@@ -774,9 +1252,11 @@ export default function Shop() {
                                                 </span>
 
                                                 <span>
-                                                    {categoryCount(
-                                                        item
-                                                    )}
+                                                    {
+                                                        categoryCount(
+                                                            item
+                                                        )
+                                                    }
                                                 </span>
 
                                             </button>
@@ -951,7 +1431,9 @@ export default function Shop() {
                         </aside>
 
 
-                        {/* PRODUCTS */}
+                        {/* =================================================
+                            PRODUCTS
+                        ================================================== */}
 
                         <div className="shop-products-area">
 
@@ -970,9 +1452,11 @@ export default function Shop() {
                                                 product={
                                                     product
                                                 }
-                                                isWishlisted={wishlist.includes(
-                                                    product.id
-                                                )}
+                                                isWishlisted={
+                                                    wishlist.includes(
+                                                        product.id
+                                                    )
+                                                }
                                                 onToggleWishlist={
                                                     toggleWishlist
                                                 }
@@ -1016,6 +1500,7 @@ export default function Shop() {
                                             clearFilters
                                         }
                                     >
+
                                         CLEAR FILTERS
 
                                         <ArrowIcon />
@@ -1047,9 +1532,11 @@ export default function Shop() {
                                 event.target ===
                                 event.currentTarget
                             ) {
+
                                 setMobileFilters(
                                     false
                                 );
+
                             }
 
                         }}
@@ -1127,9 +1614,11 @@ export default function Shop() {
                                                     </span>
 
                                                     <span>
-                                                        {categoryCount(
-                                                            item
-                                                        )}
+                                                        {
+                                                            categoryCount(
+                                                                item
+                                                            )
+                                                        }
                                                     </span>
 
                                                 </button>
@@ -1310,11 +1799,15 @@ export default function Shop() {
                                         )
                                     }
                                 >
+
                                     SHOW{" "}
+
                                     {
                                         filteredProducts.length
                                     }{" "}
+
                                     products
+
                                 </button>
 
                             </div>
@@ -1340,7 +1833,11 @@ export default function Shop() {
                                 event.target ===
                                 event.currentTarget
                             ) {
-                                setQuickView(null);
+
+                                setQuickView(
+                                    null
+                                );
+
                             }
 
                         }}
@@ -1353,7 +1850,9 @@ export default function Shop() {
                                 type="button"
                                 className="quick-view-close"
                                 onClick={() =>
-                                    setQuickView(null)
+                                    setQuickView(
+                                        null
+                                    )
                                 }
                             >
                                 <CloseIcon />
@@ -1398,6 +1897,7 @@ export default function Shop() {
                                         )}
                                     </strong>
 
+
                                     {quickView.oldPrice && (
 
                                         <del>
@@ -1433,6 +1933,7 @@ export default function Shop() {
 
                                     }}
                                 >
+
                                     ADD TO CART
 
                                     <ArrowIcon />
@@ -1482,6 +1983,7 @@ export default function Shop() {
                 )}
 
             </main>
+
         </>
     );
 }
