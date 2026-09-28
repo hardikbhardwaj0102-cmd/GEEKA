@@ -1,25 +1,30 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+    useState,
+} from "react";
+
+import {
+    Link,
+    useNavigate,
+} from "react-router-dom";
+
 import "../style/Login.css";
 
 import loginImage from "../assets/login.png";
 import geekaLogo from "../assets/logo.png";
 
-/*
-|--------------------------------------------------------------------------
-| API CONFIGURATION
-|--------------------------------------------------------------------------
-*/
+
+/* =========================================================
+   API CONFIGURATION
+========================================================= */
 
 const API_URL =
     import.meta.env.VITE_API_URL ||
     "https://geeka-backend.onrender.com";
 
-/*
-|--------------------------------------------------------------------------
-| LOGO
-|--------------------------------------------------------------------------
-*/
+
+/* =========================================================
+   LOGO
+========================================================= */
 
 function Logo() {
     return (
@@ -37,11 +42,10 @@ function Logo() {
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| EYE ICON
-|--------------------------------------------------------------------------
-*/
+
+/* =========================================================
+   EYE ICON
+========================================================= */
 
 function EyeIcon({ visible }) {
     return (
@@ -70,11 +74,10 @@ function EyeIcon({ visible }) {
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| ARROW ICON
-|--------------------------------------------------------------------------
-*/
+
+/* =========================================================
+   ARROW ICON
+========================================================= */
 
 function ArrowIcon() {
     return (
@@ -88,11 +91,10 @@ function ArrowIcon() {
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| GOOGLE ICON
-|--------------------------------------------------------------------------
-*/
+
+/* =========================================================
+   GOOGLE ICON
+========================================================= */
 
 function GoogleIcon() {
     return (
@@ -128,27 +130,129 @@ function GoogleIcon() {
     );
 }
 
-/*
-|--------------------------------------------------------------------------
-| LOGIN COMPONENT
-|--------------------------------------------------------------------------
-*/
+
+/* =========================================================
+   RESPONSE MESSAGE HELPER
+========================================================= */
+
+async function getResponseData(response) {
+    const contentType =
+        response.headers.get(
+            "content-type"
+        ) || "";
+
+    if (
+        contentType.includes(
+            "application/json"
+        )
+    ) {
+        try {
+            return await response.json();
+        } catch {
+            return {};
+        }
+    }
+
+    return {};
+}
+
+
+/* =========================================================
+   EXTRACT BACKEND ERROR
+========================================================= */
+
+function getBackendError(data) {
+    if (
+        typeof data?.error ===
+        "string"
+    ) {
+        return data.error;
+    }
+
+    if (
+        typeof data?.message ===
+        "string"
+    ) {
+        return data.message;
+    }
+
+    if (
+        data?.errors &&
+        typeof data.errors ===
+        "object"
+    ) {
+        const values = [];
+
+        Object.values(
+            data.errors
+        ).forEach((fieldErrors) => {
+            if (
+                Array.isArray(
+                    fieldErrors
+                )
+            ) {
+                values.push(
+                    ...fieldErrors
+                );
+            } else if (
+                typeof fieldErrors ===
+                "string"
+            ) {
+                values.push(
+                    fieldErrors
+                );
+            }
+        });
+
+        if (values.length > 0) {
+            return values[0];
+        }
+    }
+
+    return "Unable to sign in. Please try again.";
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
 
 export default function Login() {
-    const navigate = useNavigate();
 
-    const [showPassword, setShowPassword] =
-        useState(false);
+    const navigate =
+        useNavigate();
 
-    const [formData, setFormData] = useState({
+
+    /*
+    |--------------------------------------------------------------------------
+    | STATE
+    |--------------------------------------------------------------------------
+    */
+
+    const [
+        showPassword,
+        setShowPassword,
+    ] = useState(false);
+
+    const [
+        formData,
+        setFormData,
+    ] = useState({
         email: "",
         password: "",
         remember: false,
     });
 
-    const [loading, setLoading] = useState(false);
+    const [
+        loading,
+        setLoading,
+    ] = useState(false);
 
-    const [error, setError] = useState("");
+    const [
+        error,
+        setError,
+    ] = useState("");
+
 
     /*
     |--------------------------------------------------------------------------
@@ -157,6 +261,7 @@ export default function Login() {
     */
 
     function handleChange(event) {
+
         const {
             name,
             value,
@@ -164,148 +269,48 @@ export default function Login() {
             checked,
         } = event.target;
 
-        setFormData((current) => ({
-            ...current,
-            [name]:
-                type === "checkbox"
-                    ? checked
-                    : value,
-        }));
+        setFormData(
+            (current) => ({
+                ...current,
 
-        if (error) {
-            setError("");
-        }
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | GET CSRF TOKEN
-    |--------------------------------------------------------------------------
-    */
-
-    async function getCsrfToken() {
-        const response = await fetch(
-            `${API_URL}/api/v1/auth/csrf/`,
-            {
-                method: "GET",
-                credentials: "include",
-                headers: {
-                    Accept: "application/json",
-                },
-            }
+                [name]:
+                    type ===
+                        "checkbox"
+                        ? checked
+                        : value,
+            })
         );
 
-        let data = {};
-
-        try {
-            data = await response.json();
-        } catch {
-            data = {};
-        }
-
-        if (!response.ok) {
-            throw new Error(
-                data?.detail ||
-                data?.message ||
-                "Unable to initialize secure login."
-            );
-        }
-
-        if (!data?.csrfToken) {
-            throw new Error(
-                "CSRF token was not received from the server."
-            );
-        }
-
-        return data.csrfToken;
+        setError("");
     }
+
 
     /*
     |--------------------------------------------------------------------------
-    | API ERROR HANDLER
+    | NORMAL LOGIN
     |--------------------------------------------------------------------------
-    */
-
-    function getApiError(
-        data,
-        fallbackMessage
-    ) {
-        if (!data) {
-            return fallbackMessage;
-        }
-
-        if (typeof data === "string") {
-            return data;
-        }
-
-        if (data.detail) {
-            return data.detail;
-        }
-
-        if (data.message) {
-            return data.message;
-        }
-
-        if (data.error) {
-            return data.error;
-        }
-
-        if (
-            data.errors &&
-            typeof data.errors === "object"
-        ) {
-            const messages = [];
-
-            Object.entries(data.errors).forEach(
-                ([, value]) => {
-                    if (Array.isArray(value)) {
-                        value.forEach((message) => {
-                            messages.push(
-                                message
-                            );
-                        });
-                    } else if (
-                        typeof value ===
-                        "string"
-                    ) {
-                        messages.push(value);
-                    }
-                }
-            );
-
-            if (messages.length > 0) {
-                return messages.join(" ");
-            }
-        }
-
-        if (
-            Array.isArray(
-                data.non_field_errors
-            )
-        ) {
-            return data.non_field_errors.join(
-                " "
-            );
-        }
-
-        return fallbackMessage;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOGIN
+    |
+    | 1. Get CSRF token
+    | 2. Send email/password
+    | 3. Django creates session
+    | 4. Verify /me/
+    | 5. Notify Header
+    | 6. Go to Home
     |--------------------------------------------------------------------------
     */
 
     async function handleSubmit(event) {
+
         event.preventDefault();
+
+        if (loading) {
+            return;
+        }
 
         setError("");
 
         const email =
-            formData.email
-                .trim()
-                .toLowerCase();
+            formData.email.trim();
 
         const password =
             formData.password;
@@ -314,6 +319,7 @@ export default function Login() {
             setError(
                 "Please enter your email address."
             );
+
             return;
         }
 
@@ -321,99 +327,222 @@ export default function Login() {
             setError(
                 "Please enter your password."
             );
+
             return;
         }
 
         setLoading(true);
 
         try {
-            /*
-             * Django CSRF token
-             */
-            const csrfToken =
-                await getCsrfToken();
 
             /*
-             * Django login
-             */
-            const response =
+            |--------------------------------------------------------------------------
+            | STEP 1 — GET CSRF TOKEN
+            |--------------------------------------------------------------------------
+            */
+
+            const csrfResponse =
                 await fetch(
-                    `${API_URL}/api/v1/auth/login/`,
+                    `${API_URL}/api/v1/auth/csrf/`,
                     {
-                        method: "POST",
+                        method: "GET",
+
                         credentials:
                             "include",
+
                         headers: {
-                            "Content-Type":
-                                "application/json",
                             Accept:
                                 "application/json",
-                            "X-CSRFToken":
-                                csrfToken,
                         },
-                        body: JSON.stringify(
-                            {
-                                email,
-                                password,
-                            }
-                        ),
                     }
                 );
 
-            let data = {};
+            const csrfData =
+                await getResponseData(
+                    csrfResponse
+                );
 
-            try {
-                data =
-                    await response.json();
-            } catch {
-                data = {};
-            }
-
-            if (!response.ok) {
+            if (
+                !csrfResponse.ok ||
+                !csrfData?.csrfToken
+            ) {
                 throw new Error(
-                    getApiError(
-                        data,
-                        "Unable to sign in. Please check your email and password."
+                    getBackendError(
+                        csrfData
                     )
                 );
             }
 
-            /*
-             * Django creates the server-side
-             * authenticated session.
-             *
-             * No JWT/localStorage/sessionStorage.
-             */
 
-            navigate("/", {
-                replace: true,
-                state: {
-                    message:
-                        "Welcome back to GEEKA.",
-                },
-            });
-        } catch (err) {
-            console.error(
-                "Login error:",
-                err
-            );
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 2 — LOGIN
+            |--------------------------------------------------------------------------
+            */
+
+            const loginResponse =
+                await fetch(
+                    `${API_URL}/api/v1/auth/login/`,
+                    {
+                        method: "POST",
+
+                        credentials:
+                            "include",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+
+                            Accept:
+                                "application/json",
+
+                            "X-CSRFToken":
+                                csrfData.csrfToken,
+                        },
+
+                        body:
+                            JSON.stringify({
+                                email,
+                                password,
+                            }),
+                    }
+                );
+
+            const loginData =
+                await getResponseData(
+                    loginResponse
+                );
 
             if (
-                err instanceof TypeError
+                !loginResponse.ok
             ) {
-                setError(
-                    "Unable to connect to the Geeka server. Please try again."
-                );
-            } else {
-                setError(
-                    err.message ||
-                    "Login failed. Please try again."
+                throw new Error(
+                    getBackendError(
+                        loginData
+                    )
                 );
             }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 3 — VERIFY THE SESSION
+            |--------------------------------------------------------------------------
+            |
+            | This makes sure the browser actually received
+            | the Django session before we leave Login.
+            |--------------------------------------------------------------------------
+            */
+
+            const meResponse =
+                await fetch(
+                    `${API_URL}/api/v1/auth/me/`,
+                    {
+                        method: "GET",
+
+                        credentials:
+                            "include",
+
+                        headers: {
+                            Accept:
+                                "application/json",
+                        },
+                    }
+                );
+
+            const meData =
+                await getResponseData(
+                    meResponse
+                );
+
+            if (
+                !meResponse.ok ||
+                !meData?.user
+            ) {
+                throw new Error(
+                    "Login succeeded, but the account session could not be verified."
+                );
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 4 — STORE NON-AUTH PROFILE CACHE
+            |--------------------------------------------------------------------------
+            |
+            | This is NOT used as authentication.
+            | The real auth state remains the Django session.
+            |--------------------------------------------------------------------------
+            */
+
+            try {
+
+                localStorage.setItem(
+                    "geeka-user",
+                    JSON.stringify(
+                        meData.user
+                    )
+                );
+
+            } catch {
+                // Ignore localStorage failure.
+            }
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 5 — TELL HEADER
+            |--------------------------------------------------------------------------
+            */
+
+            window.dispatchEvent(
+                new Event(
+                    "geeka-auth-updated"
+                )
+            );
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | STEP 6 — HOME
+            |--------------------------------------------------------------------------
+            */
+
+            navigate(
+                "/",
+                {
+                    replace: true,
+                    state: {
+                        loginSuccess:
+                            true,
+
+                        message:
+                            "Welcome back to GEEKA.",
+                    },
+                }
+            );
+
+        } catch (loginError) {
+
+            console.error(
+                "Login failed:",
+                loginError
+            );
+
+            setError(
+                loginError.message ||
+                "Unable to sign in. Please try again."
+            );
+
         } finally {
-            setLoading(false);
+
+            setLoading(
+                false
+            );
+
         }
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -422,13 +551,11 @@ export default function Login() {
     */
 
     function handleGoogleLogin() {
-        /*
-         * Google OAuth must be started
-         * using browser redirection.
-         */
+
         window.location.href =
             `${API_URL}/api/v1/auth/google/login/`;
     }
+
 
     /*
     |--------------------------------------------------------------------------
@@ -438,24 +565,34 @@ export default function Login() {
 
     return (
         <main className="login-page">
+
             <section className="login-panel">
+
                 <div className="login-top">
+
                     <Link
                         to="/"
                         className="login-back-link"
                     >
+
                         <span className="back-arrow">
                             ←
                         </span>
 
                         Back to Store
+
                     </Link>
+
                 </div>
 
+
                 <div className="login-container">
+
                     <Logo />
 
+
                     <div className="login-heading">
+
                         <span className="login-eyebrow">
                             WELCOME BACK
                         </span>
@@ -467,42 +604,24 @@ export default function Login() {
                         </h1>
 
                         <p>
-                            Continue your journey
-                            with carefully curated
-                            fashion, jewellery and
-                            handmade creations.
+                            Continue your journey with
+                            carefully curated fashion,
+                            jewellery and handmade
+                            creations.
                         </p>
+
                     </div>
 
-                    {error && (
-                        <div
-                            role="alert"
-                            style={{
-                                marginBottom:
-                                    "18px",
-                                padding:
-                                    "12px 14px",
-                                border:
-                                    "1px solid rgba(160, 70, 50, 0.25)",
-                                background:
-                                    "rgba(160, 70, 50, 0.08)",
-                                color:
-                                    "#8c4333",
-                                fontSize:
-                                    "13px",
-                                lineHeight:
-                                    "1.5",
-                            }}
-                        >
-                            {error}
-                        </div>
-                    )}
 
                     <form
                         className="login-form"
-                        onSubmit={handleSubmit}
+                        onSubmit={
+                            handleSubmit
+                        }
                     >
+
                         <div className="login-field">
+
                             <label htmlFor="login-email">
                                 Email Address
                             </label>
@@ -524,10 +643,14 @@ export default function Login() {
                                 }
                                 required
                             />
+
                         </div>
 
+
                         <div className="login-field">
+
                             <div className="password-header">
+
                                 <label htmlFor="login-password">
                                     Password
                                 </label>
@@ -535,9 +658,12 @@ export default function Login() {
                                 <Link to="/forgot-password">
                                     Forgot password?
                                 </Link>
+
                             </div>
 
+
                             <div className="password-wrapper">
+
                                 <input
                                     id="login-password"
                                     type={
@@ -560,6 +686,7 @@ export default function Login() {
                                     required
                                 />
 
+
                                 <button
                                     type="button"
                                     className="password-toggle"
@@ -578,16 +705,22 @@ export default function Login() {
                                         loading
                                     }
                                 >
+
                                     <EyeIcon
                                         visible={
                                             showPassword
                                         }
                                     />
+
                                 </button>
+
                             </div>
+
                         </div>
 
+
                         <label className="remember-me">
+
                             <input
                                 type="checkbox"
                                 name="remember"
@@ -609,7 +742,21 @@ export default function Login() {
                             <span className="remember-text">
                                 Keep me signed in
                             </span>
+
                         </label>
+
+
+                        {error && (
+
+                            <div
+                                className="login-error"
+                                role="alert"
+                            >
+                                {error}
+                            </div>
+
+                        )}
+
 
                         <button
                             type="submit"
@@ -618,55 +765,79 @@ export default function Login() {
                                 loading
                             }
                         >
+
                             <span>
                                 {loading
                                     ? "SIGNING IN..."
                                     : "SIGN IN"}
                             </span>
 
-                            <span className="submit-arrow">
-                                <ArrowIcon />
-                            </span>
+                            {!loading && (
+                                <span className="submit-arrow">
+                                    <ArrowIcon />
+                                </span>
+                            )}
+
                         </button>
+
                     </form>
 
+
                     <div className="login-divider">
+
                         <span />
-                        <p>OR</p>
+
+                        <p>
+                            OR
+                        </p>
+
                         <span />
+
                     </div>
 
+
                     {/* GOOGLE LOGIN */}
+
                     <button
                         type="button"
                         className="google-login"
                         onClick={
                             handleGoogleLogin
                         }
-                        disabled={loading}
+                        disabled={
+                            loading
+                        }
                     >
+
                         <GoogleIcon />
 
                         <span>
                             Continue with Google
                         </span>
+
                     </button>
 
+
                     <div className="login-register">
+
                         <span>
                             New to GEEKA?
                         </span>
 
                         <Link to="/register">
+
                             Create an account
 
                             <ArrowIcon />
+
                         </Link>
+
                     </div>
 
+
                     <div className="login-footer-note">
-                        By continuing, you agree
-                        to our
+
+                        By continuing, you agree to our
 
                         <span>
                             {" "}Terms & Conditions{" "}
@@ -677,11 +848,16 @@ export default function Login() {
                         <span>
                             {" "}Privacy Policy.
                         </span>
+
                     </div>
+
                 </div>
+
             </section>
 
+
             <section className="login-visual">
+
                 <img
                     src={loginImage}
                     alt="GEEKA fashion collection"
@@ -689,7 +865,9 @@ export default function Login() {
 
                 <div className="login-visual-overlay" />
 
+
                 <div className="login-visual-top">
+
                     <span>
                         GEEKA
                     </span>
@@ -697,9 +875,12 @@ export default function Login() {
                     <span>
                         EST. 2026
                     </span>
+
                 </div>
 
+
                 <div className="login-visual-content">
+
                     <span className="visual-eyebrow">
                         THREE EXPRESSIONS.
                     </span>
@@ -718,14 +899,18 @@ export default function Login() {
                     </p>
 
                     <div className="login-visual-line" />
+
                 </div>
 
+
                 <div className="login-floral">
+
                     <svg
                         viewBox="0 0 160 240"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                     >
+
                         <path
                             d="M20 237C34 184 63 132 111 94C130 79 140 52 143 19"
                             stroke="currentColor"
@@ -761,9 +946,13 @@ export default function Login() {
                             stroke="currentColor"
                             strokeWidth="1"
                         />
+
                     </svg>
+
                 </div>
+
             </section>
+
         </main>
     );
 }
