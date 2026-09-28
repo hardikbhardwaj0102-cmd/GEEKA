@@ -85,6 +85,28 @@ function normalizeCategory(value) {
 
 
 /* =========================================================
+   GET PRODUCT ID
+========================================================= */
+
+function getProductId(product) {
+
+    if (!product) {
+        return "";
+    }
+
+
+    return String(
+        product?.id ??
+        product?.productId ??
+        product?._id ??
+        product?.uuid ??
+        ""
+    ).trim();
+
+}
+
+
+/* =========================================================
    COLLECTION MATCH
 ========================================================= */
 
@@ -92,13 +114,16 @@ function productBelongsToCollection(
     product,
     collectionId
 ) {
+
     if (
         !collectionId ||
         !COLLECTION_FILTERS[
         collectionId
         ]
     ) {
+
         return true;
+
     }
 
 
@@ -120,26 +145,24 @@ function productBelongsToCollection(
         );
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | CATEGORY MATCH
-    |--------------------------------------------------------------------------|
-    */
+    /* =========================================================
+       CATEGORY MATCH
+    ========================================================= */
 
     if (
         collectionCategories.includes(
             productCategory
         )
     ) {
+
         return true;
+
     }
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | BACKEND COLLECTION FIELD
-    |--------------------------------------------------------------------------|
-    */
+    /* =========================================================
+       BACKEND COLLECTION FIELD
+    ========================================================= */
 
     const productCollection =
         normalizeCategory(
@@ -155,17 +178,26 @@ function productBelongsToCollection(
 
     if (
         productCollection ===
-        normalizeCategory(collection.label) ||
+        normalizeCategory(
+            collection.label
+        ) ||
         productCollection ===
-        normalizeCategory(collectionId) ||
+        normalizeCategory(
+            collectionId
+        ) ||
         productCollectionId ===
-        normalizeCategory(collectionId)
+        normalizeCategory(
+            collectionId
+        )
     ) {
+
         return true;
+
     }
 
 
     return false;
+
 }
 
 
@@ -174,9 +206,17 @@ function productBelongsToCollection(
 ========================================================= */
 
 function formatPrice(price) {
-    return `₹${price.toLocaleString(
+
+    const amount =
+        Number(
+            price || 0
+        );
+
+
+    return `₹${amount.toLocaleString(
         "en-IN"
     )}`;
+
 }
 
 
@@ -339,6 +379,17 @@ function ProductCard({
     onAddToCart,
 }) {
 
+    const productId =
+        getProductId(
+            product
+        );
+
+
+    const productName =
+        product?.name ||
+        "Geeka Product";
+
+
     return (
 
         <article className="shop-product-card">
@@ -346,8 +397,12 @@ function ProductCard({
             <div className="shop-product-image">
 
                 <img
-                    src={product.image}
-                    alt={product.name}
+                    src={
+                        product.image
+                    }
+                    alt={
+                        productName
+                    }
                     loading="lazy"
                 />
 
@@ -363,6 +418,10 @@ function ProductCard({
                 )}
 
 
+                {/* =================================================
+                    WISHLIST
+                ================================================== */}
+
                 <button
                     type="button"
                     className={`shop-product-heart ${isWishlisted
@@ -371,13 +430,16 @@ function ProductCard({
                         }`}
                     onClick={() =>
                         onToggleWishlist(
-                            product.id
+                            productId
                         )
                     }
                     aria-label={
                         isWishlisted
-                            ? `Remove ${product.name} from wishlist`
-                            : `Add ${product.name} to wishlist`
+                            ? `Remove ${productName} from wishlist`
+                            : `Add ${productName} to wishlist`
+                    }
+                    aria-pressed={
+                        isWishlisted
                     }
                 >
 
@@ -389,6 +451,10 @@ function ProductCard({
 
                 </button>
 
+
+                {/* =================================================
+                    QUICK VIEW
+                ================================================== */}
 
                 <div className="shop-image-actions">
 
@@ -421,11 +487,32 @@ function ProductCard({
                 </span>
 
 
+                {/* =================================================
+                    CLICKABLE PRODUCT NAME
+                ================================================== */}
+
                 <h3>
 
-                    {
-                        product.name
-                    }
+                    {productId ? (
+
+                        <Link
+                            to={`/product/${encodeURIComponent(
+                                productId
+                            )}`}
+                            className="shop-product-name-link"
+                        >
+
+                            {
+                                productName
+                            }
+
+                        </Link>
+
+                    ) : (
+
+                        productName
+
+                    )}
 
                 </h3>
 
@@ -528,23 +615,21 @@ export default function Shop() {
     ]);
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | FILTER STATE
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       FILTER STATE
+    ===================================================== */
 
     const [
         category,
         setCategory,
-    ] = useState("All");
+    ] = useState(
+        "All"
+    );
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | URL PARAMETERS
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       URL PARAMETERS
+    ===================================================== */
 
     const urlParams =
         useMemo(
@@ -558,11 +643,9 @@ export default function Shop() {
         );
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | COLLECTION
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       COLLECTION
+    ===================================================== */
 
     const collectionFilter =
         urlParams.get(
@@ -576,11 +659,9 @@ export default function Shop() {
         ] || null;
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | SEARCH
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       SEARCH
+    ===================================================== */
 
     const search =
         urlParams.get(
@@ -588,59 +669,61 @@ export default function Shop() {
         ) || "";
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | PRICE
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       PRICE
+    ===================================================== */
 
     const [
         minPrice,
         setMinPrice,
-    ] = useState(0);
+    ] = useState(
+        0
+    );
 
 
     const [
         maxPrice,
         setMaxPrice,
-    ] = useState(2500);
+    ] = useState(
+        2500
+    );
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | OTHER FILTERS
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       OTHER FILTERS
+    ===================================================== */
 
     const [
         newOnly,
         setNewOnly,
-    ] = useState(false);
+    ] = useState(
+        false
+    );
 
 
     const [
         stockOnly,
         setStockOnly,
-    ] = useState(false);
+    ] = useState(
+        false
+    );
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | SORT
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       SORT
+    ===================================================== */
 
     const [
         sortBy,
         setSortBy,
-    ] = useState("featured");
+    ] = useState(
+        "featured"
+    );
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | WISHLIST
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       WISHLIST
+    ===================================================== */
 
     const [
         wishlist,
@@ -671,31 +754,34 @@ export default function Shop() {
             }
 
 
-            return parsed.map(
-                (item) => {
+            return parsed
+                .map(
+                    (item) => {
 
-                    if (
-                        item !== null &&
-                        typeof item === "object"
-                    ) {
+                        if (
+                            item !== null &&
+                            typeof item ===
+                            "object"
+                        ) {
+
+                            return String(
+                                item?.id ??
+                                item?.productId ??
+                                item?._id ??
+                                item?.uuid ??
+                                ""
+                            ).trim();
+
+                        }
+
 
                         return String(
-                            item?.id ??
-                            item?.productId ??
-                            item?._id ??
-                            item?.uuid ??
-                            ""
+                            item ?? ""
                         ).trim();
 
                     }
-
-
-                    return String(
-                        item ?? ""
-                    ).trim();
-
-                }
-            ).filter(Boolean);
+                )
+                .filter(Boolean);
 
         } catch {
 
@@ -706,47 +792,45 @@ export default function Shop() {
     });
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | QUICK VIEW
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       QUICK VIEW
+    ===================================================== */
 
     const [
         quickView,
         setQuickView,
-    ] = useState(null);
+    ] = useState(
+        null
+    );
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | MOBILE FILTERS
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       MOBILE FILTERS
+    ===================================================== */
 
     const [
         mobileFilters,
         setMobileFilters,
-    ] = useState(false);
+    ] = useState(
+        false
+    );
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | CART MESSAGE
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       CART MESSAGE
+    ===================================================== */
 
     const [
         cartMessage,
         setCartMessage,
-    ] = useState(false);
+    ] = useState(
+        false
+    );
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | CART
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       CART
+    ===================================================== */
 
     const {
         addItem,
@@ -754,27 +838,26 @@ export default function Shop() {
     } = useCart();
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | PRODUCTS
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       PRODUCTS
+    ===================================================== */
 
     const [
         products,
         setProducts,
-    ] = useState([]);
+    ] = useState(
+        []
+    );
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | LOAD PRODUCTS
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       LOAD PRODUCTS
+    ===================================================== */
 
     useEffect(() => {
 
-        let active = true;
+        let active =
+            true;
 
 
         async function loadProducts() {
@@ -788,7 +871,9 @@ export default function Shop() {
                 if (active) {
 
                     setProducts(
-                        Array.isArray(items)
+                        Array.isArray(
+                            items
+                        )
                             ? items
                             : []
                     );
@@ -799,7 +884,9 @@ export default function Shop() {
 
                 if (active) {
 
-                    setProducts([]);
+                    setProducts(
+                        []
+                    );
 
                 }
 
@@ -813,37 +900,40 @@ export default function Shop() {
 
         return () => {
 
-            active = false;
+            active =
+                false;
 
         };
 
     }, []);
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | CATEGORIES
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       CATEGORIES
+    ===================================================== */
 
     const categories =
         useMemo(() => {
 
-            const uniqueCategories = [
-                ...new Set(
-                    products
-                        .map(
-                            (product) =>
-                                product.category
-                        )
-                        .filter(Boolean)
-                ),
-            ];
+            const uniqueCategories =
+                [
+                    ...new Set(
+                        products
+                            .map(
+                                (product) =>
+                                    product.category
+                            )
+                            .filter(Boolean)
+                    ),
+                ];
 
 
             return [
+
                 "All",
+
                 ...uniqueCategories,
+
             ];
 
         }, [
@@ -851,11 +941,9 @@ export default function Shop() {
         ]);
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | SAVE WISHLIST
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       SAVE WISHLIST
+    ===================================================== */
 
     useEffect(() => {
 
@@ -878,16 +966,15 @@ export default function Shop() {
     ]);
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | BODY OVERFLOW
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       BODY OVERFLOW
+    ===================================================== */
 
     useEffect(() => {
 
         document.body.style.overflow =
-            mobileFilters || quickView
+            mobileFilters ||
+                quickView
                 ? "hidden"
                 : "";
 
@@ -905,11 +992,9 @@ export default function Shop() {
     ]);
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | CART MESSAGE
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       CART MESSAGE
+    ===================================================== */
 
     useEffect(() => {
 
@@ -938,11 +1023,9 @@ export default function Shop() {
     ]);
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | FILTERED PRODUCTS
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       FILTERED PRODUCTS
+    ===================================================== */
 
     const filteredProducts =
         useMemo(() => {
@@ -958,7 +1041,8 @@ export default function Shop() {
                     (product) => {
 
                         const matchesCategory =
-                            category === "All" ||
+                            category ===
+                            "All" ||
                             product.category ===
                             category;
 
@@ -1012,12 +1096,14 @@ export default function Shop() {
 
 
                         return (
+
                             matchesCategory &&
                             matchesCollection &&
                             matchesSearch &&
                             matchesPrice &&
                             matchesNew &&
                             matchesStock
+
                         );
 
                     }
@@ -1097,11 +1183,9 @@ export default function Shop() {
         ]);
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | CATEGORY CHANGE
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       CATEGORY CHANGE
+    ===================================================== */
 
     function handleCategoryChange(
         item
@@ -1142,11 +1226,9 @@ export default function Shop() {
     }
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | CLEAR FILTERS
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       CLEAR FILTERS
+    ===================================================== */
 
     const clearFilters = () => {
 
@@ -1187,11 +1269,9 @@ export default function Shop() {
     };
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | CLEAR SEARCH ONLY
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       CLEAR SEARCH
+    ===================================================== */
 
     function clearSearch() {
 
@@ -1219,39 +1299,51 @@ export default function Shop() {
     }
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | WISHLIST
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       WISHLIST
+    ===================================================== */
 
     const toggleWishlist =
         (productId) => {
 
+            const normalizedId =
+                String(
+                    productId
+                ).trim();
+
+
+            if (!normalizedId) {
+                return;
+            }
+
+
             setWishlist(
-                (current) =>
-                    current.includes(
-                        productId
+                (current) => {
+
+                    return current.includes(
+                        normalizedId
                     )
+
                         ? current.filter(
                             (id) =>
                                 id !==
-                                productId
+                                normalizedId
                         )
+
                         : [
                             ...current,
-                            productId,
-                        ]
+                            normalizedId,
+                        ];
+
+                }
             );
 
         };
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | ADD TO CART
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       ADD TO CART
+    ===================================================== */
 
     const addToCart =
         (product) => {
@@ -1268,11 +1360,9 @@ export default function Shop() {
         };
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | CATEGORY COUNT
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       CATEGORY COUNT
+    ===================================================== */
 
     const categoryCount =
         (selectedCategory) => {
@@ -1296,29 +1386,29 @@ export default function Shop() {
         };
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | HAS FILTERS
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       HAS FILTERS
+    ===================================================== */
 
     const hasFilters =
-        category !== "All" ||
+        category !==
+        "All" ||
         Boolean(
             collectionFilter
         ) ||
-        minPrice !== 0 ||
-        maxPrice !== 2500 ||
+        minPrice !==
+        0 ||
+        maxPrice !==
+        2500 ||
         newOnly ||
         stockOnly ||
-        search.trim() !== "";
+        search.trim() !==
+        "";
 
 
-    /*
-    |--------------------------------------------------------------------------|
-    | RENDER
-    |--------------------------------------------------------------------------|
-    */
+    /* =====================================================
+       RENDER
+    ===================================================== */
 
     return (
 
@@ -1345,7 +1435,9 @@ export default function Shop() {
                 <section className="shop-banner">
 
                     <img
-                        src={shopBanner}
+                        src={
+                            shopBanner
+                        }
                         alt="Geeka collection"
                         className="top-banner-image"
                     />
@@ -1447,7 +1539,9 @@ export default function Shop() {
 
                                 <select
                                     id="sort"
-                                    value={sortBy}
+                                    value={
+                                        sortBy
+                                    }
                                     onChange={(event) =>
                                         setSortBy(
                                             event.target.value
@@ -1540,26 +1634,27 @@ export default function Shop() {
                             )}
 
 
-                            {category !== "All" && (
+                            {category !==
+                                "All" && (
 
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        handleCategoryChange(
-                                            "All"
-                                        )
-                                    }
-                                >
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            handleCategoryChange(
+                                                "All"
+                                            )
+                                        }
+                                    >
 
-                                    {
-                                        category
-                                    }
+                                        {
+                                            category
+                                        }
 
-                                    <CloseIcon />
+                                        <CloseIcon />
 
-                                </button>
+                                    </button>
 
-                            )}
+                                )}
 
 
                             {search && (
@@ -1571,7 +1666,10 @@ export default function Shop() {
                                     }
                                 >
 
-                                    Search: {search}
+                                    Search:{" "}
+                                    {
+                                        search
+                                    }
 
                                     <CloseIcon />
 
@@ -1580,8 +1678,10 @@ export default function Shop() {
                             )}
 
 
-                            {(minPrice > 0 ||
-                                maxPrice < 2500) && (
+                            {(minPrice >
+                                0 ||
+                                maxPrice <
+                                2500) && (
 
                                     <button
                                         type="button"
@@ -1694,7 +1794,9 @@ export default function Shop() {
                             <div className="filter-block">
 
                                 <h2>
+
                                     Category
+
                                 </h2>
 
 
@@ -1722,17 +1824,22 @@ export default function Shop() {
                                             >
 
                                                 <span>
+
                                                     {
                                                         item
                                                     }
+
                                                 </span>
 
+
                                                 <span>
+
                                                     {
                                                         categoryCount(
                                                             item
                                                         )
                                                     }
+
                                                 </span>
 
                                             </button>
@@ -1748,7 +1855,9 @@ export default function Shop() {
                             <div className="filter-block">
 
                                 <h2>
+
                                     Price Range
+
                                 </h2>
 
 
@@ -1841,7 +1950,9 @@ export default function Shop() {
                             <div className="filter-block">
 
                                 <h2>
+
                                     Availability
+
                                 </h2>
 
 
@@ -1862,7 +1973,9 @@ export default function Shop() {
                                     <span className="fake-checkbox" />
 
                                     <span>
+
                                         Availability
+
                                     </span>
 
                                 </label>
@@ -1885,7 +1998,9 @@ export default function Shop() {
                                     <span className="fake-checkbox" />
 
                                     <span>
+
                                         New Arrivals
+
                                     </span>
 
                                 </label>
@@ -1924,37 +2039,42 @@ export default function Shop() {
                                 <div className="shop-product-grid">
 
                                     {filteredProducts.map(
-                                        (product) => (
+                                        (product) => {
 
-                                            <ProductCard
-                                                key={
-                                                    product.id
-                                                }
-                                                product={
+                                            const productId =
+                                                getProductId(
                                                     product
-                                                }
-                                                isWishlisted={
-                                                    wishlist.includes(
-                                                        String(
-                                                            product.id
-                                                        )
-                                                    ) ||
-                                                    wishlist.includes(
-                                                        product.id
-                                                    )
-                                                }
-                                                onToggleWishlist={
-                                                    toggleWishlist
-                                                }
-                                                onQuickView={
-                                                    setQuickView
-                                                }
-                                                onAddToCart={
-                                                    addToCart
-                                                }
-                                            />
+                                                );
 
-                                        )
+
+                                            return (
+
+                                                <ProductCard
+                                                    key={
+                                                        productId
+                                                    }
+                                                    product={
+                                                        product
+                                                    }
+                                                    isWishlisted={
+                                                        wishlist.includes(
+                                                            productId
+                                                        )
+                                                    }
+                                                    onToggleWishlist={
+                                                        toggleWishlist
+                                                    }
+                                                    onQuickView={
+                                                        setQuickView
+                                                    }
+                                                    onAddToCart={
+                                                        addToCart
+                                                    }
+                                                />
+
+                                            );
+
+                                        }
                                     )}
 
                                 </div>
@@ -1971,7 +2091,9 @@ export default function Shop() {
 
 
                                     <h2>
+
                                         No products found
+
                                     </h2>
 
 
@@ -2104,6 +2226,7 @@ export default function Shop() {
                                                             item
                                                         }
                                                     </span>
+
 
                                                     <span>
                                                         {

@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import {
+    Link,
     useNavigate,
 } from "react-router-dom";
 
@@ -591,8 +592,8 @@ function ProductCard({
                 <button
                     type="button"
                     className={`catalog-wishlist ${wishlisted
-                            ? "active"
-                            : ""
+                        ? "active"
+                        : ""
                         }`}
                     aria-pressed={
                         wishlisted
@@ -692,33 +693,26 @@ function ProductCard({
                 </div>
 
 
-                <h3
-                    role="button"
-                    tabIndex={0}
-                    onClick={() =>
-                        onViewProduct(
-                            product
-                        )
-                    }
-                    onKeyDown={(event) => {
+                <h3>
 
-                        if (
-                            event.key ===
-                            "Enter"
-                        ) {
-
-                            onViewProduct(
+                    <Link
+                        to={`/product/${encodeURIComponent(
+                            getWishlistId(
                                 product
-                            );
+                            )
+                        )}`}
+                        style={{
+                            color: "inherit",
+                            textDecoration: "none",
+                            cursor: "pointer",
+                        }}
+                    >
 
+                        {
+                            productName
                         }
 
-                    }}
-                >
-
-                    {
-                        productName
-                    }
+                    </Link>
 
                 </h3>
 
@@ -758,8 +752,8 @@ function ProductCard({
                     <button
                         type="button"
                         className={`catalog-add ${added
-                                ? "added"
-                                : ""
+                            ? "added"
+                            : ""
                             }`}
                         disabled={
                             product?.inStock ===
@@ -1635,13 +1629,17 @@ export default function ProductCatalog({
         }
 
 
-        if (
-            product?.name
-        ) {
+        const productId =
+            getWishlistId(
+                product
+            );
+
+
+        if (productId) {
 
             navigate(
-                `/shop?search=${encodeURIComponent(
-                    product.name
+                `/product/${encodeURIComponent(
+                    productId
                 )}`
             );
 

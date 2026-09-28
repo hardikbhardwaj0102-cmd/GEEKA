@@ -134,6 +134,7 @@ function readWishlist() {
             error
         );
 
+
         return [];
 
     }
@@ -320,6 +321,35 @@ function NewArrivalCard({
     onShopProduct,
 }) {
 
+    function handleImageNavigation() {
+
+        onShopProduct(
+            product
+        );
+
+    }
+
+
+    function handleImageKeyDown(
+        event
+    ) {
+
+        if (
+            event.key === "Enter" ||
+            event.key === " "
+        ) {
+
+            event.preventDefault();
+
+            onShopProduct(
+                product
+            );
+
+        }
+
+    }
+
+
     return (
 
         <article className="new-arrival-card">
@@ -328,7 +358,18 @@ function NewArrivalCard({
                 IMAGE
             ================================================== */}
 
-            <div className="new-arrival-image">
+            <div
+                className="new-arrival-image"
+                onClick={
+                    handleImageNavigation
+                }
+                onKeyDown={
+                    handleImageKeyDown
+                }
+                role="link"
+                tabIndex={0}
+                aria-label={`View ${product?.name || "product"} details`}
+            >
 
                 {product.image ? (
 
@@ -361,6 +402,11 @@ function NewArrivalCard({
                 <div
                     className="new-arrival-image-top"
                     onClick={(event) => {
+
+                        event.stopPropagation();
+
+                    }}
+                    onKeyDown={(event) => {
 
                         event.stopPropagation();
 
@@ -430,6 +476,7 @@ function NewArrivalCard({
                     className="new-arrival-quick-view"
                     onPointerDown={(event) => {
 
+                        event.preventDefault();
                         event.stopPropagation();
 
                     }}
@@ -487,9 +534,24 @@ function NewArrivalCard({
 
                 <h3>
 
-                    {
-                        product.name
-                    }
+                    <Link
+                        to={`/product/${encodeURIComponent(
+                            getProductId(
+                                product
+                            )
+                        )}`}
+                        style={{
+                            color: "inherit",
+                            textDecoration: "none",
+                            cursor: "pointer",
+                        }}
+                    >
+
+                        {
+                            product.name
+                        }
+
+                    </Link>
 
                 </h3>
 
@@ -1120,10 +1182,6 @@ export default function NewArrivals() {
         );
 
 
-        /*
-         * SHOW WISHLIST NOTIFICATION
-         */
-
         showWishlistToast(
             product,
             !exists
@@ -1170,7 +1228,7 @@ export default function NewArrivals() {
         product
     ) {
 
-        if (!product?.name) {
+        if (!product) {
 
             navigate(
                 "/shop"
@@ -1181,10 +1239,27 @@ export default function NewArrivals() {
         }
 
 
+        const productId =
+            getProductId(
+                product
+            );
+
+
+        if (productId) {
+
+            navigate(
+                `/product/${encodeURIComponent(
+                    productId
+                )}`
+            );
+
+            return;
+
+        }
+
+
         navigate(
-            `/shop?search=${encodeURIComponent(
-                product.name
-            )}`
+            "/shop"
         );
 
     }
@@ -1909,8 +1984,6 @@ export default function NewArrivals() {
                     }}
                 >
 
-                    {/* HEART ICON */}
-
                     <div
                         style={{
                             width: "38px",
@@ -1933,8 +2006,6 @@ export default function NewArrivals() {
 
                     </div>
 
-
-                    {/* CONTENT */}
 
                     <div
                         style={{
@@ -1981,8 +2052,6 @@ export default function NewArrivals() {
 
                     </div>
 
-
-                    {/* CLOSE */}
 
                     <button
                         type="button"

@@ -16,6 +16,7 @@ import About from "./components/About";
 import Contact from "./components/Contact";
 import Cart from "./components/Cart";
 import ForgotPassword from "./components/ForgotPassword";
+import ProductDetails from "./components/ProductDetails";
 
 import "./App.css";
 
@@ -99,7 +100,10 @@ function App() {
                     element={<Shop />}
                 />
 
-
+                <Route
+                    path="/product/:productId"
+                    element={<ProductDetails />}
+                />
                 {/* ================================
                     ABOUT
                 ================================= */}
