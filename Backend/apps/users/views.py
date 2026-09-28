@@ -24,6 +24,11 @@ class GoogleCallbackView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        handle_google_callback(request)
+        try:
+            handle_google_callback(request)
+            return redirect(settings.FRONTEND_URL)
 
-        return redirect(settings.FRONTEND_URL)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            raise
