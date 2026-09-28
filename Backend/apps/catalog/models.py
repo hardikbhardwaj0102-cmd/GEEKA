@@ -157,12 +157,9 @@ class AttributeValue(models.Model):
         return f"{self.attribute.name}: {self.value}"
 
 
+
 class ProductVariant(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        default=uuid.uuid4,
-        editable=False,
-    )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     product = models.ForeignKey(
         Product,
@@ -170,10 +167,7 @@ class ProductVariant(models.Model):
         related_name="variants",
     )
 
-    sku = models.CharField(
-        max_length=100,
-        unique=True,
-    )
+    sku = models.CharField(max_length=100, unique=True)
 
     attribute_values = models.ManyToManyField(
         AttributeValue,
@@ -181,17 +175,18 @@ class ProductVariant(models.Model):
         blank=True,
     )
 
-    is_active = models.BooleanField(
-        default=True,
+    combination_key = models.CharField(
+        max_length=500,
+        unique=True,
+        null=True,
+        blank=True,
+        editable=False,
     )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-    )
+    is_active = models.BooleanField(default=True)
 
-    updated_at = models.DateTimeField(
-        auto_now=True,
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["created_at"]

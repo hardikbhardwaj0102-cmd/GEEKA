@@ -19,12 +19,16 @@ from apps.users.services import (
     verify_password_reset_otp,
 )
 from django.utils import timezone
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
 
 
 
 User = get_user_model()
 
 
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
 class CSRFTokenView(APIView):
     permission_classes = [AllowAny]
 
@@ -118,8 +122,7 @@ class LoginView(APIView):
         user = serializer.validated_data["user"]
 
         login(request, user)
-        print("SESSION KEY:", request.session.session_key)
-        print("SESSION DATA:", dict(request.session))
+        
         return Response(
             {
                 "message": "Login successful.",
