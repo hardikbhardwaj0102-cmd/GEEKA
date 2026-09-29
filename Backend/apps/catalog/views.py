@@ -2,13 +2,17 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser,AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Product
 from .product_image_service import create_product_image
-from .serializers import ProductImageUploadSerializer
+from .serializers import (
+    ProductImageUploadSerializer,
+    PublicProductListSerializer,
+    PublicProductDetailSerializer,
+)
 from .supabase_storage import create_product_image_signed_url
 
 
@@ -52,3 +56,48 @@ class AdminProductImageUploadView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+
+class PublicProductListView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        products = (
+            Product.objects
+            .filter(status=Product.Status.PUBLISHED)
+            .select_related("category")
+            .prefetch_related("images")
+            .order_by("-created_at")
+        )
+
+        serializer = PublicProductListSerializer(
+            products,
+            many=True,
+            context={"request": request},
+        )
+
+        return Response(serializer.data)
+
+
+class PublicProductDetailView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, product_id):
+        product = get_object_or_404(
+            Product.objects
+            .select_related("category")
+            .prefetch_related(
+                "images",
+                "variants__attribute_values__attribute",
+            ),
+            id=product_id,
+            status=Product.Status.PUBLISHED,
+        )
+
+        serializer = PublicProductDetailSerializer(
+            product,
+            context={"request": request},
+        )
+
+        return Response(serializer.data)
