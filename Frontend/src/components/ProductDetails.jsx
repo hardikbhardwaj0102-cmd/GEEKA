@@ -32,7 +32,7 @@ const WISHLIST_KEY = "geeka-wishlist";
 
 
 /* =========================================================
-   HELPERS
+   GENERAL HELPERS
 ========================================================= */
 
 function getProductId(product) {
@@ -52,110 +52,35 @@ function getProductId(product) {
 }
 
 
-function getImageValue(item) {
+function getDisplayValue(
+    value,
+    fallback = ""
+) {
 
-    if (!item) {
-        return "";
+    if (
+        value === undefined ||
+        value === null ||
+        value === ""
+    ) {
+        return fallback;
     }
 
-    if (typeof item === "string") {
-        return item.trim();
+    if (
+        typeof value === "object"
+    ) {
+
+        return String(
+            value?.name ??
+            value?.title ??
+            value?.label ??
+            value?.value ??
+            value?.slug ??
+            fallback
+        );
+
     }
 
-    return String(
-        item?.url ??
-        item?.image_url ??
-        item?.imageUrl ??
-        item?.src ??
-        item?.path ??
-        item?.file ??
-        ""
-    ).trim();
-
-}
-
-
-function getProductImages(product) {
-
-    if (!product) {
-        return [];
-    }
-
-    const images = [];
-
-
-    /*
-     * Prefer the backend gallery first.
-     *
-     * This is important because `product.image`
-     * may sometimes be only a thumbnail.
-     */
-
-    const gallerySources = [
-        product?.images,
-        product?.gallery,
-        product?.productImages,
-        product?.product_images,
-        product?.imageUrls,
-        product?.image_urls,
-    ];
-
-
-    gallerySources.forEach((source) => {
-
-        if (!Array.isArray(source)) {
-            return;
-        }
-
-        source.forEach((item) => {
-
-            const image =
-                getImageValue(item);
-
-            if (
-                image &&
-                !images.includes(image)
-            ) {
-
-                images.push(image);
-
-            }
-
-        });
-
-    });
-
-
-    /*
-     * Individual backend image fields
-     */
-
-    const individualSources = [
-        product?.image_url,
-        product?.imageUrl,
-        product?.image,
-        product?.thumbnail,
-    ];
-
-
-    individualSources.forEach((item) => {
-
-        const image =
-            getImageValue(item);
-
-        if (
-            image &&
-            !images.includes(image)
-        ) {
-
-            images.push(image);
-
-        }
-
-    });
-
-
-    return images;
+    return String(value);
 
 }
 
@@ -214,7 +139,6 @@ function getNumericValue(
 
     }
 
-
     const number =
         Number(value);
 
@@ -225,72 +149,206 @@ function getNumericValue(
 }
 
 
-function normalizeWishlist(value) {
+/* =========================================================
+   PRODUCT ID
+========================================================= */
 
-    if (!Array.isArray(value)) {
+function getComparableProductId(
+    product
+) {
+
+    return String(
+        getProductId(
+            product
+        )
+    ).trim();
+
+}
+
+
+/* =========================================================
+   IMAGES
+========================================================= */
+
+function getImageValue(
+    item
+) {
+
+    if (!item) {
+        return "";
+    }
+
+    if (
+        typeof item ===
+        "string"
+    ) {
+
+        return item.trim();
+
+    }
+
+    return String(
+        item?.url ??
+        item?.image_url ??
+        item?.imageUrl ??
+        item?.src ??
+        item?.path ??
+        item?.file ??
+        item?.image ??
+        ""
+    ).trim();
+
+}
+
+
+function addUniqueImage(
+    collection,
+    value
+) {
+
+    const image =
+        getImageValue(
+            value
+        );
+
+    if (
+        image &&
+        !collection.includes(
+            image
+        )
+    ) {
+
+        collection.push(
+            image
+        );
+
+    }
+
+}
+
+
+function getProductImages(
+    product
+) {
+
+    if (!product) {
         return [];
     }
 
-    return [
-        ...new Set(
-            value
-                .map((item) =>
-                    getProductId(item)
-                )
-                .filter(Boolean)
-        ),
+    const images = [];
+
+
+    /*
+     * Main gallery arrays
+     */
+
+    const gallerySources = [
+        product?.images,
+        product?.gallery,
+        product?.productImages,
+        product?.product_images,
+        product?.imageUrls,
+        product?.image_urls,
     ];
 
-}
 
+    gallerySources.forEach(
+        (source) => {
 
-function readWishlist() {
+            if (
+                !Array.isArray(
+                    source
+                )
+            ) {
+                return;
+            }
 
-    try {
+            source.forEach(
+                (item) => {
 
-        const saved =
-            localStorage.getItem(
-                WISHLIST_KEY
+                    addUniqueImage(
+                        images,
+                        item
+                    );
+
+                }
             );
 
-        if (!saved) {
-            return [];
         }
-
-        return normalizeWishlist(
-            JSON.parse(saved)
-        );
-
-    } catch {
-
-        return [];
-
-    }
-
-}
+    );
 
 
-function saveWishlist(value) {
+    /*
+     * Individual image values
+     */
 
-    try {
+    const individualSources = [
+        product?.image_url,
+        product?.imageUrl,
+        product?.image,
+        product?.thumbnail,
+    ];
 
-        localStorage.setItem(
-            WISHLIST_KEY,
-            JSON.stringify(
-                normalizeWishlist(value)
-            )
-        );
 
-    } catch {
+    individualSources.forEach(
+        (item) => {
 
-        // Ignore localStorage errors.
+            addUniqueImage(
+                images,
+                item
+            );
 
-    }
+        }
+    );
+
+
+    return images;
 
 }
 
 
-function formatPrice(value) {
+/* =========================================================
+   PRICE
+========================================================= */
+
+function getCurrentPrice(
+    product
+) {
+
+    return getFirstValue(
+        product,
+        [
+            "price",
+            "sellingPrice",
+            "salePrice",
+        ],
+        null
+    );
+
+}
+
+
+function getOriginalPrice(
+    product
+) {
+
+    return getFirstValue(
+        product,
+        [
+            "oldPrice",
+            "compareAtPrice",
+            "originalPrice",
+            "mrp",
+        ],
+        null
+    );
+
+}
+
+
+function formatPrice(
+    value
+) {
 
     const amount =
         Number(value);
@@ -348,10 +406,163 @@ function calculateDiscount(
 
 
 /* =========================================================
+   INVENTORY
+========================================================= */
+
+function getStockQuantity(
+    product
+) {
+
+    return getNumericValue(
+        product,
+        [
+            "stockQuantity",
+            "quantityInStock",
+            "inventoryQuantity",
+            "inventory",
+            "stock",
+        ]
+    );
+
+}
+
+
+function isProductInStock(
+    product
+) {
+
+    if (!product) {
+        return false;
+    }
+
+
+    if (
+        product?.inStock === false ||
+        product?.in_stock === false
+    ) {
+
+        return false;
+
+    }
+
+
+    const stock =
+        getStockQuantity(
+            product
+        );
+
+
+    if (
+        stock !== null &&
+        stock <= 0
+    ) {
+
+        return false;
+
+    }
+
+
+    return true;
+
+}
+
+
+/* =========================================================
+   WISHLIST
+========================================================= */
+
+function normalizeWishlist(
+    value
+) {
+
+    if (
+        !Array.isArray(
+            value
+        )
+    ) {
+
+        return [];
+
+    }
+
+
+    return [
+        ...new Set(
+            value
+                .map(
+                    (item) =>
+                        getProductId(
+                            item
+                        )
+                )
+                .filter(Boolean)
+        ),
+    ];
+
+}
+
+
+function readWishlist() {
+
+    try {
+
+        const saved =
+            localStorage.getItem(
+                WISHLIST_KEY
+            );
+
+
+        if (!saved) {
+            return [];
+        }
+
+
+        return normalizeWishlist(
+            JSON.parse(
+                saved
+            )
+        );
+
+    } catch {
+
+        return [];
+
+    }
+
+}
+
+
+function saveWishlist(
+    value
+) {
+
+    try {
+
+        localStorage.setItem(
+            WISHLIST_KEY,
+            JSON.stringify(
+                normalizeWishlist(
+                    value
+                )
+            )
+        );
+
+    } catch {
+
+        // Ignore localStorage errors.
+
+    }
+
+}
+
+
+/* =========================================================
    REVIEWS
 ========================================================= */
 
-function getReviewData(product) {
+function getReviewData(
+    product
+) {
 
     if (!product) {
 
@@ -389,15 +600,14 @@ function getReviewData(product) {
         reviews.length > 0
             ? reviews.reduce(
                 (
-                    sum,
+                    total,
                     review
-                ) => (
-                    sum +
+                ) =>
+                    total +
                     Number(
                         review?.rating ||
                         0
-                    )
-                ),
+                    ),
                 0
             ) / reviews.length
             : null;
@@ -433,8 +643,8 @@ function getReviewData(product) {
 
 
     const distribution =
-        product?.reviewDistribution ||
-        product?.ratingDistribution ||
+        product?.reviewDistribution ??
+        product?.ratingDistribution ??
         null;
 
 
@@ -455,7 +665,10 @@ function getReviewDistribution(
     if (
         reviewData?.distribution &&
         typeof reviewData.distribution ===
-        "object"
+        "object" &&
+        !Array.isArray(
+            reviewData.distribution
+        )
     ) {
 
         return reviewData.distribution;
@@ -527,14 +740,26 @@ function getStarCount(
     }
 
 
+    const value =
+        Number(rating);
+
+    if (
+        !Number.isFinite(
+            value
+        )
+    ) {
+
+        return 0;
+
+    }
+
+
     return Math.max(
         0,
         Math.min(
             5,
             Math.round(
-                Number(
-                    rating
-                )
+                value
             )
         )
     );
@@ -543,17 +768,22 @@ function getStarCount(
 
 
 /* =========================================================
-   DYNAMIC SPECIFICATIONS
+   SPECIFICATIONS
 ========================================================= */
 
 function getSpecifications(
     product
 ) {
 
+    if (!product) {
+        return [];
+    }
+
+
     const result = [];
 
 
-    const specificationSources = [
+    const sources = [
         product?.specifications,
         product?.specs,
         product?.attributes,
@@ -562,13 +792,16 @@ function getSpecifications(
     ];
 
 
-    specificationSources.forEach(
+    sources.forEach(
         (source) => {
 
             if (
                 !source ||
-                Array.isArray(source) ||
-                typeof source !== "object"
+                Array.isArray(
+                    source
+                ) ||
+                typeof source !==
+                "object"
             ) {
 
                 return;
@@ -597,22 +830,30 @@ function getSpecifications(
                     }
 
 
-                    const alreadyExists =
+                    const exists =
                         result.some(
                             (item) =>
                                 item.key
                                     .toLowerCase() ===
-                                key.toLowerCase()
+                                String(
+                                    key
+                                ).toLowerCase()
                         );
 
 
                     if (
-                        !alreadyExists
+                        !exists
                     ) {
 
                         result.push({
-                            key,
-                            value,
+                            key:
+                                String(
+                                    key
+                                ),
+                            value:
+                                getDisplayValue(
+                                    value
+                                ),
                         });
 
                     }
@@ -625,6 +866,144 @@ function getSpecifications(
 
 
     return result;
+
+}
+
+
+/* =========================================================
+   ARRAY NORMALIZERS
+========================================================= */
+
+function normalizeBenefits(
+    benefits
+) {
+
+    if (
+        !Array.isArray(
+            benefits
+        )
+    ) {
+
+        return [];
+
+    }
+
+
+    return benefits
+        .map(
+            (
+                benefit,
+                index
+            ) => {
+
+                if (
+                    typeof benefit ===
+                    "string"
+                ) {
+
+                    return {
+                        title:
+                            benefit,
+                        text:
+                            "",
+                        index,
+                    };
+
+                }
+
+
+                return {
+                    title:
+                        getDisplayValue(
+                            benefit?.title ??
+                            benefit?.name ??
+                            "",
+                            `Benefit ${index + 1}`
+                        ),
+                    text:
+                        getDisplayValue(
+                            benefit?.text ??
+                            benefit?.description ??
+                            ""
+                        ),
+                    index,
+                };
+
+            }
+        )
+        .filter(
+            (item) =>
+                Boolean(
+                    item.title
+                )
+        );
+
+}
+
+
+function normalizeFaq(
+    faq
+) {
+
+    if (
+        !Array.isArray(
+            faq
+        )
+    ) {
+
+        return [];
+
+    }
+
+
+    return faq
+        .map(
+            (
+                item,
+                index
+            ) => {
+
+                if (
+                    typeof item ===
+                    "string"
+                ) {
+
+                    return {
+                        question:
+                            item,
+                        answer:
+                            "",
+                        index,
+                    };
+
+                }
+
+
+                return {
+                    question:
+                        getDisplayValue(
+                            item?.question ??
+                            item?.title ??
+                            ""
+                        ),
+                    answer:
+                        getDisplayValue(
+                            item?.answer ??
+                            item?.text ??
+                            item?.description ??
+                            ""
+                        ),
+                    index,
+                };
+
+            }
+        )
+        .filter(
+            (item) =>
+                Boolean(
+                    item.question
+                )
+        );
 
 }
 
@@ -930,7 +1309,7 @@ function ChevronIcon() {
 
 
 /* =========================================================
-   INFO ROW
+   BENEFIT ROW
 ========================================================= */
 
 function InfoRow({
@@ -943,14 +1322,18 @@ function InfoRow({
         <div className="product-info-row">
 
             <div className="product-info-icon">
+
                 {icon}
+
             </div>
+
 
             <div>
 
                 <strong>
                     {title}
                 </strong>
+
 
                 {text && (
                     <span>
@@ -967,7 +1350,7 @@ function InfoRow({
 
 
 /* =========================================================
-   PRODUCT DETAILS
+   COMPONENT
 ========================================================= */
 
 export default function ProductDetails() {
@@ -985,6 +1368,10 @@ export default function ProductDetails() {
         addItem,
     } = useCart();
 
+
+    /* =====================================================
+       STATE
+    ===================================================== */
 
     const [
         products,
@@ -1071,8 +1458,13 @@ export default function ProductDetails() {
 
             try {
 
-                setLoading(true);
-                setError("");
+                setLoading(
+                    true
+                );
+
+                setError(
+                    ""
+                );
 
 
                 const items =
@@ -1085,7 +1477,9 @@ export default function ProductDetails() {
 
 
                 setProducts(
-                    Array.isArray(items)
+                    Array.isArray(
+                        items
+                    )
                         ? items
                         : []
                 );
@@ -1104,13 +1498,17 @@ export default function ProductDetails() {
 
 
                 setError(
-                    "Unable to load product details."
+                    "Unable to load this product."
                 );
 
             } finally {
 
                 if (active) {
-                    setLoading(false);
+
+                    setLoading(
+                        false
+                    );
+
                 }
 
             }
@@ -1131,7 +1529,7 @@ export default function ProductDetails() {
 
 
     /* =====================================================
-       FIND PRODUCT
+       CURRENT PRODUCT
     ===================================================== */
 
     const product =
@@ -1158,10 +1556,11 @@ export default function ProductDetails() {
             return (
                 products.find(
                     (item) =>
-                        getProductId(
+                        getComparableProductId(
                             item
                         ) === target
-                ) || null
+                ) ||
+                null
             );
 
         }, [
@@ -1180,7 +1579,9 @@ export default function ProductDetails() {
                 getProductImages(
                     product
                 ),
-            [product]
+            [
+                product,
+            ]
         );
 
 
@@ -1194,45 +1595,54 @@ export default function ProductDetails() {
         );
 
 
-    const stockAvailable =
-        product?.inStock !== false;
+    const productName =
+        getDisplayValue(
+            product?.name,
+            "Geeka Product"
+        );
 
 
-    const stockQuantity =
-        getNumericValue(
-            product,
-            [
-                "stockQuantity",
-                "quantityInStock",
-                "inventoryQuantity",
-                "inventory",
-                "stock",
-            ]
+    const category =
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "category",
+                    "categoryName",
+                    "subcategory",
+                    "subcategoryName",
+                    "collectionName",
+                ],
+                "Collection"
+            )
+        );
+
+
+    const collection =
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "collection",
+                    "collectionName",
+                    "parentCategory",
+                    "parent_category",
+                    "brand",
+                ],
+                "GEEKA"
+            )
         );
 
 
     const currentPrice =
-        getFirstValue(
-            product,
-            [
-                "price",
-                "sellingPrice",
-                "salePrice",
-            ],
-            null
+        getCurrentPrice(
+            product
         );
 
 
     const originalPrice =
-        getFirstValue(
-            product,
-            [
-                "oldPrice",
-                "compareAtPrice",
-                "originalPrice",
-                "mrp",
-            ],
-            null
+        getOriginalPrice(
+            product
         );
 
 
@@ -1243,230 +1653,250 @@ export default function ProductDetails() {
         );
 
 
-    const category =
-        getFirstValue(
-            product,
-            [
-                "category",
-                "categoryName",
-                "subcategory",
-                "subcategoryName",
-                "collectionName",
-            ],
-            "Collection"
-        );
-
-
-    const collection =
-        getFirstValue(
-            product,
-            [
-                "collection",
-                "collectionName",
-                "parentCategory",
-                "parent_category",
-                "brand",
-            ],
-            "GEEKA"
-        );
-
-
     const description =
-        getFirstValue(
-            product,
-            [
-                "description",
-                "longDescription",
-                "long_description",
-                "shortDescription",
-                "short_description",
-            ],
-            ""
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "description",
+                    "longDescription",
+                    "long_description",
+                    "shortDescription",
+                    "short_description",
+                ],
+                ""
+            )
         );
 
 
     const material =
-        getFirstValue(
-            product,
-            [
-                "material",
-                "fabric",
-                "materialType",
-                "material_type",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "material",
+                    "fabric",
+                    "materialType",
+                    "material_type",
+                ]
+            )
         );
 
 
     const colour =
-        getFirstValue(
-            product,
-            [
-                "color",
-                "colour",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "color",
+                    "colour",
+                ]
+            )
         );
 
 
     const occasion =
-        getFirstValue(
-            product,
-            [
-                "occasion",
-                "suitableFor",
-                "suitable_for",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "occasion",
+                    "suitableFor",
+                    "suitable_for",
+                ]
+            )
         );
 
 
     const care =
-        getFirstValue(
-            product,
-            [
-                "care",
-                "careInstructions",
-                "care_instructions",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "care",
+                    "careInstructions",
+                    "care_instructions",
+                ]
+            )
         );
 
 
     const countryOfOrigin =
-        getFirstValue(
-            product,
-            [
-                "countryOfOrigin",
-                "country_of_origin",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "countryOfOrigin",
+                    "country_of_origin",
+                ]
+            )
         );
 
 
     const productType =
-        getFirstValue(
-            product,
-            [
-                "productType",
-                "product_type",
-                "type",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "productType",
+                    "product_type",
+                    "type",
+                ]
+            )
         );
 
 
     const sku =
-        getFirstValue(
-            product,
-            [
-                "sku",
-                "SKU",
-                "productCode",
-                "product_code",
-            ],
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "sku",
+                    "SKU",
+                    "productCode",
+                    "product_code",
+                ],
+                productIdValue
+            ),
             productIdValue
         );
 
 
     const size =
-        getFirstValue(
-            product,
-            [
-                "size",
-                "sizeInfo",
-                "size_info",
-                "fit",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "size",
+                    "sizeInfo",
+                    "size_info",
+                    "fit",
+                ]
+            )
         );
 
 
     const story =
-        getFirstValue(
-            product,
-            [
-                "story",
-                "productStory",
-                "product_story",
-                "brandStory",
-                "brand_story",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "story",
+                    "productStory",
+                    "product_story",
+                    "brandStory",
+                    "brand_story",
+                ]
+            )
         );
 
 
     const stylingNotes =
-        getFirstValue(
-            product,
-            [
-                "stylingNotes",
-                "styling",
-                "stylingTips",
-                "styling_tips",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "stylingNotes",
+                    "styling",
+                    "stylingTips",
+                    "styling_tips",
+                ]
+            )
         );
 
 
     const shippingText =
-        getFirstValue(
-            product,
-            [
-                "shippingInfo",
-                "shipping",
-                "shippingDescription",
-                "deliveryInfo",
-                "delivery",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "shippingInfo",
+                    "shipping",
+                    "shippingDescription",
+                    "shippingDescription",
+                    "deliveryInfo",
+                ]
+            )
         );
 
 
     const deliveryEstimate =
-        getFirstValue(
-            product,
-            [
-                "estimatedDelivery",
-                "deliveryEstimate",
-                "deliveryTime",
-                "shippingEstimate",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "estimatedDelivery",
+                    "deliveryEstimate",
+                    "deliveryTime",
+                    "shippingEstimate",
+                ]
+            )
         );
 
 
     const returnPolicy =
-        getFirstValue(
-            product,
-            [
-                "returnPolicy",
-                "return_policy",
-                "returns",
-                "returnInfo",
-                "return_info",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "returnPolicy",
+                    "return_policy",
+                    "returns",
+                    "returnInfo",
+                    "return_info",
+                ]
+            )
         );
 
 
     const warranty =
-        getFirstValue(
-            product,
-            [
-                "warranty",
-                "warrantyInfo",
-                "warranty_info",
-            ]
+        getDisplayValue(
+            getFirstValue(
+                product,
+                [
+                    "warranty",
+                    "warrantyInfo",
+                    "warranty_info",
+                ]
+            )
+        );
+
+
+    const stockQuantity =
+        getStockQuantity(
+            product
+        );
+
+
+    const stockAvailable =
+        isProductInStock(
+            product
         );
 
 
     const benefits =
-        Array.isArray(
-            product?.benefits
-        )
-            ? product.benefits
-            : [];
+        useMemo(
+            () =>
+                normalizeBenefits(
+                    product?.benefits
+                ),
+            [
+                product,
+            ]
+        );
 
 
     const faq =
-        Array.isArray(
-            product?.faq
-        )
-            ? product.faq
-            : Array.isArray(
-                product?.faqs
-            )
-                ? product.faqs
-                : [];
+        useMemo(
+            () =>
+                normalizeFaq(
+                    product?.faq ||
+                    product?.faqs
+                ),
+            [
+                product,
+            ]
+        );
 
 
     const reviewData =
@@ -1475,7 +1905,9 @@ export default function ProductDetails() {
                 getReviewData(
                     product
                 ),
-            [product]
+            [
+                product,
+            ]
         );
 
 
@@ -1485,7 +1917,9 @@ export default function ProductDetails() {
                 getReviewDistribution(
                     reviewData
                 ),
-            [reviewData]
+            [
+                reviewData,
+            ]
         );
 
 
@@ -1495,7 +1929,9 @@ export default function ProductDetails() {
                 getSpecifications(
                     product
                 ),
-            [product]
+            [
+                product,
+            ]
         );
 
 
@@ -1506,40 +1942,57 @@ export default function ProductDetails() {
     const highlights =
         useMemo(() => {
 
-            const items = [];
+            const result = [];
+
 
             const definitions = [
                 {
-                    label: "Material",
-                    value: material,
+                    label:
+                        "Material",
+                    value:
+                        material,
                 },
                 {
-                    label: "Category",
-                    value: category,
+                    label:
+                        "Category",
+                    value:
+                        category,
                 },
                 {
-                    label: "Colour",
-                    value: colour,
+                    label:
+                        "Colour",
+                    value:
+                        colour,
                 },
                 {
-                    label: "Occasion",
-                    value: occasion,
+                    label:
+                        "Occasion",
+                    value:
+                        occasion,
                 },
                 {
-                    label: "Care",
-                    value: care,
+                    label:
+                        "Care",
+                    value:
+                        care,
                 },
                 {
-                    label: "Country of Origin",
-                    value: countryOfOrigin,
+                    label:
+                        "Country of Origin",
+                    value:
+                        countryOfOrigin,
                 },
                 {
-                    label: "Product Type",
-                    value: productType,
+                    label:
+                        "Product Type",
+                    value:
+                        productType,
                 },
                 {
-                    label: "SKU",
-                    value: sku,
+                    label:
+                        "SKU",
+                    value:
+                        sku,
                 },
             ];
 
@@ -1550,11 +2003,13 @@ export default function ProductDetails() {
                     if (
                         item.value !==
                         undefined &&
-                        item.value !== null &&
-                        item.value !== ""
+                        item.value !==
+                        null &&
+                        item.value !==
+                        ""
                     ) {
 
-                        items.push(
+                        result.push(
                             item
                         );
 
@@ -1568,19 +2023,20 @@ export default function ProductDetails() {
                 (item) => {
 
                     const exists =
-                        items.some(
+                        result.some(
                             (existing) =>
                                 existing.label
                                     .toLowerCase() ===
-                                String(
-                                    item.key
-                                ).toLowerCase()
+                                item.key
+                                    .toLowerCase()
                         );
 
 
-                    if (!exists) {
+                    if (
+                        !exists
+                    ) {
 
-                        items.push({
+                        result.push({
                             label:
                                 item.key,
                             value:
@@ -1593,7 +2049,7 @@ export default function ProductDetails() {
             );
 
 
-            return items;
+            return result;
 
         }, [
             material,
@@ -1620,17 +2076,45 @@ export default function ProductDetails() {
             }
 
 
+            const currentId =
+                getComparableProductId(
+                    product
+                );
+
+
+            const currentCategory =
+                getDisplayValue(
+                    product?.category
+                );
+
+
+            const currentCategoryName =
+                getDisplayValue(
+                    product?.categoryName
+                );
+
+
+            const currentCollection =
+                getDisplayValue(
+                    product?.collection
+                );
+
+
+            const currentCollectionId =
+                String(
+                    product?.collectionId ??
+                    ""
+                );
+
+
             return products
                 .filter(
                     (item) => {
 
                         if (
-                            getProductId(
+                            getComparableProductId(
                                 item
-                            ) ===
-                            getProductId(
-                                product
-                            )
+                            ) === currentId
                         ) {
 
                             return false;
@@ -1638,43 +2122,56 @@ export default function ProductDetails() {
                         }
 
 
-                        const sameCategory =
-                            item?.category &&
-                            product?.category &&
-                            item.category ===
-                            product.category;
+                        const itemCategory =
+                            getDisplayValue(
+                                item?.category
+                            );
 
 
-                        const sameCategoryName =
-                            item?.categoryName &&
-                            product?.categoryName &&
-                            item.categoryName ===
-                            product.categoryName;
+                        const itemCategoryName =
+                            getDisplayValue(
+                                item?.categoryName
+                            );
 
 
-                        const sameCollection =
-                            item?.collection &&
-                            product?.collection &&
-                            item.collection ===
-                            product.collection;
+                        const itemCollection =
+                            getDisplayValue(
+                                item?.collection
+                            );
 
 
-                        const sameCollectionId =
-                            item?.collectionId &&
-                            product?.collectionId &&
+                        const itemCollectionId =
                             String(
-                                item.collectionId
-                            ) ===
-                            String(
-                                product.collectionId
+                                item?.collectionId ??
+                                ""
                             );
 
 
                         return (
-                            sameCategory ||
-                            sameCategoryName ||
-                            sameCollection ||
-                            sameCollectionId
+                            (
+                                currentCategory &&
+                                itemCategory &&
+                                currentCategory ===
+                                itemCategory
+                            ) ||
+                            (
+                                currentCategoryName &&
+                                itemCategoryName &&
+                                currentCategoryName ===
+                                itemCategoryName
+                            ) ||
+                            (
+                                currentCollection &&
+                                itemCollection &&
+                                currentCollection ===
+                                itemCollection
+                            ) ||
+                            (
+                                currentCollectionId &&
+                                itemCollectionId &&
+                                currentCollectionId ===
+                                itemCollectionId
+                            )
                         );
 
                     }
@@ -1691,13 +2188,52 @@ export default function ProductDetails() {
 
 
     /* =====================================================
-       RESET
+       DERIVED UI
+    ===================================================== */
+
+    const isWishlisted =
+        wishlist.includes(
+            productIdValue
+        );
+
+
+    const currentMainImage =
+        productImages[
+        activeImage
+        ] || "";
+
+
+    const reviewStars =
+        getStarCount(
+            reviewData.rating
+        );
+
+
+    /* =====================================================
+       RESET ON PRODUCT CHANGE
     ===================================================== */
 
     useEffect(() => {
 
-        setActiveImage(0);
-        setQuantity(1);
+        setActiveImage(
+            0
+        );
+
+        setQuantity(
+            1
+        );
+
+        setOpenSection(
+            "product"
+        );
+
+        setPincode(
+            ""
+        );
+
+        setDeliveryMessage(
+            ""
+        );
 
     }, [
         productId,
@@ -1839,18 +2375,7 @@ export default function ProductDetails() {
 
     function toggleWishlist() {
 
-        if (!product) {
-            return;
-        }
-
-
-        const id =
-            getProductId(
-                product
-            );
-
-
-        if (!id) {
+        if (!productIdValue) {
             return;
         }
 
@@ -1861,29 +2386,30 @@ export default function ProductDetails() {
 
         const exists =
             current.includes(
-                id
+                productIdValue
             );
 
 
-        const updated =
+        const next =
             exists
                 ? current.filter(
-                    (item) =>
-                        item !== id
+                    (id) =>
+                        id !==
+                        productIdValue
                 )
                 : [
                     ...current,
-                    id,
+                    productIdValue,
                 ];
 
 
         saveWishlist(
-            updated
+            next
         );
 
 
         setWishlist(
-            updated
+            next
         );
 
 
@@ -1914,7 +2440,8 @@ export default function ProductDetails() {
             (current) => {
 
                 if (
-                    stockQuantity !== null &&
+                    stockQuantity !==
+                    null &&
                     stockQuantity > 0
                 ) {
 
@@ -1948,17 +2475,17 @@ export default function ProductDetails() {
 
 
     /* =====================================================
-       ADD TO BAG
+       CART
     ===================================================== */
 
-    function handleAddToBag() {
+    function addProductToCart() {
 
         if (
             !product ||
             !stockAvailable
         ) {
 
-            return;
+            return false;
 
         }
 
@@ -1973,6 +2500,22 @@ export default function ProductDetails() {
                 product
             );
 
+        }
+
+
+        return true;
+
+    }
+
+
+    function handleAddToBag() {
+
+        const added =
+            addProductToCart();
+
+
+        if (!added) {
+            return;
         }
 
 
@@ -1986,32 +2529,14 @@ export default function ProductDetails() {
     }
 
 
-    /* =====================================================
-       BUY NOW
-    ===================================================== */
-
     function handleBuyNow() {
 
-        if (
-            !product ||
-            !stockAvailable
-        ) {
+        const added =
+            addProductToCart();
 
+
+        if (!added) {
             return;
-
-        }
-
-
-        for (
-            let index = 0;
-            index < quantity;
-            index += 1
-        ) {
-
-            addItem(
-                product
-            );
-
         }
 
 
@@ -2052,7 +2577,7 @@ export default function ProductDetails() {
         ) {
 
             setDeliveryMessage(
-                `Pincode ${clean} accepted. ${deliveryEstimate}`
+                `${deliveryEstimate}`
             );
 
             return;
@@ -2061,7 +2586,7 @@ export default function ProductDetails() {
 
 
         setDeliveryMessage(
-            `Pincode ${clean} is valid.`
+            "Pincode format is valid. Exact delivery availability will be confirmed during checkout."
         );
 
     }
@@ -2093,16 +2618,16 @@ export default function ProductDetails() {
         direction
     ) {
 
-        if (
-            !relatedScrollerRef.current
-        ) {
+        const container =
+            relatedScrollerRef.current;
 
+
+        if (!container) {
             return;
-
         }
 
 
-        relatedScrollerRef.current.scrollBy({
+        container.scrollBy({
             left:
                 direction === "next"
                     ? 370
@@ -2156,7 +2681,7 @@ export default function ProductDetails() {
 
 
     /* =====================================================
-       NOT FOUND
+       ERROR / NOT FOUND
     ===================================================== */
 
     if (
@@ -2176,15 +2701,17 @@ export default function ProductDetails() {
                             PRODUCT
                         </span>
 
+
                         <h1>
                             Product not found.
                         </h1>
 
+
                         <p>
-                            The product you are looking for
-                            is unavailable or may have been
-                            removed.
+                            {error ||
+                                "The product you are looking for is unavailable or has been removed."}
                         </p>
+
 
                         <button
                             type="button"
@@ -2211,27 +2738,8 @@ export default function ProductDetails() {
 
 
     /* =====================================================
-       DERIVED UI DATA
+       RENDER
     ===================================================== */
-
-    const isWishlisted =
-        wishlist.includes(
-            productIdValue
-        );
-
-
-    const currentMainImage =
-        productImages[
-        activeImage
-        ] ||
-        "";
-
-
-    const reviewStars =
-        getStarCount(
-            reviewData.rating
-        );
-
 
     return (
         <>
@@ -2263,60 +2771,14 @@ export default function ProductDetails() {
                     aria-hidden="true"
                 />
 
-
                 {/* =================================================
-                    BREADCRUMB
-                ================================================= */}
-
-                <div className="product-breadcrumb-wrap">
-
-                    <div className="product-breadcrumb">
-
-                        <Link to="/">
-                            Home
-                        </Link>
-
-                        <span>
-                            /
-                        </span>
-
-                        <Link to="/shop">
-                            Shop
-                        </Link>
-
-                        <span>
-                            /
-                        </span>
-
-                        <Link
-                            to={`/shop?category=${encodeURIComponent(
-                                category
-                            )}`}
-                        >
-                            {category}
-                        </Link>
-
-                        <span>
-                            /
-                        </span>
-
-                        <strong>
-                            {product.name}
-                        </strong>
-
-                    </div>
-
-                </div>
-
-
-                {/* =================================================
-                    MAIN PRODUCT AREA
+                    MAIN PRODUCT
                 ================================================= */}
 
                 <section className="product-main">
 
                     {/* =================================================
-                        PRODUCT GALLERY
+                        GALLERY
                     ================================================= */}
 
                     <div className="product-gallery">
@@ -2324,19 +2786,18 @@ export default function ProductDetails() {
                         <div className="product-gallery-heading">
 
                             <span>
-                                {String(
-                                    collection
-                                ).toUpperCase()}
+                                {collection.toUpperCase()}
                             </span>
 
 
                             <div>
 
-                                {product.isNew && (
+                                {product?.isNew && (
                                     <span className="gallery-new-label">
                                         NEW
                                     </span>
                                 )}
+
 
                                 {stockAvailable && (
                                     <span className="gallery-stock-label">
@@ -2351,9 +2812,7 @@ export default function ProductDetails() {
 
                         <div className="product-gallery-body">
 
-                            {/* =================================================
-                                THUMBNAILS
-                            ================================================= */}
+                            {/* THUMBNAILS */}
 
                             {productImages.length > 1 && (
 
@@ -2386,7 +2845,7 @@ export default function ProductDetails() {
                                                     src={
                                                         image
                                                     }
-                                                    alt={`${product.name} thumbnail ${index + 1}`}
+                                                    alt={`${productName} thumbnail ${index + 1}`}
                                                 />
 
                                                 <span>
@@ -2408,9 +2867,7 @@ export default function ProductDetails() {
                             )}
 
 
-                            {/* =================================================
-                                MAIN IMAGE
-                            ================================================= */}
+                            {/* MAIN IMAGE */}
 
                             <div className="product-main-image">
 
@@ -2423,10 +2880,12 @@ export default function ProductDetails() {
                                                 currentMainImage
                                             }
                                             alt={
-                                                product.name
+                                                productName
                                             }
                                             className="product-main-photo"
-                                            onError={(event) => {
+                                            onError={(
+                                                event
+                                            ) => {
 
                                                 event.currentTarget.style.display =
                                                     "none";
@@ -2452,11 +2911,11 @@ export default function ProductDetails() {
                                 <div className="product-image-shade" />
 
 
-                                {product.isNew && (
+                                {product?.isNew && (
 
                                     <span className="product-main-badge">
 
-
+                                        NEW ARRIVAL
 
                                     </span>
 
@@ -2500,7 +2959,7 @@ export default function ProductDetails() {
 
 
                     {/* =================================================
-                        PRODUCT INFORMATION
+                        PRODUCT PURCHASE PANEL
                     ================================================= */}
 
                     <div className="product-main-information">
@@ -2539,7 +2998,7 @@ export default function ProductDetails() {
 
 
                                 <h1>
-                                    {product.name}
+                                    {productName}
                                 </h1>
 
                             </div>
@@ -2575,9 +3034,7 @@ export default function ProductDetails() {
                         </div>
 
 
-                        {/* =================================================
-                            RATING
-                        ================================================= */}
+                        {/* RATING */}
 
                         {reviewData.rating !== null && (
 
@@ -2617,11 +3074,13 @@ export default function ProductDetails() {
 
 
                                 <strong>
+
                                     {Number(
                                         reviewData.rating
                                     ).toFixed(
                                         1
                                     )}
+
                                 </strong>
 
 
@@ -2631,7 +3090,8 @@ export default function ProductDetails() {
 
                                         {reviewData.reviewCount}
                                         {" "}
-                                        {reviewData.reviewCount === 1
+                                        {reviewData.reviewCount ===
+                                            1
                                             ? "review"
                                             : "reviews"}
 
@@ -2644,9 +3104,7 @@ export default function ProductDetails() {
                         )}
 
 
-                        {/* =================================================
-                            PRICE
-                        ================================================= */}
+                        {/* PRICE */}
 
                         <div className="product-price-row">
 
@@ -2687,9 +3145,7 @@ export default function ProductDetails() {
                         </div>
 
 
-                        {/* =================================================
-                            DESCRIPTION
-                        ================================================= */}
+                        {/* DESCRIPTION */}
 
                         {description && (
 
@@ -2698,6 +3154,7 @@ export default function ProductDetails() {
                                 <span>
                                     ABOUT
                                 </span>
+
 
                                 <p>
                                     {description}
@@ -2708,9 +3165,7 @@ export default function ProductDetails() {
                         )}
 
 
-                        {/* =================================================
-                            QUANTITY
-                        ================================================= */}
+                        {/* QUANTITY */}
 
                         {stockAvailable && (
 
@@ -2722,10 +3177,15 @@ export default function ProductDetails() {
                                         Quantity
                                     </span>
 
+
                                     {stockQuantity !== null && (
+
                                         <small>
-                                            {stockQuantity} available
+                                            {stockQuantity}
+                                            {" "}
+                                            available
                                         </small>
+
                                     )}
 
                                 </div>
@@ -2770,9 +3230,7 @@ export default function ProductDetails() {
                         )}
 
 
-                        {/* =================================================
-                            ACTIONS
-                        ================================================= */}
+                        {/* ACTIONS */}
 
                         <div className="product-purchase-actions">
 
@@ -2792,6 +3250,7 @@ export default function ProductDetails() {
                                         ? "ADD TO BAG"
                                         : "SOLD OUT"
                                 }
+
 
                                 {stockAvailable && (
                                     <ArrowIcon />
@@ -2818,9 +3277,7 @@ export default function ProductDetails() {
                         </div>
 
 
-                        {/* =================================================
-                            BENEFITS
-                        ================================================= */}
+                        {/* BENEFITS */}
 
                         {benefits.length > 0 && (
 
@@ -2837,43 +3294,27 @@ export default function ProductDetails() {
                                             index
                                         ) => {
 
-                                            const title =
-                                                typeof benefit ===
-                                                    "string"
-                                                    ? benefit
-                                                    : benefit?.title ||
-                                                    benefit?.name ||
-                                                    `Benefit ${index + 1}`;
-
-
-                                            const text =
-                                                typeof benefit ===
-                                                    "string"
-                                                    ? ""
-                                                    : benefit?.text ||
-                                                    benefit?.description ||
-                                                    "";
-
-
                                             const icon =
-                                                index === 0
+                                                index ===
+                                                    0
                                                     ? <TruckIcon />
-                                                    : index === 1
+                                                    : index ===
+                                                        1
                                                         ? <ShieldIcon />
                                                         : <ReturnIcon />;
 
 
                                             return (
                                                 <InfoRow
-                                                    key={`${title}-${index}`}
+                                                    key={`${benefit.title}-${benefit.index}`}
                                                     icon={
                                                         icon
                                                     }
                                                     title={
-                                                        title
+                                                        benefit.title
                                                     }
                                                     text={
-                                                        text
+                                                        benefit.text
                                                     }
                                                 />
                                             );
@@ -2886,9 +3327,7 @@ export default function ProductDetails() {
                         )}
 
 
-                        {/* =================================================
-                            POLICY INFORMATION
-                        ================================================= */}
+                        {/* POLICY */}
 
                         {(shippingText ||
                             deliveryEstimate ||
@@ -2961,9 +3400,7 @@ export default function ProductDetails() {
                             )}
 
 
-                        {/* =================================================
-                            DELIVERY CHECK
-                        ================================================= */}
+                        {/* DELIVERY */}
 
                         <div className="product-delivery">
 
@@ -3006,12 +3443,14 @@ export default function ProductDetails() {
                                             )
                                         );
 
+
                                         setDeliveryMessage(
                                             ""
                                         );
 
                                     }}
                                     placeholder="Enter pincode"
+                                    aria-label="Enter pincode"
                                 />
 
 
@@ -3021,7 +3460,9 @@ export default function ProductDetails() {
                                         checkDelivery
                                     }
                                 >
+
                                     CHECK
+
                                 </button>
 
                             </div>
@@ -3031,14 +3472,26 @@ export default function ProductDetails() {
 
                                 <p
                                     className={
-                                        deliveryMessage.startsWith(
-                                            "Pincode"
-                                        )
+                                        deliveryMessage ===
+                                            deliveryEstimate
                                             ? "success"
-                                            : "error"
+                                            : deliveryEstimate &&
+                                                deliveryMessage.includes(
+                                                    deliveryEstimate
+                                                )
+                                                ? "success"
+                                                : deliveryMessage.startsWith(
+                                                    "Enter"
+                                                )
+                                                    ? "error"
+                                                    : "success"
                                     }
                                 >
-                                    {deliveryMessage}
+
+                                    {
+                                        deliveryMessage
+                                    }
+
                                 </p>
 
                             )}
@@ -3051,14 +3504,12 @@ export default function ProductDetails() {
 
 
                 {/* =================================================
-                    FULL PRODUCT INFORMATION
+                    HIGHLIGHTS + STORY
                 ================================================= */}
 
                 <section className="product-information-layout">
 
-                    {/* =================================================
-                        HIGHLIGHTS
-                    ================================================= */}
+                    {/* HIGHLIGHTS */}
 
                     <div className="product-highlights">
 
@@ -3067,6 +3518,7 @@ export default function ProductDetails() {
                             <span>
                                 PRODUCT INFORMATION
                             </span>
+
 
                             <h2>
                                 Product Highlights
@@ -3091,17 +3543,14 @@ export default function ProductDetails() {
                                         >
 
                                             <strong>
-                                                {
-                                                    item.label
-                                                }
+                                                {item.label}
                                             </strong>
 
+
                                             <span>
-                                                {
-                                                    String(
-                                                        item.value
-                                                    )
-                                                }
+                                                {getDisplayValue(
+                                                    item.value
+                                                )}
                                             </span>
 
                                         </div>
@@ -3116,13 +3565,14 @@ export default function ProductDetails() {
                             <div className="product-information-empty">
 
                                 <strong>
-                                    Product specifications
+                                    No additional specifications
                                 </strong>
+
 
                                 <span>
                                     Additional product information
-                                    will appear here when it is provided
-                                    through the admin dashboard.
+                                    will appear when provided through
+                                    the admin dashboard.
                                 </span>
 
                             </div>
@@ -3132,9 +3582,7 @@ export default function ProductDetails() {
                     </div>
 
 
-                    {/* =================================================
-                        STORY / DESCRIPTION
-                    ================================================= */}
+                    {/* STORY */}
 
                     <div className="product-about">
 
@@ -3143,6 +3591,7 @@ export default function ProductDetails() {
                             <span>
                                 PRODUCT STORY
                             </span>
+
 
                             <h2>
                                 About This Product
@@ -3161,6 +3610,7 @@ export default function ProductDetails() {
                                         DESCRIPTION
                                     </span>
 
+
                                     <p>
                                         {description}
                                     </p>
@@ -3177,6 +3627,7 @@ export default function ProductDetails() {
                                     <span className="about-label">
                                         THE STORY
                                     </span>
+
 
                                     <p>
                                         {story}
@@ -3195,6 +3646,7 @@ export default function ProductDetails() {
                                         STYLING
                                     </span>
 
+
                                     <p>
                                         {stylingNotes}
                                     </p>
@@ -3211,12 +3663,13 @@ export default function ProductDetails() {
                                     <div className="product-information-empty">
 
                                         <strong>
-                                            Product story
+                                            No product story has been added
                                         </strong>
 
+
                                         <span>
-                                            Product description and story
-                                            content added in the admin
+                                            Description, story and styling
+                                            content added from the admin
                                             dashboard will appear here.
                                         </span>
 
@@ -3249,6 +3702,7 @@ export default function ProductDetails() {
                                 INFORMATION
                             </span>
 
+
                             <h2>
                                 Specifications
                             </h2>
@@ -3258,10 +3712,11 @@ export default function ProductDetails() {
 
                         <div className="product-accordion">
 
-                            {/* PRODUCT DETAILS */}
+                            {/* PRODUCT */}
 
                             <div
-                                className={`product-accordion-item ${openSection === "product"
+                                className={`product-accordion-item ${openSection ===
+                                    "product"
                                     ? "open"
                                     : ""
                                     }`}
@@ -3280,54 +3735,67 @@ export default function ProductDetails() {
                                         Product Details
                                     </span>
 
+
                                     <ChevronIcon />
 
                                 </button>
 
 
-                                {openSection === "product" && (
+                                {openSection ===
+                                    "product" && (
 
-                                    <div className="product-accordion-content">
+                                        <div className="product-accordion-content">
 
-                                        <p>
-                                            Product ID:{" "}
-                                            {productIdValue ||
-                                                "Not provided"}
-                                        </p>
-
-
-                                        <p>
-                                            Category:{" "}
-                                            {category ||
-                                                "Not provided"}
-                                        </p>
-
-
-                                        <p>
-                                            Collection:{" "}
-                                            {collection ||
-                                                "Not provided"}
-                                        </p>
-
-
-                                        <p>
-                                            Availability:{" "}
-                                            {stockAvailable
-                                                ? "Currently available"
-                                                : "Currently sold out"}
-                                        </p>
-
-
-                                        {sku && (
                                             <p>
-                                                SKU:{" "}
-                                                {sku}
+                                                Product ID:
+                                                {" "}
+                                                {productIdValue}
                                             </p>
-                                        )}
 
-                                    </div>
 
-                                )}
+                                            <p>
+                                                Category:
+                                                {" "}
+                                                {category}
+                                            </p>
+
+
+                                            <p>
+                                                Collection:
+                                                {" "}
+                                                {collection}
+                                            </p>
+
+
+                                            {productType && (
+                                                <p>
+                                                    Product Type:
+                                                    {" "}
+                                                    {productType}
+                                                </p>
+                                            )}
+
+
+                                            {sku && (
+                                                <p>
+                                                    SKU:
+                                                    {" "}
+                                                    {sku}
+                                                </p>
+                                            )}
+
+
+                                            <p>
+                                                Availability:
+                                                {" "}
+                                                {stockAvailable
+                                                    ? "Currently available"
+                                                    : "Currently sold out"}
+                                            </p>
+
+                                        </div>
+
+                                    )}
 
                             </div>
 
@@ -3335,7 +3803,8 @@ export default function ProductDetails() {
                             {/* MATERIAL */}
 
                             <div
-                                className={`product-accordion-item ${openSection === "material"
+                                className={`product-accordion-item ${openSection ===
+                                    "material"
                                     ? "open"
                                     : ""
                                     }`}
@@ -3354,51 +3823,49 @@ export default function ProductDetails() {
                                         Material & Care
                                     </span>
 
+
                                     <ChevronIcon />
 
                                 </button>
 
 
-                                {openSection === "material" && (
+                                {openSection ===
+                                    "material" && (
 
-                                    <div className="product-accordion-content">
+                                        <div className="product-accordion-content">
 
-                                        {material ? (
-
-                                            <p>
-                                                Material:{" "}
-                                                {material}
-                                            </p>
-
-                                        ) : (
-
-                                            <p>
-                                                Material information
-                                                has not been provided.
-                                            </p>
-
-                                        )}
+                                            {material && (
+                                                <p>
+                                                    Material:
+                                                    {" "}
+                                                    {material}
+                                                </p>
+                                            )}
 
 
-                                        {care ? (
+                                            {care && (
+                                                <p>
+                                                    Care:
+                                                    {" "}
+                                                    {care}
+                                                </p>
+                                            )}
 
-                                            <p>
-                                                Care:{" "}
-                                                {care}
-                                            </p>
 
-                                        ) : (
+                                            {!material &&
+                                                !care && (
 
-                                            <p>
-                                                Care information
-                                                has not been provided.
-                                            </p>
+                                                    <p>
+                                                        Material and care
+                                                        information has not
+                                                        been provided.
+                                                    </p>
 
-                                        )}
+                                                )}
 
-                                    </div>
+                                        </div>
 
-                                )}
+                                    )}
 
                             </div>
 
@@ -3406,7 +3873,8 @@ export default function ProductDetails() {
                             {/* SIZE */}
 
                             <div
-                                className={`product-accordion-item ${openSection === "size"
+                                className={`product-accordion-item ${openSection ===
+                                    "size"
                                     ? "open"
                                     : ""
                                     }`}
@@ -3425,34 +3893,25 @@ export default function ProductDetails() {
                                         Size & Fit
                                     </span>
 
+
                                     <ChevronIcon />
 
                                 </button>
 
 
-                                {openSection === "size" && (
+                                {openSection ===
+                                    "size" && (
 
-                                    <div className="product-accordion-content">
-
-                                        {size ? (
-
-                                            <p>
-                                                {size}
-                                            </p>
-
-                                        ) : (
+                                        <div className="product-accordion-content">
 
                                             <p>
-                                                Size and fit information
-                                                has not been provided for
-                                                this product.
+                                                {size ||
+                                                    "Size and fit information has not been provided."}
                                             </p>
 
-                                        )}
+                                        </div>
 
-                                    </div>
-
-                                )}
+                                    )}
 
                             </div>
 
@@ -3460,7 +3919,8 @@ export default function ProductDetails() {
                             {/* SHIPPING */}
 
                             <div
-                                className={`product-accordion-item ${openSection === "shipping"
+                                className={`product-accordion-item ${openSection ===
+                                    "shipping"
                                     ? "open"
                                     : ""
                                     }`}
@@ -3479,55 +3939,59 @@ export default function ProductDetails() {
                                         Shipping & Returns
                                     </span>
 
+
                                     <ChevronIcon />
 
                                 </button>
 
 
-                                {openSection === "shipping" && (
+                                {openSection ===
+                                    "shipping" && (
 
-                                    <div className="product-accordion-content">
+                                        <div className="product-accordion-content">
 
-                                        {shippingText && (
-                                            <p>
-                                                Shipping:{" "}
-                                                {shippingText}
-                                            </p>
-                                        )}
-
-
-                                        {deliveryEstimate && (
-                                            <p>
-                                                Delivery:{" "}
-                                                {deliveryEstimate}
-                                            </p>
-                                        )}
-
-
-                                        {returnPolicy && (
-                                            <p>
-                                                Returns:{" "}
-                                                {returnPolicy}
-                                            </p>
-                                        )}
-
-
-                                        {!shippingText &&
-                                            !deliveryEstimate &&
-                                            !returnPolicy && (
-
+                                            {shippingText && (
                                                 <p>
-                                                    Shipping and return
-                                                    information has not
-                                                    been provided in the
-                                                    admin dashboard.
+                                                    Shipping:
+                                                    {" "}
+                                                    {shippingText}
                                                 </p>
-
                                             )}
 
-                                    </div>
 
-                                )}
+                                            {deliveryEstimate && (
+                                                <p>
+                                                    Delivery:
+                                                    {" "}
+                                                    {deliveryEstimate}
+                                                </p>
+                                            )}
+
+
+                                            {returnPolicy && (
+                                                <p>
+                                                    Returns:
+                                                    {" "}
+                                                    {returnPolicy}
+                                                </p>
+                                            )}
+
+
+                                            {!shippingText &&
+                                                !deliveryEstimate &&
+                                                !returnPolicy && (
+
+                                                    <p>
+                                                        Shipping and return
+                                                        information has not
+                                                        been provided.
+                                                    </p>
+
+                                                )}
+
+                                        </div>
+
+                                    )}
 
                             </div>
 
@@ -3535,7 +3999,8 @@ export default function ProductDetails() {
                             {/* WARRANTY */}
 
                             <div
-                                className={`product-accordion-item ${openSection === "warranty"
+                                className={`product-accordion-item ${openSection ===
+                                    "warranty"
                                     ? "open"
                                     : ""
                                     }`}
@@ -3554,23 +4019,25 @@ export default function ProductDetails() {
                                         Warranty
                                     </span>
 
+
                                     <ChevronIcon />
 
                                 </button>
 
 
-                                {openSection === "warranty" && (
+                                {openSection ===
+                                    "warranty" && (
 
-                                    <div className="product-accordion-content">
+                                        <div className="product-accordion-content">
 
-                                        <p>
-                                            {warranty ||
-                                                "Warranty information has not been provided for this product."}
-                                        </p>
+                                            <p>
+                                                {warranty ||
+                                                    "No warranty information has been provided."}
+                                            </p>
 
-                                    </div>
+                                        </div>
 
-                                )}
+                                    )}
 
                             </div>
 
@@ -3578,7 +4045,8 @@ export default function ProductDetails() {
                             {/* FAQ */}
 
                             <div
-                                className={`product-accordion-item ${openSection === "faq"
+                                className={`product-accordion-item ${openSection ===
+                                    "faq"
                                     ? "open"
                                     : ""
                                     }`}
@@ -3597,78 +4065,61 @@ export default function ProductDetails() {
                                         FAQ
                                     </span>
 
+
                                     <ChevronIcon />
 
                                 </button>
 
 
-                                {openSection === "faq" && (
+                                {openSection ===
+                                    "faq" && (
 
-                                    <div className="product-accordion-content">
+                                        <div className="product-accordion-content">
 
-                                        {faq.length > 0 ? (
+                                            {faq.length > 0 ? (
 
-                                            faq.map(
-                                                (
-                                                    item,
-                                                    index
-                                                ) => {
+                                                faq.map(
+                                                    (
+                                                        item
+                                                    ) => (
 
-                                                    const question =
-                                                        typeof item ===
-                                                            "string"
-                                                            ? item
-                                                            : item?.question ||
-                                                            item?.title ||
-                                                            "";
-
-
-                                                    const answer =
-                                                        typeof item ===
-                                                            "string"
-                                                            ? ""
-                                                            : item?.answer ||
-                                                            item?.text ||
-                                                            item?.description ||
-                                                            "";
-
-
-                                                    return (
                                                         <div
-                                                            key={`${question}-${index}`}
+                                                            key={`${item.question}-${item.index}`}
                                                             className="product-faq-item"
                                                         >
 
-                                                            {question && (
-                                                                <strong>
-                                                                    {question}
-                                                                </strong>
-                                                            )}
+                                                            <strong>
+                                                                {
+                                                                    item.question
+                                                                }
+                                                            </strong>
 
-                                                            {answer && (
+
+                                                            {item.answer && (
                                                                 <p>
-                                                                    {answer}
+                                                                    {
+                                                                        item.answer
+                                                                    }
                                                                 </p>
                                                             )}
 
                                                         </div>
-                                                    );
 
-                                                }
-                                            )
+                                                    )
+                                                )
 
-                                        ) : (
+                                            ) : (
 
-                                            <p>
-                                                No FAQ information has
-                                                been added for this product.
-                                            </p>
+                                                <p>
+                                                    No FAQ information
+                                                    has been provided.
+                                                </p>
 
-                                        )}
+                                            )}
 
-                                    </div>
+                                        </div>
 
-                                )}
+                                    )}
 
                             </div>
 
@@ -3688,6 +4139,7 @@ export default function ProductDetails() {
                             <span>
                                 CUSTOMER FEEDBACK
                             </span>
+
 
                             <h2>
                                 Customer Reviews
@@ -3751,7 +4203,8 @@ export default function ProductDetails() {
                                         <span>
 
                                             {reviewData.reviewCount > 0
-                                                ? `Based on ${reviewData.reviewCount} ${reviewData.reviewCount === 1
+                                                ? `Based on ${reviewData.reviewCount} ${reviewData.reviewCount ===
+                                                    1
                                                     ? "review"
                                                     : "reviews"
                                                 }`
@@ -3768,8 +4221,16 @@ export default function ProductDetails() {
 
                                     <div className="product-review-bars">
 
-                                        {[5, 4, 3, 2, 1].map(
-                                            (star) => {
+                                        {[
+                                            5,
+                                            4,
+                                            3,
+                                            2,
+                                            1,
+                                        ].map(
+                                            (
+                                                star
+                                            ) => {
 
                                                 const count =
                                                     Number(
@@ -3864,17 +4325,20 @@ export default function ProductDetails() {
                                                 ) => {
 
                                                     const reviewName =
-                                                        review?.name ||
-                                                        review?.user ||
-                                                        review?.author ||
-                                                        "Customer";
+                                                        getDisplayValue(
+                                                            review?.name ??
+                                                            review?.user ??
+                                                            review?.author,
+                                                            "Customer"
+                                                        );
 
 
                                                     const reviewText =
-                                                        review?.comment ||
-                                                        review?.text ||
-                                                        review?.review ||
-                                                        "";
+                                                        getDisplayValue(
+                                                            review?.comment ??
+                                                            review?.text ??
+                                                            review?.review
+                                                        );
 
 
                                                     const reviewRating =
@@ -3895,12 +4359,17 @@ export default function ProductDetails() {
                                                                 <div>
 
                                                                     <strong>
-                                                                        {reviewName}
+                                                                        {
+                                                                            reviewName
+                                                                        }
                                                                     </strong>
+
 
                                                                     {review?.date && (
                                                                         <small>
-                                                                            {review.date}
+                                                                            {
+                                                                                review.date
+                                                                            }
                                                                         </small>
                                                                     )}
 
@@ -3910,11 +4379,13 @@ export default function ProductDetails() {
                                                                 {reviewRating > 0 && (
 
                                                                     <span>
+
                                                                         {reviewRating.toFixed(
                                                                             1
                                                                         )}
                                                                         {" "}
                                                                         ★
+
                                                                     </span>
 
                                                                 )}
@@ -3925,7 +4396,9 @@ export default function ProductDetails() {
                                                             {reviewText && (
 
                                                                 <p>
-                                                                    {reviewText}
+                                                                    {
+                                                                        reviewText
+                                                                    }
                                                                 </p>
 
                                                             )}
@@ -3946,10 +4419,11 @@ export default function ProductDetails() {
                                             No written reviews yet
                                         </strong>
 
+
                                         <span>
-                                            Customer review content
-                                            added through the admin
-                                            system will appear here.
+                                            Customer reviews added
+                                            through the admin and
+                                            review system will appear here.
                                         </span>
 
                                     </div>
@@ -3966,10 +4440,11 @@ export default function ProductDetails() {
                                     No ratings yet
                                 </strong>
 
+
                                 <span>
-                                    Ratings and customer reviews will
-                                    appear here when they are available
-                                    from the product data.
+                                    Ratings and customer reviews
+                                    will appear here when they are
+                                    available from the product data.
                                 </span>
 
                             </div>
@@ -3996,6 +4471,7 @@ export default function ProductDetails() {
                                 <span>
                                     FROM THE COLLECTION
                                 </span>
+
 
                                 <h2>
                                     You May Also Like
@@ -4062,10 +4538,35 @@ export default function ProductDetails() {
                                         );
 
 
-                                    const itemImage =
+                                    const itemImages =
                                         getProductImages(
                                             item
-                                        )[0];
+                                        );
+
+
+                                    const itemImage =
+                                        itemImages[0] ||
+                                        "";
+
+
+                                    const itemCategory =
+                                        getDisplayValue(
+                                            item?.category ||
+                                            item?.categoryName,
+                                            "COLLECTION"
+                                        );
+
+
+                                    const itemPrice =
+                                        getCurrentPrice(
+                                            item
+                                        );
+
+
+                                    const itemOriginalPrice =
+                                        getOriginalPrice(
+                                            item
+                                        );
 
 
                                     return (
@@ -4090,7 +4591,10 @@ export default function ProductDetails() {
                                                             itemImage
                                                         }
                                                         alt={
-                                                            item.name
+                                                            getDisplayValue(
+                                                                item?.name,
+                                                                "Geeka product"
+                                                            )
                                                         }
                                                         loading="lazy"
                                                     />
@@ -4108,7 +4612,7 @@ export default function ProductDetails() {
                                                 )}
 
 
-                                                {item.isNew && (
+                                                {item?.isNew && (
 
                                                     <span className="product-related-badge">
 
@@ -4125,8 +4629,7 @@ export default function ProductDetails() {
 
                                                 <span>
                                                     {
-                                                        item.category ||
-                                                        "COLLECTION"
+                                                        itemCategory
                                                     }
                                                 </span>
 
@@ -4138,7 +4641,10 @@ export default function ProductDetails() {
                                                 >
 
                                                     {
-                                                        item.name
+                                                        getDisplayValue(
+                                                            item?.name,
+                                                            "Geeka Product"
+                                                        )
                                                     }
 
                                                 </Link>
@@ -4147,41 +4653,28 @@ export default function ProductDetails() {
                                                 <div>
 
                                                     <strong>
-                                                        {formatPrice(
-                                                            getFirstValue(
-                                                                item,
-                                                                [
-                                                                    "price",
-                                                                    "sellingPrice",
-                                                                    "salePrice",
-                                                                ]
+                                                        {
+                                                            formatPrice(
+                                                                itemPrice
                                                             )
-                                                        )}
+                                                        }
                                                     </strong>
 
 
-                                                    {getFirstValue(
-                                                        item,
-                                                        [
-                                                            "oldPrice",
-                                                            "compareAtPrice",
-                                                            "originalPrice",
-                                                            "mrp",
-                                                        ]
-                                                    ) && (
+                                                    {itemOriginalPrice !== null &&
+                                                        Number(
+                                                            itemOriginalPrice
+                                                        ) >
+                                                        Number(
+                                                            itemPrice
+                                                        ) && (
 
                                                             <del>
-                                                                {formatPrice(
-                                                                    getFirstValue(
-                                                                        item,
-                                                                        [
-                                                                            "oldPrice",
-                                                                            "compareAtPrice",
-                                                                            "originalPrice",
-                                                                            "mrp",
-                                                                        ]
+                                                                {
+                                                                    formatPrice(
+                                                                        itemOriginalPrice
                                                                     )
-                                                                )}
+                                                                }
                                                             </del>
 
                                                         )}
@@ -4212,7 +4705,8 @@ export default function ProductDetails() {
             {toast && (
 
                 <div
-                    className={`product-detail-toast ${toast.type === "wishlist"
+                    className={`product-detail-toast ${toast.type ===
+                        "wishlist"
                         ? "wishlist"
                         : ""
                         }`}
@@ -4241,7 +4735,7 @@ export default function ProductDetails() {
 
 
                         <span>
-                            {product.name}
+                            {productName}
                         </span>
 
                     </div>

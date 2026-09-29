@@ -17,7 +17,6 @@ import Contact from "./components/Contact";
 import Cart from "./components/Cart";
 import ForgotPassword from "./components/ForgotPassword";
 import ProductDetails from "./components/ProductDetails";
-
 import "./App.css";
 
 
@@ -69,7 +68,6 @@ function App() {
                 {/* ================================
                     AUTH
                 ================================= */}
-
                 <Route
                     path="/login"
                     element={<Login />}

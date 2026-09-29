@@ -75,12 +75,16 @@ const COLLECTION_FILTERS = {
    NORMALIZE CATEGORY
 ========================================================= */
 
-function normalizeCategory(value) {
+function normalizeCategory(
+    value
+) {
+
     return String(
         value || ""
     )
         .trim()
         .toLowerCase();
+
 }
 
 
@@ -88,7 +92,9 @@ function normalizeCategory(value) {
    GET PRODUCT ID
 ========================================================= */
 
-function getProductId(product) {
+function getProductId(
+    product
+) {
 
     if (!product) {
         return "";
@@ -205,7 +211,9 @@ function productBelongsToCollection(
    PRICE FORMAT
 ========================================================= */
 
-function formatPrice(price) {
+function formatPrice(
+    price
+) {
 
     const amount =
         Number(
@@ -379,6 +387,10 @@ function ProductCard({
     onAddToCart,
 }) {
 
+    const navigate =
+        useNavigate();
+
+
     const productId =
         getProductId(
             product
@@ -390,9 +402,74 @@ function ProductCard({
         "Geeka Product";
 
 
+    /* =====================================================
+       OPEN PRODUCT DETAILS
+    ===================================================== */
+
+    function handleProductClick() {
+
+        if (!productId) {
+            return;
+        }
+
+
+        navigate(
+            `/product/${encodeURIComponent(
+                productId
+            )}`
+        );
+
+    }
+
+
+    /* =====================================================
+       KEYBOARD NAVIGATION
+    ===================================================== */
+
+    function handleCardKeyDown(
+        event
+    ) {
+
+        if (
+            event.key ===
+            "Enter" ||
+            event.key ===
+            " "
+        ) {
+
+            event.preventDefault();
+
+            handleProductClick();
+
+        }
+
+    }
+
+
     return (
 
-        <article className="shop-product-card">
+        <article
+            className="shop-product-card"
+            onClick={
+                handleProductClick
+            }
+            onKeyDown={
+                handleCardKeyDown
+            }
+            role="link"
+            tabIndex={
+                productId
+                    ? 0
+                    : -1
+            }
+            aria-label={
+                `View ${productName}`
+            }
+        >
+
+            {/* =================================================
+                IMAGE
+            ================================================== */}
 
             <div className="shop-product-image">
 
@@ -420,6 +497,7 @@ function ProductCard({
 
                 {/* =================================================
                     WISHLIST
+                    STOP CARD NAVIGATION
                 ================================================== */}
 
                 <button
@@ -428,11 +506,24 @@ function ProductCard({
                             ? "active"
                             : ""
                         }`}
-                    onClick={() =>
+                    onPointerDown={(event) => {
+
+                        event.preventDefault();
+
+                        event.stopPropagation();
+
+                    }}
+                    onClick={(event) => {
+
+                        event.preventDefault();
+
+                        event.stopPropagation();
+
                         onToggleWishlist(
                             productId
-                        )
-                    }
+                        );
+
+                    }}
                     aria-label={
                         isWishlisted
                             ? `Remove ${productName} from wishlist`
@@ -454,17 +545,34 @@ function ProductCard({
 
                 {/* =================================================
                     QUICK VIEW
+                    STOP CARD NAVIGATION
                 ================================================== */}
 
-                <div className="shop-image-actions">
+                <div
+                    className="shop-image-actions"
+                    onClick={(event) =>
+                        event.stopPropagation()
+                    }
+                >
 
                     <button
                         type="button"
-                        onClick={() =>
+                        onPointerDown={(event) => {
+
+                            event.stopPropagation();
+
+                        }}
+                        onClick={(event) => {
+
+                            event.preventDefault();
+
+                            event.stopPropagation();
+
                             onQuickView(
                                 product
-                            )
-                        }
+                            );
+
+                        }}
                     >
 
                         QUICK VIEW
@@ -476,30 +584,53 @@ function ProductCard({
             </div>
 
 
-            <div className="shop-product-info">
+            {/* =================================================
+                PRODUCT INFORMATION
+            ================================================== */}
+
+            <div
+                className="shop-product-info"
+                onClick={(event) => {
+
+                    /*
+                     * The information area itself should
+                     * navigate through the card click.
+                     * The button below explicitly stops it.
+                     */
+
+                    event.stopPropagation();
+
+                    handleProductClick();
+
+                }}
+            >
 
                 <span className="shop-product-category">
 
                     {
-                        product.category
+                        product.category ||
+                        "COLLECTION"
                     }
 
                 </span>
 
 
                 {/* =================================================
-                    CLICKABLE PRODUCT NAME
+                    PRODUCT NAME
                 ================================================== */}
 
-                <h3>
+                {productId ? (
 
-                    {productId ? (
+                    <h3>
 
                         <Link
                             to={`/product/${encodeURIComponent(
                                 productId
                             )}`}
                             className="shop-product-name-link"
+                            onClick={(event) =>
+                                event.stopPropagation()
+                            }
                         >
 
                             {
@@ -508,16 +639,31 @@ function ProductCard({
 
                         </Link>
 
-                    ) : (
+                    </h3>
 
-                        productName
+                ) : (
 
-                    )}
+                    <h3>
 
-                </h3>
+                        {
+                            productName
+                        }
+
+                    </h3>
+
+                )}
 
 
-                <div className="shop-product-price">
+                {/* =================================================
+                    PRICE
+                ================================================== */}
+
+                <div
+                    className="shop-product-price"
+                    onClick={(event) =>
+                        event.stopPropagation()
+                    }
+                >
 
                     <strong>
 
@@ -547,17 +693,34 @@ function ProductCard({
                 </div>
 
 
+                {/* =================================================
+                    ADD TO CART
+                ================================================== */}
+
                 <button
                     type="button"
                     className="shop-add-cart"
                     disabled={
                         !product.inStock
                     }
-                    onClick={() =>
+                    onPointerDown={(event) => {
+
+                        event.preventDefault();
+
+                        event.stopPropagation();
+
+                    }}
+                    onClick={(event) => {
+
+                        event.preventDefault();
+
+                        event.stopPropagation();
+
                         onAddToCart(
                             product
-                        )
-                    }
+                        );
+
+                    }}
                 >
 
                     {
@@ -599,7 +762,7 @@ export default function Shop() {
 
 
     /* =====================================================
-       IMPORTANT — ALWAYS START SHOP AT TOP
+       ALWAYS START SHOP AT TOP
     ===================================================== */
 
     useLayoutEffect(() => {
@@ -749,8 +912,12 @@ export default function Shop() {
                 );
 
 
-            if (!Array.isArray(parsed)) {
+            if (!Array.isArray(
+                parsed
+            )) {
+
                 return [];
+
             }
 
 
@@ -929,11 +1096,8 @@ export default function Shop() {
 
 
             return [
-
                 "All",
-
                 ...uniqueCategories,
-
             ];
 
         }, [
@@ -1004,13 +1168,16 @@ export default function Shop() {
 
 
         const timer =
-            setTimeout(() => {
+            setTimeout(
+                () => {
 
-                setCartMessage(
-                    false
-                );
+                    setCartMessage(
+                        false
+                    );
 
-            }, 2200);
+                },
+                2200
+            );
 
 
         return () =>
@@ -1079,31 +1246,37 @@ export default function Shop() {
 
 
                         const matchesPrice =
-                            product.price >=
+                            Number(
+                                product.price
+                            ) >=
                             minPrice &&
-                            product.price <=
+                            Number(
+                                product.price
+                            ) <=
                             maxPrice;
 
 
                         const matchesNew =
                             !newOnly ||
-                            product.isNew;
+                            Boolean(
+                                product.isNew
+                            );
 
 
                         const matchesStock =
                             !stockOnly ||
-                            product.inStock;
+                            Boolean(
+                                product.inStock
+                            );
 
 
                         return (
-
                             matchesCategory &&
                             matchesCollection &&
                             matchesSearch &&
                             matchesPrice &&
                             matchesNew &&
                             matchesStock
-
                         );
 
                     }
@@ -1115,7 +1288,9 @@ export default function Shop() {
             ].sort(
                 (a, b) => {
 
-                    switch (sortBy) {
+                    switch (
+                    sortBy
+                    ) {
 
                         case "newest":
 
@@ -1132,23 +1307,37 @@ export default function Shop() {
                         case "price-low":
 
                             return (
-                                a.price -
-                                b.price
+                                Number(
+                                    a.price
+                                ) -
+                                Number(
+                                    b.price
+                                )
                             );
 
 
                         case "price-high":
 
                             return (
-                                b.price -
-                                a.price
+                                Number(
+                                    b.price
+                                ) -
+                                Number(
+                                    a.price
+                                )
                             );
 
 
                         case "name":
 
-                            return a.name.localeCompare(
-                                b.name
+                            return String(
+                                a.name ||
+                                ""
+                            ).localeCompare(
+                                String(
+                                    b.name ||
+                                    ""
+                                )
                             );
 
 
@@ -1230,7 +1419,7 @@ export default function Shop() {
        CLEAR FILTERS
     ===================================================== */
 
-    const clearFilters = () => {
+    function clearFilters() {
 
         setCategory(
             "All"
@@ -1266,7 +1455,7 @@ export default function Shop() {
             "/shop"
         );
 
-    };
+    }
 
 
     /* =====================================================
@@ -1303,87 +1492,100 @@ export default function Shop() {
        WISHLIST
     ===================================================== */
 
-    const toggleWishlist =
-        (productId) => {
+    function toggleWishlist(
+        productId
+    ) {
 
-            const normalizedId =
-                String(
-                    productId
-                ).trim();
-
-
-            if (!normalizedId) {
-                return;
-            }
+        const normalizedId =
+            String(
+                productId
+            ).trim();
 
 
-            setWishlist(
-                (current) => {
+        if (!normalizedId) {
+            return;
+        }
 
-                    return current.includes(
-                        normalizedId
+
+        setWishlist(
+            (current) => {
+
+                return current.includes(
+                    normalizedId
+                )
+
+                    ? current.filter(
+                        (id) =>
+                            id !==
+                            normalizedId
                     )
 
-                        ? current.filter(
-                            (id) =>
-                                id !==
-                                normalizedId
-                        )
+                    : [
+                        ...current,
+                        normalizedId,
+                    ];
 
-                        : [
-                            ...current,
-                            normalizedId,
-                        ];
+            }
+        );
 
-                }
-            );
-
-        };
+    }
 
 
     /* =====================================================
        ADD TO CART
     ===================================================== */
 
-    const addToCart =
-        (product) => {
+    function addToCart(
+        product
+    ) {
 
-            addItem(
-                product
-            );
+        if (
+            !product ||
+            product.inStock === false
+        ) {
+
+            return;
+
+        }
 
 
-            setCartMessage(
-                true
-            );
+        addItem(
+            product
+        );
 
-        };
+
+        setCartMessage(
+            true
+        );
+
+    }
 
 
     /* =====================================================
        CATEGORY COUNT
     ===================================================== */
 
-    const categoryCount =
-        (selectedCategory) => {
+    function categoryCount(
+        selectedCategory
+    ) {
 
-            if (
-                selectedCategory ===
-                "All"
-            ) {
+        if (
+            selectedCategory ===
+            "All"
+        ) {
 
-                return products.length;
+            return products.length;
 
-            }
+        }
 
 
-            return products.filter(
-                (product) =>
-                    product.category ===
-                    selectedCategory
-            ).length;
+        return products.filter(
+            (product) =>
+                product.category ===
+                selectedCategory
+        ).length;
 
-        };
+    }
 
 
     /* =====================================================
@@ -1587,9 +1789,7 @@ export default function Shop() {
                         <div className="active-filter-row">
 
                             <span>
-
                                 FILTERS:
-
                             </span>
 
 
@@ -1666,7 +1866,8 @@ export default function Shop() {
                                     }
                                 >
 
-                                    Search:{" "}
+                                    Search:
+                                    {" "}
                                     {
                                         search
                                     }
@@ -1678,10 +1879,12 @@ export default function Shop() {
                             )}
 
 
-                            {(minPrice >
+                            {(
+                                minPrice >
                                 0 ||
                                 maxPrice <
-                                2500) && (
+                                2500
+                            ) && (
 
                                     <button
                                         type="button"
@@ -1794,9 +1997,7 @@ export default function Shop() {
                             <div className="filter-block">
 
                                 <h2>
-
                                     Category
-
                                 </h2>
 
 
@@ -1824,22 +2025,18 @@ export default function Shop() {
                                             >
 
                                                 <span>
-
                                                     {
                                                         item
                                                     }
-
                                                 </span>
 
 
                                                 <span>
-
                                                     {
                                                         categoryCount(
                                                             item
                                                         )
                                                     }
-
                                                 </span>
 
                                             </button>
@@ -1855,33 +2052,27 @@ export default function Shop() {
                             <div className="filter-block">
 
                                 <h2>
-
                                     Price Range
-
                                 </h2>
 
 
                                 <div className="price-values">
 
                                     <span>
-
                                         {
                                             formatPrice(
                                                 minPrice
                                             )
                                         }
-
                                     </span>
 
 
                                     <span>
-
                                         {
                                             formatPrice(
                                                 maxPrice
                                             )
                                         }
-
                                     </span>
 
                                 </div>
@@ -1950,9 +2141,7 @@ export default function Shop() {
                             <div className="filter-block">
 
                                 <h2>
-
                                     Availability
-
                                 </h2>
 
 
@@ -1973,9 +2162,7 @@ export default function Shop() {
                                     <span className="fake-checkbox" />
 
                                     <span>
-
                                         Availability
-
                                     </span>
 
                                 </label>
@@ -1998,9 +2185,7 @@ export default function Shop() {
                                     <span className="fake-checkbox" />
 
                                     <span>
-
                                         New Arrivals
-
                                     </span>
 
                                 </label>
@@ -2091,9 +2276,7 @@ export default function Shop() {
 
 
                                     <h2>
-
                                         No products found
-
                                     </h2>
 
 
@@ -2190,7 +2373,6 @@ export default function Shop() {
 
                             <div className="mobile-filter-body">
 
-
                                 <div className="filter-block">
 
                                     <h2>
@@ -2256,24 +2438,20 @@ export default function Shop() {
                                     <div className="price-values">
 
                                         <span>
-
                                             {
                                                 formatPrice(
                                                     minPrice
                                                 )
                                             }
-
                                         </span>
 
 
                                         <span>
-
                                             {
                                                 formatPrice(
                                                     maxPrice
                                                 )
                                             }
-
                                         </span>
 
                                     </div>
@@ -2463,7 +2641,12 @@ export default function Shop() {
                         }}
                     >
 
-                        <div className="quick-view-modal">
+                        <div
+                            className="quick-view-modal"
+                            onClick={(event) =>
+                                event.stopPropagation()
+                            }
+                        >
 
 
                             <button
@@ -2498,46 +2681,38 @@ export default function Shop() {
                             <div className="quick-view-content">
 
                                 <span>
-
                                     {
                                         quickView.category
                                     }
-
                                 </span>
 
 
                                 <h2>
-
                                     {
                                         quickView.name
                                     }
-
                                 </h2>
 
 
                                 <div className="quick-view-price">
 
                                     <strong>
-
                                         {
                                             formatPrice(
                                                 quickView.price
                                             )
                                         }
-
                                     </strong>
 
 
                                     {quickView.oldPrice && (
 
                                         <del>
-
                                             {
                                                 formatPrice(
                                                     quickView.oldPrice
                                                 )
                                             }
-
                                         </del>
 
                                     )}
@@ -2546,18 +2721,18 @@ export default function Shop() {
 
 
                                 <p>
-
                                     {
                                         quickView.description
                                     }
-
                                 </p>
 
 
                                 <button
                                     type="button"
                                     className="quick-view-add"
-                                    onClick={() => {
+                                    onClick={(event) => {
+
+                                        event.stopPropagation();
 
                                         addToCart(
                                             quickView
@@ -2595,18 +2770,14 @@ export default function Shop() {
                     <div className="cart-message">
 
                         <span>
-
                             Added to your bag
-
                         </span>
 
 
                         <strong>
-
                             {
                                 cartCount
                             }
-
                         </strong>
 
 
@@ -2617,6 +2788,7 @@ export default function Shop() {
                                     false
                                 )
                             }
+                            aria-label="Close cart notification"
                         >
 
                             ×
@@ -2633,4 +2805,4 @@ export default function Shop() {
 
     );
 
-}
+} 
