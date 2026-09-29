@@ -1670,3 +1670,564 @@ GET /api/v1/catalog/products/?category=handmade&page=2
 ```
 
 * An invalid page does **not** return an empty `results` array.
+
+
+## 2.12 Admin Category APIs
+
+Admin category APIs are used by the GEEKA admin dashboard to manage product categories.
+
+### Authentication
+
+All endpoints in this section require:
+
+* Authentication: Yes
+* Authentication method: Django session authentication
+* Permission: Staff/Admin (`is_staff=True`)
+* CSRF: Required for `POST` and `PATCH`
+* Public users: Not allowed
+
+The backend remains the source of truth for category data.
+
+---
+
+### 2.12.1 List Categories
+
+#### Endpoint
+
+`GET /api/v1/catalog/admin/categories/`
+
+#### Purpose
+
+Returns all categories for the admin dashboard.
+
+#### Authentication
+
+* Authentication required: Yes
+* Permission: Staff/Admin
+* CSRF required: No
+
+#### Query Parameters
+
+None.
+
+#### Response
+
+```json
+{
+    "count": 2,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "name": "Handmade",
+            "slug": "handmade",
+            "description": "Handmade and handcrafted products.",
+            "is_active": true,
+            "created_at": "2026-09-28T10:00:00Z",
+            "updated_at": "2026-09-28T10:00:00Z"
+        },
+        {
+            "id": 2,
+            "name": "Jewellery",
+            "slug": "jewellery",
+            "description": "Jewellery products.",
+            "is_active": true,
+            "created_at": "2026-09-28T10:05:00Z",
+            "updated_at": "2026-09-28T10:05:00Z"
+        }
+    ]
+}
+```
+
+#### Status Codes
+
+* `200 OK` — Categories returned successfully
+* `401 Unauthorized` — User is not authenticated
+* `403 Forbidden` — User is authenticated but is not staff/admin
+
+---
+
+### 2.12.2 Create Category
+
+#### Endpoint
+
+`POST /api/v1/catalog/admin/categories/`
+
+#### Purpose
+
+Creates a new product category.
+
+#### Authentication
+
+* Authentication required: Yes
+* Permission: Staff/Admin
+* CSRF required: Yes
+
+#### Request Body
+
+```json
+{
+    "name": "Jewellery",
+    "slug": "jewellery",
+    "description": "Jewellery products.",
+    "is_active": true
+}
+```
+
+### Request Fields
+
+| Field         | Type    | Required | Description                                            |
+| ------------- | ------- | -------: | ------------------------------------------------------ |
+| `name`        | string  |      Yes | Category name                                          |
+| `slug`        | string  |       No | Unique URL-safe slug; generated from name when omitted |
+| `description` | string  |       No | Category description                                   |
+| `is_active`   | boolean |       No | Defaults to `true`                                     |
+
+#### Validation
+
+* `name` must contain at least 2 characters.
+* `name` must be unique.
+* `slug` must be unique.
+* `slug` must be URL-safe.
+* Invalid or duplicate category data must be rejected by the backend.
+
+#### Successful Response
+
+`201 Created`
+
+```json
+{
+    "id": 2,
+    "name": "Jewellery",
+    "slug": "jewellery",
+    "description": "Jewellery products.",
+    "is_active": true,
+    "created_at": "2026-09-28T10:05:00Z",
+    "updated_at": "2026-09-28T10:05:00Z"
+}
+```
+
+#### Status Codes
+
+* `201 Created` — Category created
+* `400 Bad Request` — Validation error
+* `401 Unauthorized` — User is not authenticated
+* `403 Forbidden` — User is not staff/admin
+
+---
+
+### 2.12.3 Retrieve Category
+
+#### Endpoint
+
+`GET /api/v1/catalog/admin/categories/{category_id}/`
+
+#### Purpose
+
+Returns one category by its database ID.
+
+#### Authentication
+
+* Authentication required: Yes
+* Permission: Staff/Admin
+* CSRF required: No
+
+#### Path Parameters
+
+| Parameter     | Type    | Description |
+| ------------- | ------- | ----------- |
+| `category_id` | integer | Category ID |
+
+#### Successful Response
+
+`200 OK`
+
+```json
+{
+    "id": 1,
+    "name": "Handmade",
+    "slug": "handmade",
+    "description": "Handmade and handcrafted products.",
+    "is_active": true,
+    "created_at": "2026-09-28T10:00:00Z",
+    "updated_at": "2026-09-28T10:00:00Z"
+}
+```
+
+#### Status Codes
+
+* `200 OK` — Category returned
+* `401 Unauthorized` — User is not authenticated
+* `403 Forbidden` — User is not staff/admin
+* `404 Not Found` — Category does not exist
+
+---
+
+### 2.12.4 Update Category
+
+#### Endpoint
+
+`PATCH /api/v1/catalog/admin/categories/{category_id}/`
+
+#### Purpose
+
+Partially updates an existing category.
+
+#### Authentication
+
+* Authentication required: Yes
+* Permission: Staff/Admin
+* CSRF required: Yes
+
+#### Path Parameters
+
+| Parameter     | Type    | Description |
+| ------------- | ------- | ----------- |
+| `category_id` | integer | Category ID |
+
+#### Request Body
+
+Any supported fields may be updated independently.
+
+```json
+{
+    "name": "Handmade Products",
+    "description": "Handmade and handcrafted products.",
+    "slug": "handmade-products"
+}
+```
+
+`is_active` may also be updated through this endpoint.
+
+```json
+{
+    "is_active": false
+}
+```
+
+#### Validation
+
+The same category validation rules used during creation apply.
+
+#### Successful Response
+
+`200 OK`
+
+```json
+{
+    "id": 1,
+    "name": "Handmade Products",
+    "slug": "handmade-products",
+    "description": "Handmade and handcrafted products.",
+    "is_active": false,
+    "created_at": "2026-09-28T10:00:00Z",
+    "updated_at": "2026-09-28T10:15:00Z"
+}
+```
+
+#### Status Codes
+
+* `200 OK` — Category updated
+* `400 Bad Request` — Validation error
+* `401 Unauthorized` — User is not authenticated
+* `403 Forbidden` — User is not staff/admin
+* `404 Not Found` — Category does not exist
+
+---
+
+### Category Deletion Policy
+
+Categories are not deleted through the admin API.
+
+To remove a category from the public catalog, set:
+
+```json
+{
+    "is_active": false
+}
+```
+
+Inactive categories may continue to contain products.
+
+Product visibility is independent of category activation status.
+
+
+## 2.13 Admin Product APIs
+
+### Authentication
+
+All admin product endpoints require:
+
+- Django session authentication
+- Authenticated user
+- `is_staff=True`
+- CSRF protection for `POST` and `PATCH` requests
+
+Unauthorized users must not be able to create, update, publish, archive, or otherwise modify products.
+
+## 2.13 Admin Product APIs
+
+### Authentication
+
+All admin product endpoints require:
+
+* Django session authentication
+* An authenticated user
+* `is_staff=True`
+* CSRF protection for `POST` and `PATCH` requests
+
+Unauthorized users must not be able to create, update, publish, archive, or otherwise modify products.
+
+### 2.13.1 List Products
+
+**Endpoint**
+
+`GET /api/v1/catalog/admin/products/`
+
+Returns all products for the admin dashboard, including products with every status:
+
+* `DRAFT`
+* `PUBLISHED`
+* `ARCHIVED`
+
+**Optional Query Parameters**
+
+| Parameter  | Description                                   |
+| ---------- | --------------------------------------------- |
+| `status`   | Filter by `DRAFT`, `PUBLISHED`, or `ARCHIVED` |
+| `category` | Filter by category ID                         |
+| `page`     | Page number                                   |
+
+**Response — 200 OK**
+
+```
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "46cb81d6-dc2d-4534-9847-44e14614466f",
+      "name": "Handmade Crochet Bag",
+      "slug": "handmade-crochet-bag",
+      "description": "Handmade crochet bag.",
+      "category": {
+        "id": 1,
+        "name": "Handmade",
+        "slug": "handmade"
+      },
+      "status": "DRAFT",
+      "created_at": "2026-09-28T10:00:00Z",
+      "updated_at": "2026-09-28T10:00:00Z"
+    }
+  ]
+}
+```
+
+### 2.13.2 Create Product
+
+**Endpoint**
+
+`POST /api/v1/catalog/admin/products/`
+
+**Request Body**
+
+```
+{
+  "name": "Handmade Crochet Bag",
+  "slug": "handmade-crochet-bag",
+  "description": "Handmade crochet bag.",
+  "category_id": 1
+}
+```
+
+**Rules**
+
+* `name` is required and must contain at least 2 characters.
+* `slug` is optional. If omitted or blank, the backend generates it from the product name.
+* `slug` must be unique.
+* `category_id` is required and must reference an existing category.
+* New products are always created with status `DRAFT`.
+* The backend generates the product UUID.
+* The frontend must not generate product IDs.
+* A product cannot be created directly as `PUBLISHED`.
+* A product must satisfy the backend publishing requirements before it can become `PUBLISHED`.
+
+**Response — 201 Created**
+
+Returns the created product using the standard admin product response structure.
+
+### 2.13.3 Get Product
+
+**Endpoint**
+
+`GET /api/v1/catalog/admin/products/{product_id}/`
+
+Returns one product using its backend-generated UUID.
+
+**Response — 200 OK**
+
+```
+{
+  "id": "46cb81d6-dc2d-4534-9847-44e14614466f",
+  "name": "Handmade Crochet Bag",
+  "slug": "handmade-crochet-bag",
+  "description": "Handmade crochet bag.",
+  "category": {
+    "id": 1,
+    "name": "Handmade",
+    "slug": "handmade"
+  },
+  "status": "DRAFT",
+  "created_at": "2026-09-28T10:00:00Z",
+  "updated_at": "2026-09-28T10:00:00Z"
+}
+```
+
+### 2.13.4 Update Product
+
+**Endpoint**
+
+`PATCH /api/v1/catalog/admin/products/{product_id}/`
+
+Allows partial updates to product information.
+
+**Request Body Example**
+
+```
+{
+  "name": "Premium Handmade Crochet Bag",
+  "description": "Updated product description.",
+  "category_id": 1
+}
+```
+
+**Rules**
+
+* The product UUID cannot be changed.
+* `name` must contain at least 2 characters.
+* `slug` must remain unique.
+* `category_id` must reference an existing category.
+* Product status must not be changed through this endpoint.
+* Status changes must use the dedicated status endpoint.
+
+### 2.13.5 Update Product Status
+
+**Endpoint**
+
+`PATCH /api/v1/catalog/admin/products/{product_id}/status/`
+
+**Request Body**
+
+```
+{
+  "status": "PUBLISHED"
+}
+```
+
+**Allowed Status Values**
+
+* `DRAFT`
+* `PUBLISHED`
+* `ARCHIVED`
+
+### Publish Validation
+
+The backend is the source of truth for product publishing.
+
+A product can only be changed to `PUBLISHED` when all required publishing conditions are satisfied.
+
+At minimum:
+
+* The product has a valid category.
+* The product has at least one active variant.
+* The product has at least one active variant with a valid price greater than zero.
+* The product has at least one active product image.
+* The product has exactly one primary active image.
+* The product data passes all backend validation rules.
+
+If validation fails, the API returns **400 Bad Request**.
+
+**Example Error Response**
+
+```
+{
+  "detail": "Product cannot be published.",
+  "errors": [
+    "Product must have at least one active variant.",
+    "Product must have at least one active image."
+  ]
+}
+```
+
+The backend must perform these checks even if the frontend dashboard performs its own validation.
+
+### Status Behaviour
+
+**DRAFT**
+
+* Visible in the admin dashboard.
+* Not visible through the public product listing.
+* Not visible through the public product detail API.
+
+**PUBLISHED**
+
+* Eligible for public catalog visibility.
+* Can be returned by public catalog APIs.
+* Actual purchasability depends on active variant stock.
+
+**ARCHIVED**
+
+* Retained in the database.
+* Not visible through the public product listing.
+* Not visible through the public product detail API.
+* Existing historical references must remain valid.
+
+### Product Visibility
+
+Public storefront APIs must only expose products where `status = PUBLISHED`.
+
+Admin APIs expose products with all statuses.
+
+Category activation does not independently control product visibility.
+
+### Pagination
+
+The admin product listing uses standard pagination.
+
+* Default page size: `20`
+* Maximum page size: `20`
+
+An invalid page returns **HTTP 404**.
+
+**Example Error Response**
+
+```
+{
+  "detail": "Invalid page."
+}
+```
+
+### Stable Product IDs
+
+Product IDs are UUIDs generated by the backend.
+
+Example: `46cb81d6-dc2d-4534-9847-44e14614466f`
+
+The frontend must store and reuse the returned UUID when requesting, editing, or managing a product.
+
+The frontend must never generate product UUIDs.
+
+### Admin Product Response Fields
+
+| Field         | Type        | Description                         |
+| ------------- | ----------- | ----------------------------------- |
+| `id`          | UUID string | Stable backend-generated product ID |
+| `name`        | string      | Product name                        |
+| `slug`        | string      | Unique URL-safe identifier          |
+| `description` | string      | Product description                 |
+| `category`    | object      | Assigned category                   |
+| `status`      | string      | `DRAFT`, `PUBLISHED`, or `ARCHIVED` |
+| `created_at`  | datetime    | Creation timestamp                  |
+| `updated_at`  | datetime    | Last update timestamp               |

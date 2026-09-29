@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from .models import (
+    Category,
     Product,
     ProductImage,
     ProductVariant,
@@ -185,3 +186,92 @@ class PublicProductDetailSerializer(serializers.ModelSerializer):
             is_active=True,
             stock__gt=0,
         ).exists()
+
+
+
+class AdminCategorySerializer(serializers.ModelSerializer):
+    slug = serializers.SlugField(
+        required=False,
+        allow_blank=True,
+        )
+    class Meta:
+        model = Category
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "description",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+        ]
+
+    def validate_name(self, value):
+        value = value.strip()
+
+        if len(value) < 2:
+            raise serializers.ValidationError(
+                "Category name must contain at least 2 characters."
+            )
+
+        return value
+
+
+class AdminProductSerializer(serializers.ModelSerializer):
+    category_id = serializers.PrimaryKeyRelatedField(
+        source="category",
+        queryset=Category.objects.all(),
+        write_only=True,
+    )
+
+    category = serializers.SerializerMethodField(read_only=True)
+
+    slug = serializers.SlugField(
+        required=False,
+        allow_blank=True,
+    )
+
+    class Meta:
+        model = Product
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "description",
+            "category_id",
+            "category",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
+
+    def validate_name(self, value):
+        value = value.strip()
+
+        if len(value) < 2:
+            raise serializers.ValidationError(
+                "Product name must contain at least 2 characters."
+            )
+
+        return value
+
+    def validate_slug(self, value):
+        return value.strip()
+
+    def get_category(self, obj):
+        return {
+            "id": obj.category.id,
+            "name": obj.category.name,
+            "slug": obj.category.slug,
+        }
