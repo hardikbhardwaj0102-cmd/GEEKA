@@ -12,6 +12,7 @@ import {
 
 import {
     createAdminProduct,
+    getAdminCategories,
     getAdminProduct,
     updateAdminProduct,
     updateAdminProductStatus,
@@ -23,9 +24,9 @@ import "../style/AdminProductEditor.css";
 
 
 /*
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | PRODUCT STATUS OPTIONS
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 const PRODUCT_STATUSES = [
@@ -35,45 +36,15 @@ const PRODUCT_STATUSES = [
 ];
 
 
-/*
-|----------------------------------------------------------------------
-| GEEKA CATEGORY OPTIONS
-|
-| IMPORTANT:
-| These IDs must match the integer IDs in your Django database.
-|
-| Frontend label      -> Django category_id
-| Ethnic Wear         -> 1
-| Jewellery           -> 2
-| Creative            -> 3
-|----------------------------------------------------------------------
-*/
-
-const CATEGORY_OPTIONS = [
-    {
-        id: 1,
-        name: "Ethnic Wear",
-    },
-    {
-        id: 2,
-        name: "Jewellery",
-    },
-    {
-        id: 3,
-        name: "Creative",
-    },
-];
-
-
 const IMAGE_LIMIT = 5;
 const IMAGE_MAX_BYTES = 400 * 1024;
 const IMAGE_MAX_DIMENSION = 2000;
 
 
 /*
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | EMPTY PRODUCT
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 function createEmptyProduct() {
@@ -89,9 +60,9 @@ function createEmptyProduct() {
 
 
 /*
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | SLUGIFY
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 function slugify(value) {
@@ -105,9 +76,9 @@ function slugify(value) {
 
 
 /*
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | NORMALIZE PRODUCT
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 function normalizeProduct(data) {
@@ -173,9 +144,9 @@ function normalizeProduct(data) {
 
 
 /*
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | NORMALIZE IMAGES
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 function normalizeImages(data) {
@@ -199,9 +170,9 @@ function normalizeImages(data) {
 
 
 /*
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | NORMALIZE VARIANTS
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 function normalizeVariants(data) {
@@ -225,9 +196,80 @@ function normalizeVariants(data) {
 
 
 /*
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
+| NORMALIZE CATEGORIES
+|
+| Backend response:
+|
+| {
+|     count: 2,
+|     results: [
+|         {
+|             id: 1,
+|             name: "Handmade",
+|             slug: "handmade",
+|             is_active: true
+|         }
+|     ]
+| }
+|--------------------------------------------------------------------------
+*/
+
+function normalizeCategories(data) {
+    const results =
+        Array.isArray(data?.results)
+            ? data.results
+            : Array.isArray(data)
+                ? data
+                : [];
+
+
+    return results
+        .map((category) => {
+
+            const numericId =
+                Number(
+                    category?.id
+                );
+
+
+            if (
+                !Number.isInteger(
+                    numericId
+                ) ||
+                numericId <= 0
+            ) {
+                return null;
+            }
+
+
+            return {
+                id: numericId,
+
+                name:
+                    category?.name ||
+                    `Category ${numericId}`,
+
+                slug:
+                    category?.slug ||
+                    "",
+
+                description:
+                    category?.description ||
+                    "",
+
+                is_active:
+                    category?.is_active !== false,
+            };
+        })
+        .filter(Boolean);
+}
+
+
+/*
+|--------------------------------------------------------------------------
 | IMAGE VALIDATION
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 function validateImageFile(file) {
@@ -264,9 +306,9 @@ function validateImageFile(file) {
 
 
 /*
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | IMAGE DIMENSION CHECK
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 function inspectImageDimensions(file) {
@@ -326,9 +368,9 @@ function inspectImageDimensions(file) {
 
 
 /*
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | API ERROR MESSAGE
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 function getApiErrorMessage(error) {
@@ -387,9 +429,9 @@ function getApiErrorMessage(error) {
 
 
 /*
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | COMPONENT
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 */
 
 export default function AdminProductEditor() {
@@ -412,9 +454,9 @@ export default function AdminProductEditor() {
 
 
     /*
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | STATE
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
 
     const [
@@ -431,6 +473,18 @@ export default function AdminProductEditor() {
     ] = useState(
         "DRAFT"
     );
+
+
+    const [
+        categories,
+        setCategories,
+    ] = useState([]);
+
+
+    const [
+        categoriesLoading,
+        setCategoriesLoading,
+    ] = useState(true);
 
 
     const [
@@ -490,9 +544,96 @@ export default function AdminProductEditor() {
 
 
     /*
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
+    | LOAD CATEGORIES
+    |
+    | Categories are controlled by Django.
+    |
+    | We intentionally do NOT hardcode category IDs in the frontend.
+    |--------------------------------------------------------------------------
+    */
+
+    useEffect(() => {
+
+        let cancelled =
+            false;
+
+
+        async function loadCategories() {
+
+            setCategoriesLoading(
+                true
+            );
+
+
+            try {
+
+                const data =
+                    await getAdminCategories();
+
+
+                if (cancelled) {
+                    return;
+                }
+
+
+                const normalizedCategories =
+                    normalizeCategories(
+                        data
+                    );
+
+
+                setCategories(
+                    normalizedCategories
+                );
+
+            } catch (
+            requestError
+            ) {
+
+                if (!cancelled) {
+
+                    setCategories(
+                        []
+                    );
+
+
+                    setError(
+                        getApiErrorMessage(
+                            requestError
+                        )
+                    );
+
+                }
+
+            } finally {
+
+                if (!cancelled) {
+
+                    setCategoriesLoading(
+                        false
+                    );
+
+                }
+
+            }
+        }
+
+
+        loadCategories();
+
+
+        return () => {
+            cancelled = true;
+        };
+
+    }, []);
+
+
+    /*
+    |--------------------------------------------------------------------------
     | LOAD EXISTING PRODUCT
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
 
     useEffect(() => {
@@ -504,7 +645,11 @@ export default function AdminProductEditor() {
         async function loadProduct() {
 
             if (!isEdit) {
-                setLoading(false);
+
+                setLoading(
+                    false
+                );
+
                 return;
             }
 
@@ -573,7 +718,11 @@ export default function AdminProductEditor() {
             } finally {
 
                 if (!cancelled) {
-                    setLoading(false);
+
+                    setLoading(
+                        false
+                    );
+
                 }
 
             }
@@ -594,9 +743,9 @@ export default function AdminProductEditor() {
 
 
     /*
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | GENERIC FIELD UPDATE
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
 
     function updateField(
@@ -620,9 +769,9 @@ export default function AdminProductEditor() {
 
 
     /*
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | NAME CHANGE
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
 
     function handleNameChange(
@@ -657,20 +806,12 @@ export default function AdminProductEditor() {
 
 
     /*
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | CATEGORY CHANGE
     |
-    | The HTML select gives us a STRING.
-    | We immediately convert it to an INTEGER.
-    |
-    | Example:
-    |
-    | "2" -> 2
-    |
-    | Therefore the request contains:
-    |
-    | category_id: 2
-    |------------------------------------------------------------------
+    | HTML select returns a string.
+    | Convert it to an integer immediately.
+    |--------------------------------------------------------------------------
     */
 
     function handleCategoryChange(
@@ -722,9 +863,9 @@ export default function AdminProductEditor() {
 
 
     /*
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | SAVE PRODUCT
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
 
     async function handleSave(
@@ -740,9 +881,39 @@ export default function AdminProductEditor() {
 
 
         /*
-        |--------------------------------------------------------------
+        |----------------------------------------------------------------------
+        | CATEGORY API MUST BE LOADED
+        |----------------------------------------------------------------------
+        */
+
+        if (
+            categoriesLoading
+        ) {
+
+            setError(
+                "Categories are still loading. Please wait a moment and try again."
+            );
+
+            return;
+        }
+
+
+        if (
+            categories.length === 0
+        ) {
+
+            setError(
+                "No categories are available. Please create or activate a category in the Django admin catalogue first."
+            );
+
+            return;
+        }
+
+
+        /*
+        |----------------------------------------------------------------------
         | CONVERT CATEGORY TO INTEGER
-        |--------------------------------------------------------------
+        |----------------------------------------------------------------------
         */
 
         const categoryId =
@@ -752,13 +923,12 @@ export default function AdminProductEditor() {
 
 
         /*
-        |--------------------------------------------------------------
+        |----------------------------------------------------------------------
         | PRODUCT PAYLOAD
         |
-        | IMPORTANT:
         | status is intentionally NOT included.
         | Django has a separate status endpoint.
-        |--------------------------------------------------------------
+        |----------------------------------------------------------------------
         */
 
         const payload = {
@@ -778,9 +948,9 @@ export default function AdminProductEditor() {
 
 
         /*
-        |--------------------------------------------------------------
+        |----------------------------------------------------------------------
         | VALIDATE NAME
-        |--------------------------------------------------------------
+        |----------------------------------------------------------------------
         */
 
         if (
@@ -809,9 +979,9 @@ export default function AdminProductEditor() {
 
 
         /*
-        |--------------------------------------------------------------
+        |----------------------------------------------------------------------
         | VALIDATE SLUG
-        |--------------------------------------------------------------
+        |----------------------------------------------------------------------
         */
 
         if (
@@ -827,9 +997,9 @@ export default function AdminProductEditor() {
 
 
         /*
-        |--------------------------------------------------------------
-        | VALIDATE CATEGORY
-        |--------------------------------------------------------------
+        |----------------------------------------------------------------------
+        | VALIDATE CATEGORY ID
+        |----------------------------------------------------------------------
         */
 
         if (
@@ -848,23 +1018,27 @@ export default function AdminProductEditor() {
 
 
         /*
-        |--------------------------------------------------------------
-        | VALIDATE CATEGORY EXISTS IN FRONTEND OPTIONS
-        |--------------------------------------------------------------
+        |----------------------------------------------------------------------
+        | VALIDATE CATEGORY AGAINST DJANGO DATA
+        |
+        | We do NOT validate against hardcoded IDs.
+        |
+        | The backend category list is the source of truth.
+        |----------------------------------------------------------------------
         */
 
-        const categoryExists =
-            CATEGORY_OPTIONS.some(
+        const selectedCategory =
+            categories.find(
                 (category) =>
                     category.id ===
                     categoryId
             );
 
 
-        if (!categoryExists) {
+        if (!selectedCategory) {
 
             setError(
-                "Selected category is invalid."
+                "Selected category does not exist in the Django category list."
             );
 
             return;
@@ -872,9 +1046,29 @@ export default function AdminProductEditor() {
 
 
         /*
-        |--------------------------------------------------------------
+        |----------------------------------------------------------------------
+        | NEW PRODUCTS
+        |
+        | Only active categories should be selectable for new products.
+        |----------------------------------------------------------------------
+        */
+
+        if (
+            !selectedCategory.is_active
+        ) {
+
+            setError(
+                "The selected category is inactive. Please choose an active category."
+            );
+
+            return;
+        }
+
+
+        /*
+        |----------------------------------------------------------------------
         | VALIDATE STATUS
-        |--------------------------------------------------------------
+        |----------------------------------------------------------------------
         */
 
         if (
@@ -899,9 +1093,9 @@ export default function AdminProductEditor() {
         try {
 
             /*
-            |----------------------------------------------------------
+            |------------------------------------------------------------------
             | CREATE / UPDATE PRODUCT
-            |----------------------------------------------------------
+            |------------------------------------------------------------------
             */
 
             const response =
@@ -916,9 +1110,9 @@ export default function AdminProductEditor() {
 
 
             /*
-            |----------------------------------------------------------
+            |------------------------------------------------------------------
             | NORMALIZE RESPONSE
-            |----------------------------------------------------------
+            |------------------------------------------------------------------
             */
 
             const savedProduct =
@@ -929,9 +1123,9 @@ export default function AdminProductEditor() {
 
 
             /*
-            |----------------------------------------------------------
+            |------------------------------------------------------------------
             | GET BACKEND PRODUCT UUID
-            |----------------------------------------------------------
+            |------------------------------------------------------------------
             */
 
             const savedId =
@@ -950,12 +1144,12 @@ export default function AdminProductEditor() {
 
 
             /*
-            |----------------------------------------------------------
+            |------------------------------------------------------------------
             | STATUS
             |
-            | Status is updated separately because the API contract
-            | does not allow status through the normal product update.
-            |----------------------------------------------------------
+            | Status is updated separately because the API contract does not
+            | allow status through the normal product update.
+            |------------------------------------------------------------------
             */
 
             const requestedStatus =
@@ -1004,13 +1198,14 @@ export default function AdminProductEditor() {
                         statusProduct?.status ||
                         requestedStatus
                     ).toUpperCase();
+
             }
 
 
             /*
-            |----------------------------------------------------------
+            |------------------------------------------------------------------
             | UPDATE LOCAL STATE
-            |----------------------------------------------------------
+            |------------------------------------------------------------------
             */
 
             const normalizedSavedProduct =
@@ -1044,9 +1239,9 @@ export default function AdminProductEditor() {
 
 
             /*
-            |----------------------------------------------------------
+            |------------------------------------------------------------------
             | SUCCESS
-            |----------------------------------------------------------
+            |------------------------------------------------------------------
             */
 
             if (isEdit) {
@@ -1084,16 +1279,18 @@ export default function AdminProductEditor() {
 
         } finally {
 
-            setSaving(false);
+            setSaving(
+                false
+            );
 
         }
     }
 
 
     /*
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | IMAGE SELECTION
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
 
     async function handleImageSelection(
@@ -1230,9 +1427,9 @@ export default function AdminProductEditor() {
 
 
     /*
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | REMOVE PENDING IMAGE
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
 
     function removePendingImage(
@@ -1273,9 +1470,9 @@ export default function AdminProductEditor() {
 
 
     /*
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | UPLOAD IMAGES
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
 
     async function handleUploadImages() {
@@ -1374,6 +1571,7 @@ export default function AdminProductEditor() {
 
                 currentOrder +=
                     1;
+
             }
 
 
@@ -1426,9 +1624,9 @@ export default function AdminProductEditor() {
 
 
     /*
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     | LOADING SCREEN
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
 
     if (loading) {
@@ -1455,9 +1653,28 @@ export default function AdminProductEditor() {
 
 
     /*
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
+    | CURRENT CATEGORY
+    |
+    | If editing an existing product and its category has been deactivated,
+    | keep it visible so the existing product remains editable.
+    |--------------------------------------------------------------------------
+    */
+
+    const currentCategory =
+        categories.find(
+            (category) =>
+                category.id ===
+                Number(
+                    product.category_id
+                )
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
     | PAGE
-    |------------------------------------------------------------------
+    |--------------------------------------------------------------------------
     */
 
     return (
@@ -1465,9 +1682,9 @@ export default function AdminProductEditor() {
         <div className="admin-page admin-product-editor">
 
 
-            {/* ========================================================
+            {/* ==========================================================
                 TOOLBAR
-            ========================================================= */}
+            ========================================================== */}
 
             <section className="admin-page-toolbar admin-product-toolbar">
 
@@ -1516,14 +1733,19 @@ export default function AdminProductEditor() {
                         type="submit"
                         form="admin-product-form"
                         className="admin-button admin-button-primary"
-                        disabled={saving}
+                        disabled={
+                            saving ||
+                            categoriesLoading
+                        }
                     >
 
                         {saving
                             ? "Saving..."
-                            : isEdit
-                                ? "Save changes"
-                                : "Create product"}
+                            : categoriesLoading
+                                ? "Loading categories..."
+                                : isEdit
+                                    ? "Save changes"
+                                    : "Create product"}
 
                     </button>
 
@@ -1532,9 +1754,9 @@ export default function AdminProductEditor() {
             </section>
 
 
-            {/* ========================================================
+            {/* ==========================================================
                 ERROR
-            ========================================================= */}
+            ========================================================== */}
 
             {error && (
 
@@ -1547,9 +1769,9 @@ export default function AdminProductEditor() {
             )}
 
 
-            {/* ========================================================
+            {/* ==========================================================
                 SUCCESS
-            ========================================================= */}
+            ========================================================== */}
 
             {success && (
 
@@ -1562,9 +1784,9 @@ export default function AdminProductEditor() {
             )}
 
 
-            {/* ========================================================
+            {/* ==========================================================
                 FORM
-            ========================================================= */}
+            ========================================================== */}
 
             <form
                 id="admin-product-form"
@@ -1573,14 +1795,14 @@ export default function AdminProductEditor() {
             >
 
 
-                {/* ====================================================
+                {/* ======================================================
                     MAIN COLUMN
-                ==================================================== */}
+                ====================================================== */}
 
                 <div className="admin-product-main-column">
 
 
-                    {/* =================================================
+                    {/* ==================================================
                         BASIC INFORMATION
                     ================================================== */}
 
@@ -1607,9 +1829,9 @@ export default function AdminProductEditor() {
                         <div className="admin-form admin-product-form">
 
 
-                            {/* =========================================
+                            {/* ==========================================
                                 PRODUCT NAME
-                            ========================================== */}
+                            =========================================== */}
 
                             <label className="admin-field-span-2">
 
@@ -1631,9 +1853,9 @@ export default function AdminProductEditor() {
                             </label>
 
 
-                            {/* =========================================
+                            {/* ==========================================
                                 SLUG
-                            ========================================== */}
+                            =========================================== */}
 
                             <label>
 
@@ -1665,9 +1887,9 @@ export default function AdminProductEditor() {
                             </label>
 
 
-                            {/* =========================================
+                            {/* ==========================================
                                 CATEGORY
-                            ========================================== */}
+                            =========================================== */}
 
                             <label>
 
@@ -1687,53 +1909,87 @@ export default function AdminProductEditor() {
                                         handleCategoryChange
                                     }
                                     required
+                                    disabled={
+                                        categoriesLoading ||
+                                        categories.length ===
+                                        0
+                                    }
                                 >
 
                                     <option value="">
-                                        Select a category
+
+                                        {categoriesLoading
+                                            ? "Loading categories..."
+                                            : categories.length ===
+                                                0
+                                                ? "No categories available"
+                                                : "Select a category"}
+
                                     </option>
 
 
-                                    {CATEGORY_OPTIONS.map(
-                                        (
-                                            category
-                                        ) => (
-
-                                            <option
-                                                key={
-                                                    category.id
-                                                }
-                                                value={
-                                                    String(
-                                                        category.id
+                                    {categories
+                                        .filter(
+                                            (
+                                                category
+                                            ) =>
+                                                category.is_active ||
+                                                (
+                                                    isEdit &&
+                                                    category.id ===
+                                                    Number(
+                                                        product.category_id
                                                     )
-                                                }
-                                            >
-
-                                                {
-                                                    category.name
-                                                }
-
-                                            </option>
-
+                                                )
                                         )
-                                    )}
+                                        .map(
+                                            (
+                                                category
+                                            ) => (
+
+                                                <option
+                                                    key={
+                                                        category.id
+                                                    }
+                                                    value={
+                                                        String(
+                                                            category.id
+                                                        )
+                                                    }
+                                                >
+
+                                                    {
+                                                        category.name
+                                                    }
+
+                                                    {!category.is_active &&
+                                                        " (Inactive)"}
+
+                                                </option>
+
+                                            )
+                                        )}
 
                                 </select>
 
 
                                 <span className="admin-field-help">
 
-                                    Categories are stored as integer IDs. The selected category name is only for display; Django receives <strong>category_id</strong>.
+                                    {categoriesLoading
+                                        ? "Loading categories from Django..."
+                                        : currentCategory &&
+                                            !currentCategory.is_active
+                                            ? "This product currently uses an inactive category. Select an active category before saving."
+                                            : "Categories are loaded directly from Django. The selected category name is for display; Django receives the integer category_id."}
 
                                 </span>
 
                             </label>
 
 
-                            {/* =========================================
+                            {/* ==========================================
                                 STATUS
-                            ========================================== */}
+                            =========================================== */}
 
                             <label>
 
@@ -1788,9 +2044,9 @@ export default function AdminProductEditor() {
                             </label>
 
 
-                            {/* =========================================
+                            {/* ==========================================
                                 DESCRIPTION
-                            ========================================== */}
+                            =========================================== */}
 
                             <label className="admin-field-span-2">
 
@@ -1819,7 +2075,7 @@ export default function AdminProductEditor() {
                     </section>
 
 
-                    {/* =================================================
+                    {/* ==================================================
                         VARIANTS
                     ================================================== */}
 
@@ -1937,14 +2193,14 @@ export default function AdminProductEditor() {
                 </div>
 
 
-                {/* ====================================================
+                {/* ======================================================
                     SIDE COLUMN
-                ==================================================== */}
+                ====================================================== */}
 
                 <aside className="admin-product-side-column">
 
 
-                    {/* =================================================
+                    {/* ==================================================
                         PRODUCT GALLERY
                     ================================================== */}
 
@@ -1983,9 +2239,9 @@ export default function AdminProductEditor() {
                         <div className="admin-image-grid">
 
 
-                            {/* =========================================
+                            {/* ==========================================
                                 SAVED IMAGES
-                            ========================================== */}
+                            =========================================== */}
 
                             {images.map(
                                 (
@@ -2037,9 +2293,9 @@ export default function AdminProductEditor() {
                             )}
 
 
-                            {/* =========================================
+                            {/* ==========================================
                                 PENDING IMAGES
-                            ========================================== */}
+                            =========================================== */}
 
                             {selectedFiles.map(
                                 (
@@ -2086,7 +2342,7 @@ export default function AdminProductEditor() {
                         </div>
 
 
-                        {/* =============================================
+                        {/* ==============================================
                             FILE INPUT
                         ============================================== */}
 
@@ -2104,7 +2360,7 @@ export default function AdminProductEditor() {
                         />
 
 
-                        {/* =============================================
+                        {/* ==============================================
                             IMAGE ACTIONS
                         ============================================== */}
 
@@ -2173,7 +2429,7 @@ export default function AdminProductEditor() {
                     </section>
 
 
-                    {/* =================================================
+                    {/* ==================================================
                         SOURCE OF TRUTH
                     ================================================== */}
 
