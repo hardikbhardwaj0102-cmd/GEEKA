@@ -15,6 +15,7 @@ import "../style/Header.css";
 import geekaLogo from "../assets/logo.png";
 
 import { useCart } from "../hooks/useCart";
+import { isAdminUser } from "../admin/services/adminAccess";
 
 
 /* =========================================================
@@ -269,6 +270,16 @@ export default function Header() {
 
     const isProfile =
         location.pathname === "/profile";
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | ADMIN ACCESS
+    |--------------------------------------------------------------------------
+    */
+
+    const showManageStore =
+        isAdminUser(user);
 
 
     /*
@@ -1155,8 +1166,8 @@ export default function Header() {
                 <Link
                     to="/shop"
                     className={`navigation-shop ${isShop
-                            ? "navigation-active"
-                            : ""
+                        ? "navigation-active"
+                        : ""
                         }`}
                 >
 
@@ -1194,6 +1205,22 @@ export default function Header() {
                     Contact
                 </Link>
 
+
+                {showManageStore && (
+
+                    <Link
+                        to="/admin"
+                        className={
+                            location.pathname.startsWith("/admin")
+                                ? "navigation-active navigation-manage-store"
+                                : "navigation-manage-store"
+                        }
+                    >
+                        Manage Store
+                    </Link>
+
+                )}
+
             </nav>
 
 
@@ -1210,8 +1237,8 @@ export default function Header() {
 
                 <div
                     className={`header-search-wrapper ${searchOpen
-                            ? "search-expanded"
-                            : ""
+                        ? "search-expanded"
+                        : ""
                         } ${isShop
                             ? "shop-header-search"
                             : ""
@@ -1312,8 +1339,8 @@ export default function Header() {
                 <button
                     type="button"
                     className={`header-wishlist ${isWishlist
-                            ? "header-wishlist-active"
-                            : ""
+                        ? "header-wishlist-active"
+                        : ""
                         }`}
                     onClick={
                         goToWishlist
@@ -1342,8 +1369,8 @@ export default function Header() {
                 <button
                     type="button"
                     className={`header-account-link ${user
-                            ? "header-account-logged-in"
-                            : ""
+                        ? "header-account-logged-in"
+                        : ""
                         } ${isProfile
                             ? "header-account-active"
                             : ""
@@ -1395,8 +1422,8 @@ export default function Header() {
                 <Link
                     to="/cart"
                     className={`header-bag ${isCart
-                            ? "header-bag-active"
-                            : ""
+                        ? "header-bag-active"
+                        : ""
                         }`}
                     aria-label="Shopping bag"
                 >
