@@ -2509,7 +2509,7 @@ Returns all variants belonging to a specific product.
 * Returns variants ordered by creation time.
 * Attribute information is returned as nested attribute/value objects.
 * `product_id` is the UUID of the parent product.
-* `stock` is returned for dashboard display but is not modified through the general variant PATCH endpoint.
+* `stock` is returned and can be updated through the general variant PATCH endpoint.
 * `currency` is controlled by the backend and currently uses `INR`.
 
 ---
@@ -2664,8 +2664,8 @@ Price must be greater than zero.
 
 * Stock cannot be negative.
 * Initial stock may be supplied when creating a variant.
-* Stock is managed separately from general variant updates.
-* Stock management must not be performed through the variant PATCH endpoint.
+* Stock may be updated later through the general variant PATCH endpoint.
+* Stock value `0` is valid and represents zero available units.
 
 ### Low-Stock Threshold Validation
 
@@ -2761,6 +2761,7 @@ The following fields may be updated:
 * `sku`
 * `price`
 * `attribute_value_ids`
+* `stock`
 * `low_stock_threshold`
 
 ### Example Request
@@ -2770,6 +2771,7 @@ The following fields may be updated:
     "sku": "HCB-BLU-UPDATED-001",
     "price": "949.00",
     "attribute_value_ids": [1, 2],
+    "stock": 15,
     "low_stock_threshold": 5
 }
 ```
@@ -2778,29 +2780,12 @@ The following fields may be updated:
 
 Returns the complete updated variant object using the standard variant response structure.
 
-### Important Stock Rule
+### Stock Validation
 
-`stock` is read-only when updating an existing variant.
-
-If `stock` is included in a PATCH request, it is ignored and the stored stock value remains unchanged.
-
-Example:
-
-```
-{
-    "stock": 99
-}
-```
-
-The request may return:
-
-```
-HTTP 200 OK
-```
-
-but the existing stock value remains unchanged.
-
-Inventory changes must therefore be handled through the dedicated inventory functionality rather than the general variant update endpoint.
+* `stock` may be included in PATCH requests.
+* Stock cannot be negative.
+* Stock value `0` is valid.
+* The backend remains the source of truth for the stored stock value.
 
 ### Important Currency Rule
 
@@ -2816,12 +2801,13 @@ The current backend currency is:
 
 ### Validation
 
-The same variant validation rules used during creation also apply when changing SKU, price, or attribute values.
+The same variant validation rules used during creation also apply when changing SKU, price, stock, or attribute values.
 
 This includes:
 
 * SKU uniqueness
 * Price greater than zero
+* Non-negative stock
 * One value per attribute
 * No duplicate attribute combinations
 * No mixing of default/no-option and attribute-based variants
@@ -2887,9 +2873,407 @@ The frontend admin dashboard should:
 2. Use the returned attribute value IDs when creating or updating variants.
 3. Fetch product variants using the product-specific variants endpoint.
 4. Use the variant detail endpoint when an individual variant needs to be loaded.
-5. Treat `stock` as read-only in the general variant editing form.
-6. Use the dedicated inventory API when inventory management is implemented.
-7. Treat `currency` as backend-controlled.
-8. Use `is_active` to determine whether a variant is active.
-9. Never generate or assume attribute IDs, attribute value IDs, product IDs, or variant IDs.
-10. Use the IDs returned by the backend as the source of truth.
+5. Use `stock` as an editable field in the general variant editing form.
+6. Treat `currency` as backend-controlled.
+7. Use `is_active` to determine whether a variant is active.
+8. Never generate or assume attribute IDs, attribute value IDs, product IDs, or variant IDs.
+9. Use the IDs returned by the backend as the source of truth.
+10. Remember that the backend controls the final stored price and stock values.
+
+
+### Update Product Variant
+
+**Endpoint:** `PATCH /api/v1/catalog/admin/variants/{variant_id}/`
+
+**Authentication:** Required
+**Permission:** Admin/staff only
+**Content-Type:** `application/json`
+
+Updates editable fields of an existing product variant.
+
+#### Request Body
+
+```
+{
+    "sku": "HCB-BLU-001",
+    "price": "899.00",
+    "stock": 25,
+    "low_stock_threshold": 5,
+    "attribute_value_ids": [1, 2]
+}
+```
+
+All fields are optional. Send only the fields that need to be changed.
+
+#### Editable Fields
+
+| Field                 | Type           | Required | Rules                                                                                                 |
+| --------------------- | -------------- | -------: | ----------------------------------------------------------------------------------------------------- |
+| `sku`                 | string         |       No | Must be globally unique                                                                               |
+| `price`               | decimal string |       No | Must be greater than `0`                                                                              |
+| `stock`               | integer        |       No | Must be greater than or equal to `0`                                                                  |
+| `low_stock_threshold` | integer        |       No | Must be greater than or equal to `0`; `0` disables the low-stock warning                              |
+| `attribute_value_ids` | array of IDs   |       No | Cannot contain multiple values from the same attribute; combination must be unique within the product |
+
+#### Inventory Behavior
+
+* `stock` represents the current inventory quantity.
+* Admin/staff can directly update the current stock through this PATCH endpoint.
+* `stock: 0` is valid and represents an out-of-stock variant.
+* Negative stock values are rejected with `400 Bad Request`.
+* Updating stock does not automatically change the variant's `is_active` value.
+* Stock availability is determined from the variant's current stock.
+* Low-stock threshold is an administrative warning threshold and does not prevent purchasing.
+
+#### Example — Update Stock
+
+```
+{
+    "stock": 25
+}
+```
+
+#### Example — Set Variant Out of Stock
+
+```
+{
+    "stock": 0
+}
+```
+
+#### Successful Response
+
+**Status:** `200 OK`
+
+```
+{
+    "id": "a2d5a87b-a314-4f66-9ffb-648023da82e3",
+    "product_id": "cca13e0a-baac-4ce3-bbb2-e0eb59d20fd6",
+    "sku": "VAR-DUPLICATE-TEST-001",
+    "attributes": [],
+    "price": "899.00",
+    "currency": "INR",
+    "stock": 25,
+    "low_stock_threshold": 2,
+    "is_active": true,
+    "created_at": "2026-09-29T17:45:00.312336Z",
+    "updated_at": "2026-09-29T17:46:22.824512Z"
+}
+```
+
+#### Validation Example — Negative Stock
+
+Request:
+
+```
+{
+    "stock": -1
+}
+```
+
+Response:
+
+```
+{
+    "stock": [
+        "Ensure this value is greater than or equal to 0."
+    ]
+}
+```
+
+**Status:** `400 Bad Request`
+
+---
+
+## 2.15 Admin Product Image APIs
+
+These APIs are used by the authenticated GEEKA admin/staff dashboard to upload, view, update, and delete product images.
+
+### Authentication & Permissions
+
+* Authentication: Required
+* Authentication method: Django session authentication
+* Permission: Admin/staff user (`IsAdminUser`)
+* CSRF: Required for `POST`, `PATCH`, and `DELETE` requests
+* Upload Content-Type: `multipart/form-data`
+* Update Content-Type: `application/json`
+
+### Image Rules
+
+* Maximum file size: `400 KB` (`409,600` bytes)
+* Allowed formats: JPG/JPEG, PNG, WebP
+* Maximum dimensions: `2000 × 2000` pixels
+* Maximum images per product: `5`
+* Images are stored in the private Supabase Storage bucket `product-images`.
+* The database stores the Supabase storage path, not a public browser URL.
+* Public/admin responses provide a temporary signed URL through `image_url`.
+* Product images are product-level images, not variant-level images.
+* Only one image can be primary for a product.
+* `display_order` controls image ordering.
+* Inactive images are not intended for public catalog display.
+
+---
+
+### 2.15.1 List Product Images
+
+Returns all images belonging to a specific product.
+
+### Request
+
+* **Method:** `GET`
+* **Endpoint:** `/api/v1/catalog/admin/products/{product_id}/images/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Not required
+* **Request Body:** None
+
+### Success Response — `200 OK`
+
+```
+[
+    {
+        "id": "3fd01ff5-19f3-4535-a88e-9c7e1056d5c6",
+        "product_id": "8b3b57ae-684e-45f5-b3e9-255ab9b12f2e",
+        "image_url": "https://signed-url-example",
+        "display_order": 0,
+        "is_primary": true,
+        "is_active": true,
+        "created_at": "2026-09-28T00:00:00Z",
+        "updated_at": "2026-09-28T00:00:00Z"
+    }
+]
+```
+
+### Behavior
+
+* Returns images belonging only to the requested product.
+* Images are ordered by `display_order`, then creation time.
+* `image_url` is a temporary signed URL generated by the backend.
+* The frontend must not construct Supabase Storage URLs itself.
+* The image ID is a UUID and is used for later image-specific updates or deletion.
+
+---
+
+### 2.15.2 Upload Product Image
+
+Uploads a new image for a specific product.
+
+### Request
+
+* **Method:** `POST`
+* **Endpoint:** `/api/v1/catalog/admin/products/{product_id}/images/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Required
+* **Content-Type:** `multipart/form-data`
+
+### Form Fields
+
+| Field           | Required | Description                                                                               |
+| --------------- | -------- | ----------------------------------------------------------------------------------------- |
+| `image_file`    | Yes      | JPG/JPEG, PNG, or WebP image                                                              |
+| `display_order` | No       | Non-negative display order; defaults to `0`                                               |
+| `is_primary`    | No       | Whether the uploaded image should become the product's primary image; defaults to `false` |
+
+### Success Response — `201 Created`
+
+Returns the created image using the admin image response structure.
+
+```
+{
+    "id": "3fd01ff5-19f3-4535-a88e-9c7e1056d5c6",
+    "product_id": "8b3b57ae-684e-45f5-b3e9-255ab9b12f2e",
+    "image_url": "https://signed-url-example",
+    "display_order": 0,
+    "is_primary": true,
+    "is_active": true,
+    "created_at": "2026-09-28T00:00:00Z",
+    "updated_at": "2026-09-28T00:00:00Z"
+}
+```
+
+### Validation
+
+The upload is rejected if:
+
+* File size exceeds `400 KB`.
+* The file is not a valid image.
+* The image is corrupted.
+* The image format is not JPG/JPEG, PNG, or WebP.
+* Width exceeds `2000` pixels.
+* Height exceeds `2000` pixels.
+* The product already has `5` images.
+* The filename extension is unsupported.
+
+### Primary Image Behavior
+
+If `is_primary` is set to `true`:
+
+* Any existing primary image for the same product is changed to `is_primary: false`.
+* The newly uploaded image becomes the primary image.
+
+---
+
+### 2.15.3 Update Product Image
+
+Updates metadata for an existing product image.
+
+### Request
+
+* **Method:** `PATCH`
+* **Endpoint:** `/api/v1/catalog/admin/images/{image_id}/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Required
+* **Content-Type:** `application/json`
+
+### Editable Fields
+
+* `display_order`
+* `is_primary`
+* `is_active`
+
+### Example Request
+
+```
+{
+    "display_order": 2,
+    "is_primary": true,
+    "is_active": true
+}
+```
+
+### Success Response — `200 OK`
+
+Returns the complete updated image object.
+
+### Validation
+
+`display_order` cannot be negative.
+
+An inactive image cannot be marked as primary.
+
+Example invalid request:
+
+```
+{
+    "is_primary": true,
+    "is_active": false
+}
+```
+
+Response:
+
+```
+{
+    "is_primary": [
+        "An inactive image cannot be the primary image."
+    ]
+}
+```
+
+### Primary Image Behavior
+
+When an image is changed to `is_primary: true`:
+
+* Any existing primary image belonging to the same product is changed to `is_primary: false`.
+* The updated image becomes the product's primary image.
+
+---
+
+### 2.15.4 Delete Product Image
+
+Permanently deletes a product image.
+
+### Request
+
+* **Method:** `DELETE`
+* **Endpoint:** `/api/v1/catalog/admin/images/{image_id}/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Required
+* **Request Body:** None
+
+### Success Response — `204 No Content`
+
+No response body is returned.
+
+### Behavior
+
+* The specified `ProductImage` database record is deleted.
+* A Django `post_delete` signal automatically removes the corresponding image file from Supabase Storage.
+* The frontend only needs to provide the image ID.
+* The product ID is not required for this operation.
+
+### Not Found — `404 Not Found`
+
+Returned when the specified image does not exist.
+
+---
+
+### 2.15.5 Product Image Storage & Cleanup
+
+Product images use the private Supabase Storage bucket:
+
+```
+product-images/
+```
+
+Storage paths follow the structure:
+
+```
+products/{product_id}/{generated_filename}
+```
+
+The generated filename uses a UUID-based filename to avoid collisions.
+
+The backend stores the resulting storage path in the `ProductImage.image` field.
+
+The frontend must never assume that the database value is directly browser-accessible.
+
+The backend generates signed URLs when returning image data.
+
+### Automatic Cleanup
+
+When a `ProductImage` is deleted:
+
+```
+ProductImage deleted
+        ↓
+Django post_delete signal
+        ↓
+Supabase Storage file deleted
+```
+
+When a Product is deleted:
+
+```
+Product deleted
+        ↓
+Related ProductImage records deleted
+        ↓
+post_delete signal runs for each image
+        ↓
+Corresponding Supabase Storage files deleted
+```
+
+This prevents orphaned product image files from remaining in Supabase Storage.
+
+---
+
+### 2.15.6 Frontend Integration Notes
+
+The frontend admin dashboard should:
+
+1. Use the product-specific image endpoint to list a product's images.
+2. Upload images using `multipart/form-data`.
+3. Display the returned signed `image_url`.
+4. Use `id` from the backend response for image-specific PATCH and DELETE operations.
+5. Never construct Supabase Storage URLs directly.
+6. Respect the maximum of five images per product.
+7. Respect the `400 KB` file-size limit before upload where convenient, while treating backend validation as authoritative.
+8. Use `display_order` to control gallery ordering.
+9. Use `is_primary` to identify the primary product image.
+10. Use `is_active` to determine whether an image is active.
+11. Do not store Supabase credentials or storage secrets in the frontend.
+12. Do not assume image URLs are permanent; signed URLs are temporary and are generated by the backend.
