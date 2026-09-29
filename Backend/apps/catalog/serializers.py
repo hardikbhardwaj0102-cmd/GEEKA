@@ -128,10 +128,7 @@ class PublicProductListSerializer(serializers.ModelSerializer):
 
 class PublicProductDetailSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
-    images = PublicProductImageSerializer(
-        many=True,
-        read_only=True,
-    )
+    images = serializers.SerializerMethodField()
     variants = serializers.SerializerMethodField()
     is_purchasable = serializers.SerializerMethodField()
 
@@ -154,6 +151,19 @@ class PublicProductDetailSerializer(serializers.ModelSerializer):
             "name": obj.category.name,
             "slug": obj.category.slug,
         }
+
+    def get_images(self, obj):
+        images = (
+            obj.images
+            .filter(is_active=True)
+            .order_by("display_order", "created_at")
+        )
+
+        return PublicProductImageSerializer(
+            images,
+            many=True,
+            context=self.context,
+        ).data
 
     def get_variants(self, obj):
         variants = (

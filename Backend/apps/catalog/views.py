@@ -14,6 +14,7 @@ from .serializers import (
     PublicProductDetailSerializer,
 )
 from .supabase_storage import create_product_image_signed_url
+from .pagination import ProductPagination
 
 
 class AdminProductImageUploadView(APIView):
@@ -71,13 +72,32 @@ class PublicProductListView(APIView):
             .order_by("-created_at")
         )
 
-        serializer = PublicProductListSerializer(
+        category_slug = request.query_params.get("category")
+
+        if category_slug:
+            products = products.filter(
+                category__slug=category_slug,
+                category__is_active=True,
+            )
+
+        paginator = ProductPagination()
+
+        page = paginator.paginate_queryset(
             products,
+            request,
+            view=self,
+        )
+
+        serializer = PublicProductListSerializer(
+            page,
             many=True,
             context={"request": request},
         )
 
-        return Response(serializer.data)
+        return paginator.get_paginated_response(
+            serializer.data
+        )
+
 
 
 class PublicProductDetailView(APIView):
