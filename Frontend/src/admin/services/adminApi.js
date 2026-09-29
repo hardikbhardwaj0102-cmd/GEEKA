@@ -4,12 +4,14 @@ import { API_URL, getCsrfToken } from "./adminAuthService";
 /* =========================================================
    GEEKA ADMIN API SERVICE
 
-   Product CRUD + product image upload are connected because
-   those endpoints are finalized in the backend contract.
+   Product + Category APIs are connected because their
+   endpoints and request/response structures are now
+   finalized in the backend contract.
 
-   The remaining admin resources are intentionally left
-   unconfigured until their backend endpoints/schemas are
-   finalized.
+   Product image upload is also finalized and connected.
+
+   Variant, inventory and the remaining image-management
+   mutations stay unconfigured until their APIs are finalized.
 ========================================================= */
 
 
@@ -17,8 +19,9 @@ const ENDPOINTS = {
     products:
         "/api/v1/catalog/admin/products/",
 
-    // These remain empty until your friend finalizes them.
-    categories: "",
+    categories:
+        "/api/v1/catalog/admin/categories/",
+
     inventory: "",
     orders: "",
     customers: "",
@@ -45,8 +48,8 @@ function resolveEndpoint(endpoint) {
     }
 
     return `${API_URL}${endpoint.startsWith("/")
-            ? ""
-            : "/"
+        ? ""
+        : "/"
         }${endpoint}`;
 }
 
@@ -103,11 +106,45 @@ async function parseResponse(
             null;
 
 
+        /*
+         * Backend may return:
+         *
+         * {
+         *   "errors": [
+         *       "Message 1",
+         *       "Message 2"
+         *   ]
+         * }
+         *
+         * OR:
+         *
+         * {
+         *   "errors": {
+         *       "field": [
+         *           "Message"
+         *       ]
+         *   }
+         * }
+         */
+
         if (
+            Array.isArray(
+                data?.errors
+            )
+        ) {
+
+            validationMessage =
+                data.errors
+                    .filter(Boolean)
+                    .join(" ");
+
+        } else if (
             data?.errors &&
             typeof data.errors ===
             "object"
         ) {
+
+            const messages = [];
 
             for (
                 const value of
@@ -122,35 +159,93 @@ async function parseResponse(
                     )
                 ) {
 
-                    validationMessage =
-                        value.find(
+                    messages.push(
+                        ...value.filter(
                             Boolean
-                        );
+                        )
+                    );
 
                 } else if (
                     value
                 ) {
 
-                    validationMessage =
-                        value;
-                }
-
-
-                if (
-                    validationMessage
-                ) {
-                    break;
+                    messages.push(
+                        value
+                    );
                 }
             }
+
+            validationMessage =
+                messages.length > 0
+                    ? messages.join(" ")
+                    : null;
+        }
+
+
+        const messageParts = [];
+
+
+        if (
+            data?.detail
+        ) {
+
+            messageParts.push(
+                data.detail
+            );
+        }
+
+
+        if (
+            Array.isArray(
+                data?.errors
+            )
+        ) {
+
+            messageParts.push(
+                ...data.errors.filter(
+                    Boolean
+                )
+            );
+        }
+
+
+        if (
+            data?.error
+        ) {
+
+            messageParts.push(
+                data.error
+            );
+        }
+
+
+        if (
+            data?.message
+        ) {
+
+            messageParts.push(
+                data.message
+            );
+        }
+
+
+        if (
+            validationMessage &&
+            !messageParts.includes(
+                validationMessage
+            )
+        ) {
+
+            messageParts.push(
+                validationMessage
+            );
         }
 
 
         const message =
-            data?.detail ||
-            data?.error ||
-            data?.message ||
-            validationMessage ||
-            `Request failed with status ${response.status}.`;
+            messageParts.length > 0
+                ? messageParts.join(" ")
+                : `Request failed with status ${response.status}.`;
 
 
         const error =
@@ -222,7 +317,9 @@ export async function adminRequest({
 
     /*
      * Do NOT set Content-Type for FormData.
-     * The browser must add the multipart boundary itself.
+     *
+     * The browser must generate the multipart
+     * boundary automatically.
      */
 
     if (!isFormData) {
@@ -241,6 +338,13 @@ export async function adminRequest({
         "DELETE",
     ];
 
+
+    /*
+     * Django CSRF
+     *
+     * Every state-changing admin request gets
+     * the current CSRF token.
+     */
 
     if (
         stateChangingMethods.includes(
@@ -261,6 +365,10 @@ export async function adminRequest({
         }
     }
 
+
+    /*
+     * JSON body
+     */
 
     if (
         !isFormData &&
@@ -565,19 +673,111 @@ export async function deleteAdminResource(
 
    Finalized endpoints:
 
-   GET   /api/v1/catalog/admin/products/
-   GET   /api/v1/catalog/admin/products/<id>/
-   POST  /api/v1/catalog/admin/products/
-   PATCH /api/v1/catalog/admin/products/<id>/
+   GET
+   /api/v1/catalog/admin/products/
+
+   GET
+   /api/v1/catalog/admin/products/<id>/
+
+   POST
+   /api/v1/catalog/admin/products/
+
+   PATCH
+   /api/v1/catalog/admin/products/<id>/
 ========================================================= */
 
-export async function getAdminProducts() {
+export async function getAdminProducts(
+    options = {}
+) {
 
-    return getAdminCollection(
-        "products"
-    );
+    const {
+        status,
+        category,
+        page,
+    } = options;
+
+
+    const params =
+        new URLSearchParams();
+
+
+    /*
+     * Optional status filter
+     *
+     * DRAFT
+     * PUBLISHED
+     * ARCHIVED
+     */
+
+    if (
+        status
+    ) {
+
+        params.set(
+            "status",
+            status
+        );
+    }
+
+
+    /*
+     * Optional category ID filter
+     *
+     * Category IDs are integers.
+     */
+
+    if (
+        category !== undefined &&
+        category !== null &&
+        String(category).trim() !== ""
+    ) {
+
+        params.set(
+            "category",
+            String(category)
+        );
+    }
+
+
+    /*
+     * Optional page
+     */
+
+    if (
+        page !== undefined &&
+        page !== null &&
+        String(page).trim() !== ""
+    ) {
+
+        params.set(
+            "page",
+            String(page)
+        );
+    }
+
+
+    const endpoint =
+        getEndpoint(
+            "products"
+        );
+
+
+    return adminRequest({
+
+        endpoint:
+            params.toString()
+                ? `${endpoint}?${params.toString()}`
+                : endpoint,
+
+        method:
+            "GET",
+    });
 }
 
+
+/* =========================================================
+   GET SINGLE PRODUCT
+========================================================= */
 
 export async function getAdminProduct(
     productId
@@ -590,6 +790,10 @@ export async function getAdminProduct(
 }
 
 
+/* =========================================================
+   CREATE PRODUCT
+========================================================= */
+
 export async function createAdminProduct(
     payload
 ) {
@@ -600,6 +804,10 @@ export async function createAdminProduct(
     );
 }
 
+
+/* =========================================================
+   UPDATE PRODUCT
+========================================================= */
 
 export async function updateAdminProduct(
     productId,
@@ -615,10 +823,98 @@ export async function updateAdminProduct(
 
 
 /* =========================================================
+   CATEGORIES — FINALIZED
+
+   GET
+   /api/v1/catalog/admin/categories/
+
+   GET
+   /api/v1/catalog/admin/categories/<id>/
+
+   POST
+   /api/v1/catalog/admin/categories/
+
+   PATCH
+   /api/v1/catalog/admin/categories/<id>/
+========================================================= */
+
+
+/* =========================================================
+   GET ALL CATEGORIES
+========================================================= */
+
+export async function getAdminCategories() {
+
+    return getAdminCollection(
+        "categories"
+    );
+}
+
+
+/* =========================================================
+   GET SINGLE CATEGORY
+========================================================= */
+
+export async function getAdminCategory(
+    categoryId
+) {
+
+    return getAdminResource(
+        "categories",
+        categoryId
+    );
+}
+
+
+/* =========================================================
+   CREATE CATEGORY
+========================================================= */
+
+export async function createAdminCategory(
+    payload
+) {
+
+    return createAdminResource(
+        "categories",
+        payload
+    );
+}
+
+
+/* =========================================================
+   UPDATE CATEGORY
+========================================================= */
+
+export async function updateAdminCategory(
+    categoryId,
+    payload
+) {
+
+    return updateAdminResource(
+        "categories",
+        categoryId,
+        payload
+    );
+}
+
+
+/* =========================================================
    PRODUCT STATUS
 
    PATCH
    /api/v1/catalog/admin/products/<id>/status/
+
+   Body:
+
+   {
+       "status": "PUBLISHED"
+   }
+
+   Allowed:
+
+   DRAFT
+   PUBLISHED
+   ARCHIVED
 ========================================================= */
 
 export async function updateAdminProductStatus(
@@ -671,6 +967,14 @@ export async function updateAdminProductStatus(
 
    POST
    /api/v1/catalog/admin/products/<id>/images/
+
+   multipart/form-data
+
+   Fields:
+
+   image_file
+   display_order
+   is_primary
 ========================================================= */
 
 export async function uploadProductImage({

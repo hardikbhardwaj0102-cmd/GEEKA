@@ -12,8 +12,10 @@ import {
 
 import {
     createAdminProduct,
+    getAdminCategories,
     getAdminProduct,
     updateAdminProduct,
+    updateAdminProductStatus,
     uploadProductImage,
 } from "../services/adminApi";
 
@@ -21,27 +23,47 @@ import "../style/AdminPages.css";
 import "../style/AdminProductEditor.css";
 
 
+/*
+|--------------------------------------------------------------------------
+| PRODUCT STATUS OPTIONS
+|--------------------------------------------------------------------------
+*/
+
 const PRODUCT_STATUSES = [
     "DRAFT",
     "PUBLISHED",
     "ARCHIVED",
 ];
 
+
 const IMAGE_LIMIT = 5;
 const IMAGE_MAX_BYTES = 400 * 1024;
 const IMAGE_MAX_DIMENSION = 2000;
 
 
+/*
+|--------------------------------------------------------------------------
+| EMPTY PRODUCT
+|--------------------------------------------------------------------------
+*/
+
 function createEmptyProduct() {
     return {
+        id: "",
         name: "",
         slug: "",
         description: "",
-        category: "",
+        category_id: "",
         status: "DRAFT",
     };
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| SLUGIFY
+|--------------------------------------------------------------------------
+*/
 
 function slugify(value) {
     return value
@@ -53,39 +75,67 @@ function slugify(value) {
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| NORMALIZE PRODUCT
+|--------------------------------------------------------------------------
+*/
+
 function normalizeProduct(data) {
     const product =
         data?.product ||
         data ||
         {};
 
-    let category =
-        product?.category ??
+
+    let categoryId =
         product?.category_id ??
+        product?.category?.id ??
         "";
 
+
     if (
-        category &&
-        typeof category === "object"
+        categoryId !== "" &&
+        categoryId !== null &&
+        categoryId !== undefined
     ) {
-        category =
-            category.id ||
-            category.slug ||
-            category.name ||
-            "";
+        const numericCategoryId =
+            Number(categoryId);
+
+
+        categoryId =
+            Number.isInteger(
+                numericCategoryId
+            ) &&
+                numericCategoryId > 0
+                ? numericCategoryId
+                : "";
+    } else {
+        categoryId = "";
     }
 
+
     return {
+        id:
+            product?.id ||
+            product?.uuid ||
+            "",
+
         name:
             product?.name ??
             "",
+
         slug:
             product?.slug ??
             "",
+
         description:
             product?.description ??
             "",
-        category,
+
+        category_id:
+            categoryId,
+
         status:
             product?.status ??
             "DRAFT",
@@ -93,21 +143,37 @@ function normalizeProduct(data) {
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| NORMALIZE IMAGES
+|--------------------------------------------------------------------------
+*/
+
 function normalizeImages(data) {
     const product =
         data?.product ||
         data ||
         {};
 
+
     if (
-        Array.isArray(product?.images)
+        Array.isArray(
+            product?.images
+        )
     ) {
         return product.images;
     }
 
+
     return [];
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| NORMALIZE VARIANTS
+|--------------------------------------------------------------------------
+*/
 
 function normalizeVariants(data) {
     const product =
@@ -115,15 +181,96 @@ function normalizeVariants(data) {
         data ||
         {};
 
+
     if (
-        Array.isArray(product?.variants)
+        Array.isArray(
+            product?.variants
+        )
     ) {
         return product.variants;
     }
 
+
     return [];
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| NORMALIZE CATEGORIES
+|
+| Backend response:
+|
+| {
+|     count: 2,
+|     results: [
+|         {
+|             id: 1,
+|             name: "Handmade",
+|             slug: "handmade",
+|             is_active: true
+|         }
+|     ]
+| }
+|--------------------------------------------------------------------------
+*/
+
+function normalizeCategories(data) {
+    const results =
+        Array.isArray(data?.results)
+            ? data.results
+            : Array.isArray(data)
+                ? data
+                : [];
+
+
+    return results
+        .map((category) => {
+
+            const numericId =
+                Number(
+                    category?.id
+                );
+
+
+            if (
+                !Number.isInteger(
+                    numericId
+                ) ||
+                numericId <= 0
+            ) {
+                return null;
+            }
+
+
+            return {
+                id: numericId,
+
+                name:
+                    category?.name ||
+                    `Category ${numericId}`,
+
+                slug:
+                    category?.slug ||
+                    "",
+
+                description:
+                    category?.description ||
+                    "",
+
+                is_active:
+                    category?.is_active !== false,
+            };
+        })
+        .filter(Boolean);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| IMAGE VALIDATION
+|--------------------------------------------------------------------------
+*/
 
 function validateImageFile(file) {
     const allowedTypes = [
@@ -132,236 +279,825 @@ function validateImageFile(file) {
         "image/webp",
     ];
 
-    if (!allowedTypes.includes(file.type)) {
-        return "Use JPG, JPEG, PNG or WebP images.";
+
+    if (
+        !allowedTypes.includes(
+            file.type
+        )
+    ) {
+        return (
+            "Use JPG, JPEG, PNG or WebP images."
+        );
     }
 
-    if (file.size > IMAGE_MAX_BYTES) {
-        return "Image size must be 400 KB or less.";
+
+    if (
+        file.size >
+        IMAGE_MAX_BYTES
+    ) {
+        return (
+            "Image size must be 400 KB or less."
+        );
     }
+
 
     return "";
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| IMAGE DIMENSION CHECK
+|--------------------------------------------------------------------------
+*/
+
 function inspectImageDimensions(file) {
-    return new Promise((resolve) => {
-        const objectUrl = URL.createObjectURL(file);
-        const image = new Image();
+    return new Promise(
+        (resolve) => {
+            const objectUrl =
+                URL.createObjectURL(
+                    file
+                );
 
-        image.onload = () => {
-            const valid =
-                image.width <= IMAGE_MAX_DIMENSION &&
-                image.height <= IMAGE_MAX_DIMENSION;
+            const image =
+                new Image();
 
-            URL.revokeObjectURL(objectUrl);
 
-            resolve({
-                valid,
-                width: image.width,
-                height: image.height,
-            });
-        };
+            image.onload = () => {
+                const valid =
+                    image.width <=
+                    IMAGE_MAX_DIMENSION &&
+                    image.height <=
+                    IMAGE_MAX_DIMENSION;
 
-        image.onerror = () => {
-            URL.revokeObjectURL(objectUrl);
 
-            resolve({
-                valid: false,
-                width: 0,
-                height: 0,
-            });
-        };
+                URL.revokeObjectURL(
+                    objectUrl
+                );
 
-        image.src = objectUrl;
-    });
+
+                resolve({
+                    valid,
+                    width:
+                        image.width,
+                    height:
+                        image.height,
+                });
+            };
+
+
+            image.onerror = () => {
+                URL.revokeObjectURL(
+                    objectUrl
+                );
+
+
+                resolve({
+                    valid: false,
+                    width: 0,
+                    height: 0,
+                });
+            };
+
+
+            image.src =
+                objectUrl;
+        }
+    );
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| API ERROR MESSAGE
+|--------------------------------------------------------------------------
+*/
 
 function getApiErrorMessage(error) {
     if (!error) {
-        return "Something went wrong.";
+        return (
+            "Something went wrong."
+        );
     }
 
-    if (error.status === 401) {
-        return "Your Django session is no longer authenticated. Please log in again.";
+
+    if (
+        error.status === 401
+    ) {
+        return (
+            "Your Django session is no longer authenticated. Please log in again."
+        );
     }
 
-    if (error.status === 403) {
-        return "Django denied this admin operation. The logged-in account must have staff/admin permission.";
+
+    if (
+        error.status === 403
+    ) {
+        return (
+            "Django denied this admin operation. The logged-in account must have staff/admin permission."
+        );
     }
 
-    return error.message || "Something went wrong.";
+
+    if (
+        Array.isArray(
+            error.errors
+        ) &&
+        error.errors.length > 0
+    ) {
+        return error.errors.join(
+            " "
+        );
+    }
+
+
+    if (
+        error.status === 404
+    ) {
+        return (
+            error.message ||
+            "The requested admin resource was not found."
+        );
+    }
+
+
+    return (
+        error.message ||
+        "Something went wrong."
+    );
 }
 
 
-export default function AdminProductEditor() {
-    const { productId } = useParams();
-    const navigate = useNavigate();
+/*
+|--------------------------------------------------------------------------
+| COMPONENT
+|--------------------------------------------------------------------------
+*/
 
-    const isEdit = Boolean(productId);
+export default function AdminProductEditor() {
+
+    const {
+        productId,
+    } = useParams();
+
+
+    const navigate =
+        useNavigate();
+
+
+    const isEdit =
+        Boolean(productId);
+
 
     const fileInputRef =
         useRef(null);
 
-    const [product, setProduct] =
-        useState(createEmptyProduct());
 
-    const [images, setImages] =
-        useState([]);
+    /*
+    |--------------------------------------------------------------------------
+    | STATE
+    |--------------------------------------------------------------------------
+    */
 
-    const [variants, setVariants] =
-        useState([]);
+    const [
+        product,
+        setProduct,
+    ] = useState(
+        createEmptyProduct()
+    );
 
-    const [selectedFiles, setSelectedFiles] =
-        useState([]);
 
-    const [loading, setLoading] =
-        useState(isEdit);
+    const [
+        initialStatus,
+        setInitialStatus,
+    ] = useState(
+        "DRAFT"
+    );
 
-    const [saving, setSaving] =
-        useState(false);
 
-    const [uploading, setUploading] =
-        useState(false);
+    const [
+        categories,
+        setCategories,
+    ] = useState([]);
 
-    const [error, setError] =
-        useState("");
 
-    const [success, setSuccess] =
-        useState("");
+    const [
+        categoriesLoading,
+        setCategoriesLoading,
+    ] = useState(true);
 
-    const [slugManuallyEdited, setSlugManuallyEdited] =
-        useState(false);
 
+    const [
+        images,
+        setImages,
+    ] = useState([]);
+
+
+    const [
+        variants,
+        setVariants,
+    ] = useState([]);
+
+
+    const [
+        selectedFiles,
+        setSelectedFiles,
+    ] = useState([]);
+
+
+    const [
+        loading,
+        setLoading,
+    ] = useState(
+        isEdit
+    );
+
+
+    const [
+        saving,
+        setSaving,
+    ] = useState(false);
+
+
+    const [
+        uploading,
+        setUploading,
+    ] = useState(false);
+
+
+    const [
+        error,
+        setError,
+    ] = useState("");
+
+
+    const [
+        success,
+        setSuccess,
+    ] = useState("");
+
+
+    const [
+        slugManuallyEdited,
+        setSlugManuallyEdited,
+    ] = useState(false);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD CATEGORIES
+    |
+    | Categories are controlled by Django.
+    |
+    | We intentionally do NOT hardcode category IDs in the frontend.
+    |--------------------------------------------------------------------------
+    */
 
     useEffect(() => {
-        let cancelled = false;
 
-        async function loadProduct() {
-            if (!isEdit) {
-                setLoading(false);
-                return;
-            }
+        let cancelled =
+            false;
 
-            setLoading(true);
-            setError("");
+
+        async function loadCategories() {
+
+            setCategoriesLoading(
+                true
+            );
+
 
             try {
+
                 const data =
-                    await getAdminProduct(
-                        productId
-                    );
+                    await getAdminCategories();
+
 
                 if (cancelled) {
                     return;
                 }
 
-                setProduct(
-                    normalizeProduct(data)
+
+                const normalizedCategories =
+                    normalizeCategories(
+                        data
+                    );
+
+
+                setCategories(
+                    normalizedCategories
                 );
 
-                setImages(
-                    normalizeImages(data)
-                );
+            } catch (
+            requestError
+            ) {
 
-                setVariants(
-                    normalizeVariants(data)
-                );
-            } catch (requestError) {
                 if (!cancelled) {
+
+                    setCategories(
+                        []
+                    );
+
+
                     setError(
                         getApiErrorMessage(
                             requestError
                         )
                     );
+
                 }
+
             } finally {
+
                 if (!cancelled) {
-                    setLoading(false);
+
+                    setCategoriesLoading(
+                        false
+                    );
+
                 }
+
             }
         }
 
-        loadProduct();
+
+        loadCategories();
+
 
         return () => {
             cancelled = true;
         };
+
+    }, []);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD EXISTING PRODUCT
+    |--------------------------------------------------------------------------
+    */
+
+    useEffect(() => {
+
+        let cancelled =
+            false;
+
+
+        async function loadProduct() {
+
+            if (!isEdit) {
+
+                setLoading(
+                    false
+                );
+
+                return;
+            }
+
+
+            setLoading(true);
+
+            setError("");
+
+
+            try {
+
+                const data =
+                    await getAdminProduct(
+                        productId
+                    );
+
+
+                if (cancelled) {
+                    return;
+                }
+
+
+                const normalizedProduct =
+                    normalizeProduct(
+                        data
+                    );
+
+
+                setProduct(
+                    normalizedProduct
+                );
+
+
+                setInitialStatus(
+                    normalizedProduct.status
+                );
+
+
+                setImages(
+                    normalizeImages(
+                        data
+                    )
+                );
+
+
+                setVariants(
+                    normalizeVariants(
+                        data
+                    )
+                );
+
+            } catch (
+            requestError
+            ) {
+
+                if (!cancelled) {
+
+                    setError(
+                        getApiErrorMessage(
+                            requestError
+                        )
+                    );
+
+                }
+
+            } finally {
+
+                if (!cancelled) {
+
+                    setLoading(
+                        false
+                    );
+
+                }
+
+            }
+        }
+
+
+        loadProduct();
+
+
+        return () => {
+            cancelled = true;
+        };
+
     }, [
         isEdit,
         productId,
     ]);
 
 
-    function updateField(field, value) {
-        setProduct((current) => ({
-            ...current,
-            [field]: value,
-        }));
+    /*
+    |--------------------------------------------------------------------------
+    | GENERIC FIELD UPDATE
+    |--------------------------------------------------------------------------
+    */
+
+    function updateField(
+        field,
+        value
+    ) {
+
+        setProduct(
+            (current) => ({
+                ...current,
+                [field]:
+                    value,
+            })
+        );
+
 
         setError("");
+
         setSuccess("");
     }
 
 
-    function handleNameChange(event) {
+    /*
+    |--------------------------------------------------------------------------
+    | NAME CHANGE
+    |--------------------------------------------------------------------------
+    */
+
+    function handleNameChange(
+        event
+    ) {
+
         const value =
             event.target.value;
 
-        setProduct((current) => ({
-            ...current,
-            name: value,
-            slug:
-                slugManuallyEdited
-                    ? current.slug
-                    : slugify(value),
-        }));
+
+        setProduct(
+            (current) => ({
+                ...current,
+
+                name:
+                    value,
+
+                slug:
+                    slugManuallyEdited
+                        ? current.slug
+                        : slugify(
+                            value
+                        ),
+            })
+        );
+
 
         setError("");
+
         setSuccess("");
     }
 
 
-    async function handleSave(event) {
+    /*
+    |--------------------------------------------------------------------------
+    | CATEGORY CHANGE
+    |
+    | HTML select returns a string.
+    | Convert it to an integer immediately.
+    |--------------------------------------------------------------------------
+    */
+
+    function handleCategoryChange(
+        event
+    ) {
+
+        const value =
+            event.target.value;
+
+
+        if (!value) {
+
+            updateField(
+                "category_id",
+                ""
+            );
+
+            return;
+        }
+
+
+        const categoryId =
+            Number(
+                value
+            );
+
+
+        if (
+            Number.isInteger(
+                categoryId
+            ) &&
+            categoryId > 0
+        ) {
+
+            updateField(
+                "category_id",
+                categoryId
+            );
+
+        } else {
+
+            updateField(
+                "category_id",
+                ""
+            );
+
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SAVE PRODUCT
+    |--------------------------------------------------------------------------
+    */
+
+    async function handleSave(
+        event
+    ) {
+
         event.preventDefault();
 
+
         setError("");
+
         setSuccess("");
 
+
+        /*
+        |----------------------------------------------------------------------
+        | CATEGORY API MUST BE LOADED
+        |----------------------------------------------------------------------
+        */
+
+        if (
+            categoriesLoading
+        ) {
+
+            setError(
+                "Categories are still loading. Please wait a moment and try again."
+            );
+
+            return;
+        }
+
+
+        if (
+            categories.length === 0
+        ) {
+
+            setError(
+                "No categories are available. Please create or activate a category in the Django admin catalogue first."
+            );
+
+            return;
+        }
+
+
+        /*
+        |----------------------------------------------------------------------
+        | CONVERT CATEGORY TO INTEGER
+        |----------------------------------------------------------------------
+        */
+
+        const categoryId =
+            Number(
+                product.category_id
+            );
+
+
+        /*
+        |----------------------------------------------------------------------
+        | PRODUCT PAYLOAD
+        |
+        | status is intentionally NOT included.
+        | Django has a separate status endpoint.
+        |----------------------------------------------------------------------
+        */
+
         const payload = {
-            name: product.name.trim(),
-            slug: product.slug.trim(),
+
+            name:
+                product.name.trim(),
+
+            slug:
+                product.slug.trim(),
+
             description:
                 product.description.trim(),
-            category:
-                product.category.trim(),
-            status: product.status,
+
+            category_id:
+                categoryId,
         };
 
-        if (!payload.name) {
-            setError("Product name is required.");
+
+        /*
+        |----------------------------------------------------------------------
+        | VALIDATE NAME
+        |----------------------------------------------------------------------
+        */
+
+        if (
+            !payload.name
+        ) {
+
+            setError(
+                "Product name is required."
+            );
+
             return;
         }
 
-        if (!payload.slug) {
-            setError("Slug is required.");
+
+        if (
+            payload.name.length <
+            2
+        ) {
+
+            setError(
+                "Product name must contain at least 2 characters."
+            );
+
             return;
         }
 
-        if (!payload.category) {
-            setError("Category is required.");
+
+        /*
+        |----------------------------------------------------------------------
+        | VALIDATE SLUG
+        |----------------------------------------------------------------------
+        */
+
+        if (
+            !payload.slug
+        ) {
+
+            setError(
+                "Slug is required."
+            );
+
             return;
         }
 
-        if (!PRODUCT_STATUSES.includes(payload.status)) {
-            setError("Select a valid product status.");
+
+        /*
+        |----------------------------------------------------------------------
+        | VALIDATE CATEGORY ID
+        |----------------------------------------------------------------------
+        */
+
+        if (
+            !Number.isInteger(
+                categoryId
+            ) ||
+            categoryId <= 0
+        ) {
+
+            setError(
+                "Please select a valid category."
+            );
+
             return;
         }
 
-        setSaving(true);
+
+        /*
+        |----------------------------------------------------------------------
+        | VALIDATE CATEGORY AGAINST DJANGO DATA
+        |
+        | We do NOT validate against hardcoded IDs.
+        |
+        | The backend category list is the source of truth.
+        |----------------------------------------------------------------------
+        */
+
+        const selectedCategory =
+            categories.find(
+                (category) =>
+                    category.id ===
+                    categoryId
+            );
+
+
+        if (!selectedCategory) {
+
+            setError(
+                "Selected category does not exist in the Django category list."
+            );
+
+            return;
+        }
+
+
+        /*
+        |----------------------------------------------------------------------
+        | NEW PRODUCTS
+        |
+        | Only active categories should be selectable for new products.
+        |----------------------------------------------------------------------
+        */
+
+        if (
+            !selectedCategory.is_active
+        ) {
+
+            setError(
+                "The selected category is inactive. Please choose an active category."
+            );
+
+            return;
+        }
+
+
+        /*
+        |----------------------------------------------------------------------
+        | VALIDATE STATUS
+        |----------------------------------------------------------------------
+        */
+
+        if (
+            !PRODUCT_STATUSES.includes(
+                product.status
+            )
+        ) {
+
+            setError(
+                "Select a valid product status."
+            );
+
+            return;
+        }
+
+
+        setSaving(
+            true
+        );
+
 
         try {
+
+            /*
+            |------------------------------------------------------------------
+            | CREATE / UPDATE PRODUCT
+            |------------------------------------------------------------------
+            */
+
             const response =
                 isEdit
                     ? await updateAdminProduct(
@@ -372,67 +1108,212 @@ export default function AdminProductEditor() {
                         payload
                     );
 
+
+            /*
+            |------------------------------------------------------------------
+            | NORMALIZE RESPONSE
+            |------------------------------------------------------------------
+            */
+
             const savedProduct =
                 response?.product ||
                 response?.data ||
                 response ||
                 {};
 
+
+            /*
+            |------------------------------------------------------------------
+            | GET BACKEND PRODUCT UUID
+            |------------------------------------------------------------------
+            */
+
             const savedId =
                 savedProduct?.id ||
                 savedProduct?.uuid ||
                 productId;
 
-            setProduct(
+
+            if (!savedId) {
+
+                throw new Error(
+                    "The product was saved, but the backend response did not contain its UUID."
+                );
+
+            }
+
+
+            /*
+            |------------------------------------------------------------------
+            | STATUS
+            |
+            | Status is updated separately because the API contract does not
+            | allow status through the normal product update.
+            |------------------------------------------------------------------
+            */
+
+            const requestedStatus =
+                String(
+                    product.status ||
+                    "DRAFT"
+                ).toUpperCase();
+
+
+            const backendStatus =
+                String(
+                    savedProduct?.status ||
+                    (
+                        isEdit
+                            ? initialStatus
+                            : "DRAFT"
+                    )
+                ).toUpperCase();
+
+
+            let finalStatus =
+                backendStatus;
+
+
+            if (
+                requestedStatus !==
+                backendStatus
+            ) {
+
+                const statusResponse =
+                    await updateAdminProductStatus(
+                        savedId,
+                        requestedStatus
+                    );
+
+
+                const statusProduct =
+                    statusResponse?.product ||
+                    statusResponse?.data ||
+                    statusResponse ||
+                    {};
+
+
+                finalStatus =
+                    String(
+                        statusProduct?.status ||
+                        requestedStatus
+                    ).toUpperCase();
+
+            }
+
+
+            /*
+            |------------------------------------------------------------------
+            | UPDATE LOCAL STATE
+            |------------------------------------------------------------------
+            */
+
+            const normalizedSavedProduct =
                 normalizeProduct(
                     savedProduct
-                )
+                );
+
+
+            setProduct(
+                (current) => ({
+                    ...current,
+
+                    ...normalizedSavedProduct,
+
+                    id:
+                        savedId,
+
+                    category_id:
+                        normalizedSavedProduct.category_id ||
+                        categoryId,
+
+                    status:
+                        finalStatus,
+                })
             );
 
+
+            setInitialStatus(
+                finalStatus
+            );
+
+
+            /*
+            |------------------------------------------------------------------
+            | SUCCESS
+            |------------------------------------------------------------------
+            */
+
             if (isEdit) {
+
                 setSuccess(
                     "Product changes saved successfully."
                 );
+
             } else {
-                if (!savedId) {
-                    throw new Error(
-                        "The product was created, but the backend response did not contain its UUID. Images cannot be uploaded until the product ID is returned."
-                    );
-                }
 
                 setSuccess(
                     "Product created successfully. You can now upload its images."
                 );
 
+
                 navigate(
                     `/admin/products/${savedId}`,
                     {
-                        replace: true,
+                        replace:
+                            true,
                     }
                 );
+
             }
-        } catch (requestError) {
+
+        } catch (
+        requestError
+        ) {
+
             setError(
                 getApiErrorMessage(
                     requestError
                 )
             );
+
         } finally {
-            setSaving(false);
+
+            setSaving(
+                false
+            );
+
         }
     }
 
 
-    async function handleImageSelection(event) {
-        const files = Array.from(
-            event.target.files || []
-        );
+    /*
+    |--------------------------------------------------------------------------
+    | IMAGE SELECTION
+    |--------------------------------------------------------------------------
+    */
 
-        event.target.value = "";
+    async function handleImageSelection(
+        event
+    ) {
 
-        if (files.length === 0) {
+        const files =
+            Array.from(
+                event.target.files ||
+                []
+            );
+
+
+        event.target.value =
+            "";
+
+
+        if (
+            files.length === 0
+        ) {
             return;
         }
+
 
         if (
             images.length +
@@ -440,216 +1321,406 @@ export default function AdminProductEditor() {
             files.length >
             IMAGE_LIMIT
         ) {
+
             setError(
                 `A product can have a maximum of ${IMAGE_LIMIT} images.`
             );
+
             return;
         }
 
+
         setError("");
+
         setSuccess("");
 
-        const prepared = [];
+
+        const prepared =
+            [];
+
 
         try {
-            for (const file of files) {
+
+            for (
+                const file of files
+            ) {
+
                 const validationError =
                     validateImageFile(
                         file
                     );
 
-                if (validationError) {
+
+                if (
+                    validationError
+                ) {
+
                     throw new Error(
                         validationError
                     );
+
                 }
+
 
                 const dimensions =
                     await inspectImageDimensions(
                         file
                     );
 
-                if (!dimensions.valid) {
+
+                if (
+                    !dimensions.valid
+                ) {
+
                     throw new Error(
                         "Image dimensions must be 2000 × 2000 pixels or smaller, and the file must be a valid image."
                     );
+
                 }
 
+
                 prepared.push({
+
                     id:
                         `${Date.now()}-${Math.random()}`,
+
                     file,
+
                     previewUrl:
                         URL.createObjectURL(
                             file
                         ),
                 });
+
             }
 
-            setSelectedFiles((current) => [
-                ...current,
-                ...prepared,
-            ]);
-        } catch (imageError) {
-            prepared.forEach((item) => {
-                URL.revokeObjectURL(
-                    item.previewUrl
-                );
-            });
+
+            setSelectedFiles(
+                (current) => [
+                    ...current,
+                    ...prepared,
+                ]
+            );
+
+        } catch (
+        imageError
+        ) {
+
+            prepared.forEach(
+                (item) => {
+
+                    URL.revokeObjectURL(
+                        item.previewUrl
+                    );
+
+                }
+            );
+
 
             setError(
                 imageError?.message ||
                 "Unable to prepare the selected image."
             );
+
         }
     }
 
 
-    function removePendingImage(index) {
-        setSelectedFiles((current) => {
-            const removed =
-                current[index];
+    /*
+    |--------------------------------------------------------------------------
+    | REMOVE PENDING IMAGE
+    |--------------------------------------------------------------------------
+    */
 
-            if (removed?.previewUrl) {
-                URL.revokeObjectURL(
-                    removed.previewUrl
+    function removePendingImage(
+        index
+    ) {
+
+        setSelectedFiles(
+            (current) => {
+
+                const removed =
+                    current[index];
+
+
+                if (
+                    removed?.previewUrl
+                ) {
+
+                    URL.revokeObjectURL(
+                        removed.previewUrl
+                    );
+
+                }
+
+
+                return current.filter(
+                    (
+                        _,
+                        currentIndex
+                    ) =>
+                        currentIndex !==
+                        index
                 );
-            }
 
-            return current.filter(
-                (_, currentIndex) =>
-                    currentIndex !== index
-            );
-        });
+            }
+        );
+
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | UPLOAD IMAGES
+    |--------------------------------------------------------------------------
+    */
+
     async function handleUploadImages() {
+
         if (!productId) {
+
             setError(
                 "Save the product first. Django needs the product UUID for image upload."
             );
+
             return;
         }
 
-        if (selectedFiles.length === 0) {
+
+        if (
+            selectedFiles.length ===
+            0
+        ) {
+
             setError(
                 "Select at least one new image first."
             );
+
             return;
         }
+
 
         if (
             images.length +
             selectedFiles.length >
             IMAGE_LIMIT
         ) {
+
             setError(
                 `A product can have a maximum of ${IMAGE_LIMIT} images.`
             );
+
             return;
         }
 
-        setUploading(true);
+
+        setUploading(
+            true
+        );
+
         setError("");
+
         setSuccess("");
 
+
         try {
+
             let currentOrder =
                 images.length;
 
-            const uploaded = [];
+
+            const uploaded =
+                [];
+
 
             for (
                 let index = 0;
-                index < selectedFiles.length;
+                index <
+                selectedFiles.length;
                 index += 1
             ) {
+
                 const item =
-                    selectedFiles[index];
+                    selectedFiles[
+                    index
+                    ];
+
 
                 const result =
                     await uploadProductImage({
                         productId,
-                        file: item.file,
+
+                        file:
+                            item.file,
+
                         displayOrder:
                             currentOrder,
+
                         isPrimary:
-                            images.length === 0 &&
+                            images.length ===
+                            0 &&
                             index === 0,
                     });
+
 
                 uploaded.push(
                     result?.image ||
                     result
                 );
 
-                currentOrder += 1;
+
+                currentOrder +=
+                    1;
+
             }
 
-            setImages((current) => [
-                ...current,
-                ...uploaded,
-            ]);
 
-            selectedFiles.forEach((item) => {
-                URL.revokeObjectURL(
-                    item.previewUrl
-                );
-            });
+            setImages(
+                (current) => [
+                    ...current,
+                    ...uploaded,
+                ]
+            );
 
-            setSelectedFiles([]);
+
+            selectedFiles.forEach(
+                (item) => {
+
+                    URL.revokeObjectURL(
+                        item.previewUrl
+                    );
+
+                }
+            );
+
+
+            setSelectedFiles(
+                []
+            );
+
 
             setSuccess(
                 `${uploaded.length} image${uploaded.length === 1 ? "" : "s"} uploaded successfully through Django.`
             );
-        } catch (uploadError) {
+
+        } catch (
+        uploadError
+        ) {
+
             setError(
                 getApiErrorMessage(
                     uploadError
                 )
             );
+
         } finally {
-            setUploading(false);
+
+            setUploading(
+                false
+            );
+
         }
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | LOADING SCREEN
+    |--------------------------------------------------------------------------
+    */
 
     if (loading) {
+
         return (
+
             <div className="admin-page">
+
                 <section className="admin-panel-card admin-product-loading">
+
                     <div className="admin-loading-spinner" />
+
                     <p>
                         Loading product...
                     </p>
+
                 </section>
+
             </div>
+
         );
+
     }
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | CURRENT CATEGORY
+    |
+    | If editing an existing product and its category has been deactivated,
+    | keep it visible so the existing product remains editable.
+    |--------------------------------------------------------------------------
+    */
+
+    const currentCategory =
+        categories.find(
+            (category) =>
+                category.id ===
+                Number(
+                    product.category_id
+                )
+        );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | PAGE
+    |--------------------------------------------------------------------------
+    */
+
     return (
+
         <div className="admin-page admin-product-editor">
+
+
+            {/* ==========================================================
+                TOOLBAR
+            ========================================================== */}
+
             <section className="admin-page-toolbar admin-product-toolbar">
+
                 <div>
+
                     <div className="admin-eyebrow">
-                        CATALOGUE / {isEdit ? "EDIT" : "NEW"}
+
+                        CATALOGUE /{" "}
+
+                        {isEdit
+                            ? "EDIT"
+                            : "NEW"}
+
                     </div>
 
+
                     <h2>
+
                         {isEdit
                             ? "Edit product"
                             : "Add product"}
+
                     </h2>
 
+
                     <p>
-                        Product data is saved through the finalized Django catalogue API. Publication eligibility remains a backend decision.
+
+                        Product data is saved through the Django catalogue API. Publication eligibility remains a backend decision.
+
                     </p>
+
                 </div>
 
+
                 <div className="admin-toolbar-actions">
+
                     <Link
                         to="/admin/products"
                         className="admin-button admin-button-secondary"
@@ -657,107 +1728,278 @@ export default function AdminProductEditor() {
                         Back to products
                     </Link>
 
+
                     <button
                         type="submit"
                         form="admin-product-form"
                         className="admin-button admin-button-primary"
-                        disabled={saving}
+                        disabled={
+                            saving ||
+                            categoriesLoading
+                        }
                     >
+
                         {saving
                             ? "Saving..."
-                            : isEdit
-                                ? "Save changes"
-                                : "Create product"}
+                            : categoriesLoading
+                                ? "Loading categories..."
+                                : isEdit
+                                    ? "Save changes"
+                                    : "Create product"}
+
                     </button>
+
                 </div>
+
             </section>
 
+
+            {/* ==========================================================
+                ERROR
+            ========================================================== */}
+
             {error && (
+
                 <div className="admin-error-banner">
+
                     {error}
+
                 </div>
+
             )}
 
+
+            {/* ==========================================================
+                SUCCESS
+            ========================================================== */}
+
             {success && (
+
                 <div className="admin-success-banner">
+
                     {success}
+
                 </div>
+
             )}
+
+
+            {/* ==========================================================
+                FORM
+            ========================================================== */}
 
             <form
                 id="admin-product-form"
                 className="admin-product-form-layout"
                 onSubmit={handleSave}
             >
+
+
+                {/* ======================================================
+                    MAIN COLUMN
+                ====================================================== */}
+
                 <div className="admin-product-main-column">
+
+
+                    {/* ==================================================
+                        BASIC INFORMATION
+                    ================================================== */}
+
                     <section className="admin-panel-card admin-editor-card">
+
                         <div className="admin-panel-heading">
+
                             <div>
+
                                 <div className="admin-eyebrow">
                                     01 / PRODUCT
                                 </div>
+
+
                                 <h3>
                                     Basic information
                                 </h3>
+
                             </div>
+
                         </div>
 
+
                         <div className="admin-form admin-product-form">
+
+
+                            {/* ==========================================
+                                PRODUCT NAME
+                            =========================================== */}
+
                             <label className="admin-field-span-2">
+
                                 Product name
+
+
                                 <input
                                     type="text"
-                                    value={product.name}
+                                    value={
+                                        product.name
+                                    }
                                     onChange={
                                         handleNameChange
                                     }
                                     placeholder="Enter the product name"
                                     required
                                 />
+
                             </label>
 
+
+                            {/* ==========================================
+                                SLUG
+                            =========================================== */}
+
                             <label>
+
                                 Slug
+
+
                                 <input
                                     type="text"
-                                    value={product.slug}
+                                    value={
+                                        product.slug
+                                    }
                                     onChange={(event) => {
+
                                         setSlugManuallyEdited(
                                             true
                                         );
+
+
                                         updateField(
                                             "slug",
                                             event.target.value
                                         );
+
                                     }}
                                     placeholder="product-slug"
                                     required
                                 />
+
                             </label>
 
-                            <label>
-                                Category ID
-                                <input
-                                    type="text"
-                                    value={product.category}
-                                    onChange={(event) =>
-                                        updateField(
-                                            "category",
-                                            event.target.value
-                                        )
-                                    }
-                                    placeholder="Category UUID / value from Django"
-                                    required
-                                />
-                                <span className="admin-field-help">
-                                    Category CRUD is not finalized yet, so this field does not guess a category endpoint.
-                                </span>
-                            </label>
+
+                            {/* ==========================================
+                                CATEGORY
+                            =========================================== */}
 
                             <label>
-                                Status
+
+                                Category
+
+
                                 <select
-                                    value={product.status}
+                                    value={
+                                        product.category_id ===
+                                            ""
+                                            ? ""
+                                            : String(
+                                                product.category_id
+                                            )
+                                    }
+                                    onChange={
+                                        handleCategoryChange
+                                    }
+                                    required
+                                    disabled={
+                                        categoriesLoading ||
+                                        categories.length ===
+                                        0
+                                    }
+                                >
+
+                                    <option value="">
+
+                                        {categoriesLoading
+                                            ? "Loading categories..."
+                                            : categories.length ===
+                                                0
+                                                ? "No categories available"
+                                                : "Select a category"}
+
+                                    </option>
+
+
+                                    {categories
+                                        .filter(
+                                            (
+                                                category
+                                            ) =>
+                                                category.is_active ||
+                                                (
+                                                    isEdit &&
+                                                    category.id ===
+                                                    Number(
+                                                        product.category_id
+                                                    )
+                                                )
+                                        )
+                                        .map(
+                                            (
+                                                category
+                                            ) => (
+
+                                                <option
+                                                    key={
+                                                        category.id
+                                                    }
+                                                    value={
+                                                        String(
+                                                            category.id
+                                                        )
+                                                    }
+                                                >
+
+                                                    {
+                                                        category.name
+                                                    }
+
+                                                    {!category.is_active &&
+                                                        " (Inactive)"}
+
+                                                </option>
+
+                                            )
+                                        )}
+
+                                </select>
+
+
+                                <span className="admin-field-help">
+
+                                    {categoriesLoading
+                                        ? "Loading categories from Django..."
+                                        : currentCategory &&
+                                            !currentCategory.is_active
+                                            ? "This product currently uses an inactive category. Select an active category before saving."
+                                            : "Categories are loaded directly from Django. The selected category name is for display; Django receives the integer category_id."}
+
+                                </span>
+
+                            </label>
+
+
+                            {/* ==========================================
+                                STATUS
+                            =========================================== */}
+
+                            <label>
+
+                                Status
+
+
+                                <select
+                                    value={
+                                        product.status
+                                    }
                                     onChange={(event) =>
                                         updateField(
                                             "status",
@@ -766,24 +2008,51 @@ export default function AdminProductEditor() {
                                     }
                                     required
                                 >
+
                                     {PRODUCT_STATUSES.map(
-                                        (status) => (
+                                        (
+                                            status
+                                        ) => (
+
                                             <option
-                                                key={status}
-                                                value={status}
+                                                key={
+                                                    status
+                                                }
+                                                value={
+                                                    status
+                                                }
                                             >
-                                                {status}
+
+                                                {
+                                                    status
+                                                }
+
                                             </option>
+
                                         )
                                     )}
+
                                 </select>
+
+
                                 <span className="admin-field-help">
-                                    Django validates whether a product is eligible for publication.
+
+                                    New products are created as DRAFT first. Status changes use Django's dedicated status endpoint.
+
                                 </span>
+
                             </label>
 
+
+                            {/* ==========================================
+                                DESCRIPTION
+                            =========================================== */}
+
                             <label className="admin-field-span-2">
+
                                 Description
+
+
                                 <textarea
                                     rows="9"
                                     value={
@@ -797,26 +2066,49 @@ export default function AdminProductEditor() {
                                     }
                                     placeholder="Customer-facing product description"
                                 />
+
                             </label>
+
+
                         </div>
+
                     </section>
 
+
+                    {/* ==================================================
+                        VARIANTS
+                    ================================================== */}
+
                     <section className="admin-panel-card admin-editor-card">
+
                         <div className="admin-panel-heading">
+
                             <div>
+
                                 <div className="admin-eyebrow">
                                     02 / VARIANTS
                                 </div>
+
+
                                 <h3>
                                     Backend variant data
                                 </h3>
+
                             </div>
+
                         </div>
 
+
                         {variants.length > 0 ? (
+
                             <div className="admin-list">
+
                                 {variants.map(
-                                    (variant, index) => (
+                                    (
+                                        variant,
+                                        index
+                                    ) => (
+
                                         <div
                                             className="admin-list-row"
                                             key={
@@ -824,63 +2116,139 @@ export default function AdminProductEditor() {
                                                 index
                                             }
                                         >
+
                                             <div>
+
                                                 <strong>
-                                                    {variant.sku ||
-                                                        `Variant ${index + 1}`}
+
+                                                    {
+                                                        variant.sku ||
+                                                        `Variant ${index + 1}`
+                                                    }
+
                                                 </strong>
+
+
                                                 <span>
-                                                    {variant.price ??
-                                                        "—"} {variant.currency || ""}
+
+                                                    {
+                                                        variant.price ??
+                                                        "—"
+                                                    }{" "}
+
+                                                    {
+                                                        variant.currency ||
+                                                        ""
+                                                    }
+
                                                     {" · "}
-                                                    Stock {variant.stock ?? "—"}
+
+                                                    Stock{" "}
+
+                                                    {
+                                                        variant.stock ??
+                                                        "—"
+                                                    }
+
                                                 </span>
+
                                             </div>
 
+
                                             <small>
+
                                                 {variant.is_active ===
                                                     false
                                                     ? "INACTIVE"
                                                     : "ACTIVE"}
+
                                             </small>
+
                                         </div>
+
                                     )
                                 )}
+
                             </div>
+
                         ) : (
+
                             <div className="admin-empty-state compact">
+
                                 <strong>
                                     No variant data returned
                                 </strong>
+
+
                                 <p>
                                     Variant CRUD is waiting for the finalized Django variant request schemas.
                                 </p>
+
                             </div>
+
                         )}
+
                     </section>
+
                 </div>
 
+
+                {/* ======================================================
+                    SIDE COLUMN
+                ====================================================== */}
+
                 <aside className="admin-product-side-column">
+
+
+                    {/* ==================================================
+                        PRODUCT GALLERY
+                    ================================================== */}
+
                     <section className="admin-panel-card">
+
                         <div className="admin-panel-heading">
+
                             <div>
+
                                 <div className="admin-eyebrow">
                                     03 / IMAGES
                                 </div>
+
+
                                 <h3>
                                     Product gallery
                                 </h3>
+
                             </div>
 
+
                             <span className="admin-image-counter">
-                                {images.length + selectedFiles.length}/
+
+                                {images.length +
+                                    selectedFiles.length}
+
+                                /
+
                                 {IMAGE_LIMIT}
+
                             </span>
+
                         </div>
 
+
                         <div className="admin-image-grid">
+
+
+                            {/* ==========================================
+                                SAVED IMAGES
+                            =========================================== */}
+
                             {images.map(
-                                (image, index) => (
+                                (
+                                    image,
+                                    index
+                                ) => (
+
                                     <div
                                         className="admin-image-tile"
                                         key={
@@ -888,38 +2256,69 @@ export default function AdminProductEditor() {
                                             index
                                         }
                                     >
+
                                         {image.image_url ? (
+
                                             <img
-                                                src={image.image_url}
-                                                alt={`Product ${index + 1}`}
+                                                src={
+                                                    image.image_url
+                                                }
+                                                alt={`Product ${index +
+                                                    1
+                                                    }`}
                                             />
+
                                         ) : (
+
                                             <div className="admin-image-fallback">
                                                 Image unavailable
                                             </div>
+
                                         )}
 
+
                                         {image.is_primary && (
+
                                             <span className="admin-image-tag">
+
                                                 Primary
+
                                             </span>
+
                                         )}
+
                                     </div>
+
                                 )
                             )}
 
+
+                            {/* ==========================================
+                                PENDING IMAGES
+                            =========================================== */}
+
                             {selectedFiles.map(
-                                (item, index) => (
+                                (
+                                    item,
+                                    index
+                                ) => (
+
                                     <div
                                         className="admin-image-tile"
-                                        key={item.id}
+                                        key={
+                                            item.id
+                                        }
                                     >
+
                                         <img
                                             src={
                                                 item.previewUrl
                                             }
-                                            alt={`Pending upload ${index + 1}`}
+                                            alt={`Pending upload ${index +
+                                                1
+                                                }`}
                                         />
+
 
                                         <button
                                             type="button"
@@ -930,15 +2329,27 @@ export default function AdminProductEditor() {
                                                 )
                                             }
                                         >
+
                                             Remove pending
+
                                         </button>
+
                                     </div>
+
                                 )
                             )}
+
                         </div>
 
+
+                        {/* ==============================================
+                            FILE INPUT
+                        ============================================== */}
+
                         <input
-                            ref={fileInputRef}
+                            ref={
+                                fileInputRef
+                            }
                             type="file"
                             accept="image/jpeg,image/png,image/webp"
                             multiple
@@ -948,7 +2359,13 @@ export default function AdminProductEditor() {
                             }
                         />
 
+
+                        {/* ==============================================
+                            IMAGE ACTIONS
+                        ============================================== */}
+
                         <div className="admin-toolbar-actions">
+
                             <button
                                 type="button"
                                 className="admin-button admin-button-secondary"
@@ -963,8 +2380,11 @@ export default function AdminProductEditor() {
                                     IMAGE_LIMIT
                                 }
                             >
+
                                 Select images
+
                             </button>
+
 
                             <button
                                 type="button"
@@ -979,38 +2399,64 @@ export default function AdminProductEditor() {
                                     0
                                 }
                             >
+
                                 {uploading
                                     ? "Uploading..."
                                     : "Upload to Django"}
+
                             </button>
+
                         </div>
 
+
                         {!productId && (
+
                             <p className="admin-field-warning">
+
                                 Create the product first. The image API requires the product UUID.
+
                             </p>
+
                         )}
 
+
                         <p className="admin-helper-text">
+
                             JPG, JPEG, PNG or WebP · maximum 400 KB · maximum 2000 × 2000 · maximum 5 images.
+
                         </p>
+
                     </section>
 
+
+                    {/* ==================================================
+                        SOURCE OF TRUTH
+                    ================================================== */}
+
                     <section className="admin-panel-card">
+
                         <div className="admin-eyebrow">
                             SOURCE OF TRUTH
                         </div>
+
 
                         <h3>
                             Django controls publication
                         </h3>
 
+
                         <p className="admin-panel-description">
+
                             The frontend validates obvious form errors, but product publication, permissions and image storage remain controlled by the backend.
+
                         </p>
+
                     </section>
+
                 </aside>
+
             </form>
+
         </div>
     );
 }
