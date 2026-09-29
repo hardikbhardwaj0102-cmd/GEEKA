@@ -372,9 +372,6 @@ class AdminProductVariantSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.instance is not None:
-            self.fields["stock"].read_only = True
-
     def validate_price(self, value):
         if value <= 0:
             raise serializers.ValidationError(
