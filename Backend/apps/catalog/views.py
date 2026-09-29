@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAdminUser,AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Product, Category , Attribute, ProductVariant
+from .models import Product, Category , Attribute, ProductVariant, ProductImage
 from .product_image_service import create_product_image
 from .serializers import (
     AdminCategorySerializer,
@@ -17,9 +17,12 @@ from .serializers import (
     AdminAttributeSerializer,
     AdminAttributeValueSerializer,
     AdminProductVariantSerializer,
+    AdminProductImageSerializer,
+    AdminProductImageUpdateSerializer,
 )
 
-from .supabase_storage import create_product_image_signed_url
+from django.db import transaction
+from .supabase_storage import create_product_image_signed_url , delete_product_image
 from .pagination import ProductPagination
 from rest_framework.authentication import SessionAuthentication
 
@@ -27,6 +30,24 @@ from rest_framework.authentication import SessionAuthentication
 class AdminProductImageUploadView(APIView):
     permission_classes = [IsAdminUser]
     parser_classes = [MultiPartParser, FormParser]
+
+    def get(self, request, product_id):
+        product = get_object_or_404(Product, id=product_id)
+
+        images = product.images.all().order_by(
+            "display_order",
+            "created_at",
+        )
+
+        serializer = AdminProductImageSerializer(
+            images,
+            many=True,
+        )
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK,
+        )
 
     def post(self, request, product_id):
         product = get_object_or_404(Product, id=product_id)
@@ -63,6 +84,60 @@ class AdminProductImageUploadView(APIView):
                 "is_active": product_image.is_active,
             },
             status=status.HTTP_201_CREATED,
+        )
+
+
+
+class AdminProductImageDetailView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def patch(self, request, image_id):
+        product_image = get_object_or_404(
+            ProductImage,
+            id=image_id,
+        )
+
+        serializer = AdminProductImageUpdateSerializer(
+            product_image,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            validated_data = serializer.validated_data
+
+            if validated_data.get("is_primary") is True:
+                ProductImage.objects.filter(
+                    product=product_image.product,
+                    is_primary=True,
+                ).exclude(
+                    id=product_image.id,
+                ).update(
+                    is_primary=False,
+                )
+
+            product_image = serializer.save()
+
+        response_serializer = AdminProductImageSerializer(
+            product_image,
+        )
+
+        return Response(
+            response_serializer.data,
+            status=status.HTTP_200_OK,
+        )
+
+    def delete(self, request, image_id):
+        product_image = get_object_or_404(
+            ProductImage,
+            id=image_id,
+        )
+
+        product_image.delete()
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT,
         )
 
 

@@ -28,6 +28,70 @@ class ProductImageUploadSerializer(serializers.ModelSerializer):
         return value
 
 
+class AdminProductImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProductImage
+        fields = [
+            "id",
+            "product_id",
+            "image_url",
+            "display_order",
+            "is_primary",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields
+
+    def get_image_url(self, obj):
+        from .supabase_storage import create_product_image_signed_url
+
+        return create_product_image_signed_url(obj.image)
+
+
+
+
+class AdminProductImageUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = [
+            "display_order",
+            "is_primary",
+            "is_active",
+        ]
+
+    def validate_display_order(self, value):
+        if value < 0:
+            raise serializers.ValidationError(
+                "Display order cannot be negative."
+            )
+        return value
+
+    def validate(self, attrs):
+        is_primary = attrs.get(
+            "is_primary",
+            self.instance.is_primary,
+        )
+        is_active = attrs.get(
+            "is_active",
+            self.instance.is_active,
+        )
+
+        if is_primary and not is_active:
+            raise serializers.ValidationError(
+                {
+                    "is_primary": [
+                        "An inactive image cannot be the primary image."
+                    ]
+                }
+            )
+
+        return attrs
+
+
+
 
 class PublicProductImageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()

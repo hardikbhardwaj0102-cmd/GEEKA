@@ -14,11 +14,17 @@ from .views import (
     AdminProductVariantListCreateView,
     AdminProductVariantDetailView,
     AdminProductVariantDeactivateView,
+    AdminProductImageDetailView,
 )
 
 
 urlpatterns = [
     path("admin/products/<uuid:product_id>/images/",AdminProductImageUploadView.as_view(),name="admin-product-image-upload"),
+    path(
+        "admin/images/<uuid:image_id>/",
+        AdminProductImageDetailView.as_view(),
+        name="admin-product-image-detail",
+    ),
     path("products/",PublicProductListView.as_view(),name="public-product-list"),
     path("products/<uuid:product_id>/",PublicProductDetailView.as_view(),name="public-product-detail"),
     path("admin/categories/",AdminCategoryListCreateView.as_view(),name="admin-category-list-create"),
