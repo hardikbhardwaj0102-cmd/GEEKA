@@ -1,4 +1,9 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {
+    BrowserRouter,
+    Routes,
+    Route,
+    Navigate,
+} from "react-router-dom";
 
 import Header from "./components/Header";
 import Hero from "./components/Hero";
@@ -17,8 +22,27 @@ import Contact from "./components/Contact";
 import Cart from "./components/Cart";
 import ForgotPassword from "./components/ForgotPassword";
 import ProductDetails from "./components/ProductDetails";
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN
+|--------------------------------------------------------------------------
+*/
+
+import AdminLayout from "./admin/components/AdminLayout";
+import AdminDashboard from "./admin/pages/AdminDashboard";
+import AdminProducts from "./admin/pages/AdminProducts";
+import AdminProductEditor from "./admin/pages/AdminProductEditor";
+import AdminSectionPage from "./admin/pages/AdminSectionPage";
+import AdminMessages from "./admin/pages/AdminMessages";
+import AdminSettings from "./admin/pages/AdminSettings";
+
 import "./App.css";
 
+
+/* =========================================================
+   HOME PAGE
+========================================================= */
 
 function HomePage() {
     return (
@@ -49,15 +73,21 @@ function HomePage() {
 }
 
 
+/* =========================================================
+   APP
+========================================================= */
+
 function App() {
+
     return (
+
         <BrowserRouter>
 
             <Routes>
 
-                {/* ================================
+                {/* =====================================================
                     HOME
-                ================================= */}
+                ===================================================== */}
 
                 <Route
                     path="/"
@@ -65,9 +95,10 @@ function App() {
                 />
 
 
-                {/* ================================
-                    AUTH
-                ================================= */}
+                {/* =====================================================
+                    CUSTOMER AUTH
+                ===================================================== */}
+
                 <Route
                     path="/login"
                     element={<Login />}
@@ -78,10 +109,15 @@ function App() {
                     element={<Register />}
                 />
 
+                <Route
+                    path="/forgot-password"
+                    element={<ForgotPassword />}
+                />
 
-                {/* ================================
-                    ACCOUNT
-                ================================= */}
+
+                {/* =====================================================
+                    CUSTOMER ACCOUNT
+                ===================================================== */}
 
                 <Route
                     path="/profile"
@@ -89,9 +125,9 @@ function App() {
                 />
 
 
-                {/* ================================
-                    SHOP
-                ================================= */}
+                {/* =====================================================
+                    STORE
+                ===================================================== */}
 
                 <Route
                     path="/shop"
@@ -102,39 +138,164 @@ function App() {
                     path="/product/:productId"
                     element={<ProductDetails />}
                 />
-                {/* ================================
-                    ABOUT
-                ================================= */}
 
                 <Route
                     path="/about"
                     element={<About />}
                 />
 
-
-                {/* ================================
-                    CONTACT
-                ================================= */}
-
                 <Route
                     path="/contact"
                     element={<Contact />}
                 />
 
-
-                {/* ================================
-                    CART
-                ================================= */}
-
                 <Route
                     path="/cart"
                     element={<Cart />}
                 />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
+
+
+                {/* =====================================================
+                    OLD ADMIN LOGIN URL
+                    No separate admin login for Geeka.
+                    Redirect it to the normal customer login.
+                ===================================================== */}
+
+                <Route
+                    path="/admin/login"
+                    element={
+                        <Navigate
+                            to="/login"
+                            replace
+                        />
+                    }
+                />
+
+
+                {/* =====================================================
+                    ADMIN PANEL
+                ===================================================== */}
+
+                <Route
+                    path="/admin"
+                    element={<AdminLayout />}
+                >
+
+                    {/* Dashboard */}
+
+                    <Route
+                        index
+                        element={<AdminDashboard />}
+                    />
+
+
+                    {/* Products */}
+
+                    <Route
+                        path="products"
+                        element={<AdminProducts />}
+                    />
+
+
+                    {/* Add Product */}
+
+                    <Route
+                        path="products/new"
+                        element={<AdminProductEditor />}
+                    />
+
+
+                    {/* Edit Product */}
+
+                    <Route
+                        path="products/:productId"
+                        element={<AdminProductEditor />}
+                    />
+
+
+                    {/* Categories */}
+
+                    <Route
+                        path="categories"
+                        element={
+                            <AdminSectionPage
+                                section="categories"
+                            />
+                        }
+                    />
+
+
+                    {/* Inventory */}
+
+                    <Route
+                        path="inventory"
+                        element={
+                            <AdminSectionPage
+                                section="inventory"
+                            />
+                        }
+                    />
+
+
+                    {/* Orders */}
+
+                    <Route
+                        path="orders"
+                        element={
+                            <AdminSectionPage
+                                section="orders"
+                            />
+                        }
+                    />
+
+
+                    {/* Customers */}
+
+                    <Route
+                        path="customers"
+                        element={
+                            <AdminSectionPage
+                                section="customers"
+                            />
+                        }
+                    />
+
+
+                    {/* Reviews */}
+
+                    <Route
+                        path="reviews"
+                        element={
+                            <AdminSectionPage
+                                section="reviews"
+                            />
+                        }
+                    />
+
+
+                    {/* Messages */}
+
+                    <Route
+                        path="messages"
+                        element={<AdminMessages />}
+                    />
+
+
+                    {/* Settings */}
+
+                    <Route
+                        path="settings"
+                        element={<AdminSettings />}
+                    />
+
+                </Route>
+
+
             </Routes>
 
         </BrowserRouter>
     );
 }
+
 
 export default App;
