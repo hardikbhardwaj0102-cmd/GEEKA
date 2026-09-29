@@ -9,6 +9,11 @@ from .views import (
     AdminProductListCreateView,
     AdminProductDetailView,
     AdminProductStatusView,
+    AdminAttributeListCreateView,
+    AdminAttributeValueListCreateView,
+    AdminProductVariantListCreateView,
+    AdminProductVariantDetailView,
+    AdminProductVariantDeactivateView,
 )
 
 
@@ -21,4 +26,29 @@ urlpatterns = [
     path("admin/products/",AdminProductListCreateView.as_view(),name="admin-product-list-create"),
     path("admin/products/<uuid:product_id>/",AdminProductDetailView.as_view(),name="admin-product-detail"),
     path("admin/products/<uuid:product_id>/status/",AdminProductStatusView.as_view(),name="admin-product-status"),
+    path(
+        "admin/attributes/",
+        AdminAttributeListCreateView.as_view(),
+        name="admin-attribute-list-create",
+    ),
+    path(
+        "admin/attributes/<int:attribute_id>/values/",
+        AdminAttributeValueListCreateView.as_view(),
+        name="admin-attribute-value-list-create",
+    ),
+    path(
+        "admin/products/<uuid:product_id>/variants/",
+        AdminProductVariantListCreateView.as_view(),
+        name="admin-product-variant-list-create",
+    ),
+    path(
+        "admin/variants/<uuid:variant_id>/",
+        AdminProductVariantDetailView.as_view(),
+        name="admin-product-variant-detail",
+    ),
+    path(
+        "admin/variants/<uuid:variant_id>/deactivate/",
+        AdminProductVariantDeactivateView.as_view(),
+        name="admin-product-variant-deactivate",
+    ),
 ]

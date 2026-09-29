@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
 from .models import (
+    Attribute,
+    AttributeValue,
     Category,
     Product,
     ProductImage,
@@ -275,3 +277,244 @@ class AdminProductSerializer(serializers.ModelSerializer):
             "name": obj.category.name,
             "slug": obj.category.slug,
         }
+
+
+
+class AdminAttributeValueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AttributeValue
+        fields = [
+            "id",
+            "value",
+        ]
+
+    def validate_value(self, value):
+        value = value.strip()
+
+        if not value:
+            raise serializers.ValidationError(
+                "Attribute value cannot be empty."
+            )
+
+        return value
+
+
+class AdminAttributeSerializer(serializers.ModelSerializer):
+    values = AdminAttributeValueSerializer(
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+        model = Attribute
+        fields = [
+            "id",
+            "name",
+            "values",
+        ]
+
+    def validate_name(self, value):
+        value = value.strip()
+
+        if not value:
+            raise serializers.ValidationError(
+                "Attribute name cannot be empty."
+            )
+
+        return value
+
+
+
+
+class AdminProductVariantSerializer(serializers.ModelSerializer):
+    product_id = serializers.UUIDField(
+        source="product.id",
+        read_only=True,
+    )
+
+    attribute_value_ids = serializers.PrimaryKeyRelatedField(
+        source="attribute_values",
+        queryset=AttributeValue.objects.select_related("attribute"),
+        many=True,
+        write_only=True,
+        required=False,
+    )
+
+    attributes = serializers.SerializerMethodField(read_only=True)
+    currency = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = ProductVariant
+        fields = [
+            "id",
+            "product_id",
+            "sku",
+            "attribute_value_ids",
+            "attributes",
+            "price",
+            "currency",
+            "stock",
+            "low_stock_threshold",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+
+        read_only_fields = [
+            "id",
+            "product_id",
+            "currency",
+            "is_active",
+            "created_at",
+            "updated_at",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.instance is not None:
+            self.fields["stock"].read_only = True
+
+    def validate_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError(
+                "Price must be greater than zero."
+            )
+
+        return value
+
+    def validate_low_stock_threshold(self, value):
+        if value < 0:
+            raise serializers.ValidationError(
+                "Low-stock threshold cannot be negative."
+            )
+
+        return value
+
+
+    def validate(self, attrs):
+        product = self.instance.product if self.instance else self.context.get("product")
+
+        attribute_values = attrs.get(
+            "attribute_values",
+            self.instance.attribute_values.all()
+            if self.instance
+            else AttributeValue.objects.none(),
+        )
+
+        attribute_values = list(attribute_values)
+
+        # A variant cannot contain multiple values from the same attribute.
+        attribute_ids = [
+            attribute_value.attribute_id
+            for attribute_value in attribute_values
+        ]
+
+        if len(attribute_ids) != len(set(attribute_ids)):
+            raise serializers.ValidationError(
+                {
+                    "attribute_value_ids": [
+                        "A variant cannot contain multiple values from the same attribute."
+                    ]
+                }
+            )
+        # Default/no-option variant rules.
+        existing_variants = ProductVariant.objects.filter(
+            product=product,
+        )
+
+        if self.instance:
+            existing_variants = existing_variants.exclude(
+                pk=self.instance.pk
+            )
+
+        existing_default_exists = any(
+            not variant.attribute_values.exists()
+            for variant in existing_variants
+        )
+
+        existing_option_variant_exists = any(
+            variant.attribute_values.exists()
+            for variant in existing_variants
+        )
+
+        if not attribute_values:
+            # A product cannot mix a default variant with option-based variants.
+            if existing_option_variant_exists:
+                raise serializers.ValidationError(
+                    {
+                        "attribute_value_ids": [
+                            "A product cannot mix a default/no-option variant with attribute-based variants."
+                        ]
+                    }
+                )
+
+            # Only one default/no-option variant is allowed.
+            if existing_default_exists:
+                raise serializers.ValidationError(
+                    {
+                        "attribute_value_ids": [
+                            "This product already has a default/no-option variant."
+                        ]
+                    }
+                )
+
+        else:
+            # Option-based variants cannot be mixed with a default variant.
+            if existing_default_exists:
+                raise serializers.ValidationError(
+                    {
+                        "attribute_value_ids": [
+                            "A product cannot mix a default/no-option variant with attribute-based variants."
+                        ]
+                    }
+                )
+        # Check duplicate attribute combination.
+        if attribute_values:
+            selected_ids = sorted(
+                attribute_value.id
+                for attribute_value in attribute_values
+            )
+
+            existing_variants = ProductVariant.objects.filter(
+                product=product,
+            ).prefetch_related("attribute_values")
+
+            if self.instance:
+                existing_variants = existing_variants.exclude(
+                    pk=self.instance.pk
+                )
+
+            for variant in existing_variants:
+                existing_ids = sorted(
+                    attribute_value.id
+                    for attribute_value in variant.attribute_values.all()
+                )
+
+                if existing_ids == selected_ids:
+                    raise serializers.ValidationError(
+                        {
+                            "attribute_value_ids": [
+                                "A variant with the same attribute combination already exists for this product."
+                            ]
+                        }
+                    )
+
+        return attrs
+
+    def get_attributes(self, obj):
+        return [
+            {
+                "attribute": {
+                    "id": attribute_value.attribute.id,
+                    "name": attribute_value.attribute.name,
+                },
+                "value": {
+                    "id": attribute_value.id,
+                    "value": attribute_value.value,
+                },
+            }
+            for attribute_value in obj.attribute_values.select_related(
+                "attribute"
+            ).all()
+        ]

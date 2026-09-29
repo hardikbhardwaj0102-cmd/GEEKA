@@ -2231,3 +2231,665 @@ The frontend must never generate product UUIDs.
 | `status`      | string      | `DRAFT`, `PUBLISHED`, or `ARCHIVED` |
 | `created_at`  | datetime    | Creation timestamp                  |
 | `updated_at`  | datetime    | Last update timestamp               |
+
+
+
+## 2.14 Admin Attribute & Variant APIs
+
+These APIs are used by the authenticated GEEKA admin/staff dashboard to manage reusable product attributes, attribute values, and product variants.
+
+### Authentication & Permissions
+
+* Authentication: Required
+* Authentication method: Django session authentication
+* Permission: Admin/staff user (`IsAdminUser`)
+* CSRF: Required for `POST` and `PATCH` requests
+* Content-Type for requests with a body: `application/json`
+
+---
+
+### 2.14.1 List Attributes
+
+Returns all reusable product attributes and their existing values.
+
+### Request
+
+* **Method:** `GET`
+* **Endpoint:** `/api/v1/catalog/admin/attributes/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Not required
+* **Request Body:** None
+
+### Success Response — `200 OK`
+
+```
+[
+    {
+        "id": 1,
+        "name": "Color",
+        "values": [
+            {
+                "id": 1,
+                "value": "Blue"
+            },
+            {
+                "id": 4,
+                "value": "Red"
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "name": "Size",
+        "values": [
+            {
+                "id": 2,
+                "value": "M"
+            }
+        ]
+    }
+]
+```
+
+### Behavior
+
+* Returns all attributes ordered by name.
+* Each attribute includes its available values.
+* Attribute IDs and attribute value IDs are database IDs and must be used when creating variants.
+* Attribute names are unique.
+
+---
+
+### 2.14.2 Create Attribute
+
+Creates a reusable product attribute such as `Size`, `Color`, or `Material`.
+
+### Request
+
+* **Method:** `POST`
+* **Endpoint:** `/api/v1/catalog/admin/attributes/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Required
+* **Content-Type:** `application/json`
+
+### Request Body
+
+```
+{
+    "name": "Material"
+}
+```
+
+### Success Response — `201 Created`
+
+```
+{
+    "id": 5,
+    "name": "Material",
+    "values": []
+}
+```
+
+### Validation Error — `400 Bad Request`
+
+If the attribute name is empty:
+
+```
+{
+    "name": [
+        "Attribute name cannot be empty."
+    ]
+}
+```
+
+If an attribute with the same name already exists:
+
+```
+{
+    "name": [
+        "attribute with this name already exists."
+    ]
+}
+```
+
+### Behavior
+
+* Attribute names are trimmed before validation.
+* Empty attribute names are rejected.
+* Attribute names are unique.
+* A newly created attribute initially has no values.
+
+---
+
+### 2.14.3 List Attribute Values
+
+Returns all values belonging to a specific attribute.
+
+### Request
+
+* **Method:** `GET`
+* **Endpoint:** `/api/v1/catalog/admin/attributes/{attribute_id}/values/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Not required
+* **Request Body:** None
+
+### Success Response — `200 OK`
+
+```
+[
+    {
+        "id": 1,
+        "value": "Blue"
+    },
+    {
+        "id": 4,
+        "value": "Red"
+    }
+]
+```
+
+### Not Found — `404 Not Found`
+
+Returned when the specified attribute does not exist.
+
+---
+
+### 2.14.4 Create Attribute Value
+
+Creates a value belonging to an existing attribute.
+
+### Request
+
+* **Method:** `POST`
+* **Endpoint:** `/api/v1/catalog/admin/attributes/{attribute_id}/values/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Required
+* **Content-Type:** `application/json`
+
+### Request Body
+
+```
+{
+    "value": "Green"
+}
+```
+
+### Success Response — `201 Created`
+
+```
+{
+    "id": 6,
+    "value": "Green"
+}
+```
+
+### Validation Error — `400 Bad Request`
+
+If the value is empty:
+
+```
+{
+    "value": [
+        "Attribute value cannot be empty."
+    ]
+}
+```
+
+If the same value already exists for the same attribute, the database uniqueness constraint rejects the duplicate.
+
+### Behavior
+
+* Attribute values are trimmed before validation.
+* An empty value is rejected.
+* Attribute values are unique within their attribute.
+* The same text may be used under different attributes if required.
+
+---
+
+### 2.14.5 List Product Variants
+
+Returns all variants belonging to a specific product.
+
+### Request
+
+* **Method:** `GET`
+* **Endpoint:** `/api/v1/catalog/admin/products/{product_id}/variants/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Not required
+* **Request Body:** None
+
+### Success Response — `200 OK`
+
+```
+[
+    {
+        "id": "3d518b22-0089-4ceb-b7ae-e1ccf511eeb3",
+        "product_id": "46cb81d6-dc2d-4534-9847-44e14614466f",
+        "sku": "HCB-RED-M-TEST-001",
+        "attributes": [
+            {
+                "attribute": {
+                    "id": 3,
+                    "name": "Size"
+                },
+                "value": {
+                    "id": 2,
+                    "value": "M"
+                }
+            },
+            {
+                "attribute": {
+                    "id": 1,
+                    "name": "Color"
+                },
+                "value": {
+                    "id": 4,
+                    "value": "Red"
+                }
+            }
+        ],
+        "price": "949.00",
+        "currency": "INR",
+        "stock": 0,
+        "low_stock_threshold": 3,
+        "is_active": true,
+        "created_at": "2026-09-28T00:00:00Z",
+        "updated_at": "2026-09-28T00:00:00Z"
+    }
+]
+```
+
+### Behavior
+
+* Returns variants ordered by creation time.
+* Attribute information is returned as nested attribute/value objects.
+* `product_id` is the UUID of the parent product.
+* `stock` is returned for dashboard display but is not modified through the general variant PATCH endpoint.
+* `currency` is controlled by the backend and currently uses `INR`.
+
+---
+
+### 2.14.6 Create Product Variant
+
+Creates a new variant for a specific product.
+
+### Request
+
+* **Method:** `POST`
+* **Endpoint:** `/api/v1/catalog/admin/products/{product_id}/variants/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Required
+* **Content-Type:** `application/json`
+
+### Request Body
+
+```
+{
+    "sku": "HCB-BLU-001",
+    "price": "899.00",
+    "attribute_value_ids": [1, 2],
+    "stock": 10,
+    "low_stock_threshold": 3
+}
+```
+
+### Field Rules
+
+| Field                 | Required | Description                                                        |
+| --------------------- | -------- | ------------------------------------------------------------------ |
+| `sku`                 | Yes      | Globally unique variant SKU                                        |
+| `price`               | Yes      | Must be greater than `0`                                           |
+| `attribute_value_ids` | No       | Attribute value IDs used by the variant; defaults to no attributes |
+| `stock`               | No       | Initial stock quantity; defaults to `0`                            |
+| `low_stock_threshold` | No       | Admin warning threshold; defaults to `0`                           |
+
+`currency` must not be submitted by the frontend. The backend sets it to `INR`.
+
+### Success Response — `201 Created`
+
+```
+{
+    "id": "d1b54e05-bb1e-473d-a546-8e8584d3cb78",
+    "product_id": "ecfa15a8-462e-4c4a-85f1-96eee2bd153e",
+    "sku": "VAR-STOCK-TEST-001",
+    "attributes": [
+        {
+            "attribute": {
+                "id": 1,
+                "name": "Color"
+            },
+            "value": {
+                "id": 1,
+                "value": "Blue"
+            }
+        },
+        {
+            "attribute": {
+                "id": 3,
+                "name": "Size"
+            },
+            "value": {
+                "id": 2,
+                "value": "M"
+            }
+        }
+    ],
+    "price": "799.00",
+    "currency": "INR",
+    "stock": 10,
+    "low_stock_threshold": 3,
+    "is_active": true,
+    "created_at": "2026-09-28T00:00:00Z",
+    "updated_at": "2026-09-28T00:00:00Z"
+}
+```
+
+### Validation Rules
+
+A variant cannot contain multiple values from the same attribute.
+
+Example:
+
+```
+{
+    "attribute_value_ids": [1, 4]
+}
+```
+
+If IDs `1` and `4` both belong to the `Color` attribute:
+
+```
+{
+    "attribute_value_ids": [
+        "A variant cannot contain multiple values from the same attribute."
+    ]
+}
+```
+
+A product cannot contain duplicate attribute combinations.
+
+If the same combination already exists:
+
+```
+{
+    "attribute_value_ids": [
+        "A variant with the same attribute combination already exists for this product."
+    ]
+}
+```
+
+A product cannot mix a default/no-option variant with attribute-based variants.
+
+If an incompatible variant is submitted:
+
+```
+{
+    "attribute_value_ids": [
+        "A product cannot mix a default/no-option variant with attribute-based variants."
+    ]
+}
+```
+
+A product can have only one default/no-option variant.
+
+If another default variant already exists:
+
+```
+{
+    "attribute_value_ids": [
+        "This product already has a default/no-option variant."
+    ]
+}
+```
+
+### Price Validation — `400 Bad Request`
+
+Price must be greater than zero.
+
+```
+{
+    "price": [
+        "Price must be greater than zero."
+    ]
+}
+```
+
+### Stock Validation
+
+* Stock cannot be negative.
+* Initial stock may be supplied when creating a variant.
+* Stock is managed separately from general variant updates.
+* Stock management must not be performed through the variant PATCH endpoint.
+
+### Low-Stock Threshold Validation
+
+The threshold cannot be negative.
+
+A value of `0` means that low-stock warnings are disabled.
+
+### SKU Rules
+
+* SKU must be globally unique.
+* SKU is stored on the variant.
+* Duplicate SKUs are rejected.
+
+---
+
+### 2.14.7 Get Product Variant Detail
+
+Returns one specific product variant.
+
+### Request
+
+* **Method:** `GET`
+* **Endpoint:** `/api/v1/catalog/admin/variants/{variant_id}/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Not required
+* **Request Body:** None
+
+### Success Response — `200 OK`
+
+The response uses the same variant structure as the product variant list/create response.
+
+```
+{
+    "id": "d1b54e05-bb1e-473d-a546-8e8584d3cb78",
+    "product_id": "ecfa15a8-462e-4c4a-85f1-96eee2bd153e",
+    "sku": "VAR-STOCK-TEST-UPDATED",
+    "attributes": [
+        {
+            "attribute": {
+                "id": 1,
+                "name": "Color"
+            },
+            "value": {
+                "id": 1,
+                "value": "Blue"
+            }
+        },
+        {
+            "attribute": {
+                "id": 3,
+                "name": "Size"
+            },
+            "value": {
+                "id": 2,
+                "value": "M"
+            }
+        }
+    ],
+    "price": "849.00",
+    "currency": "INR",
+    "stock": 10,
+    "low_stock_threshold": 5,
+    "is_active": false,
+    "created_at": "2026-09-28T00:00:00Z",
+    "updated_at": "2026-09-28T00:00:00Z"
+}
+```
+
+### Not Found — `404 Not Found`
+
+Returned when the specified variant does not exist.
+
+---
+
+### 2.14.8 Update Product Variant
+
+Updates editable variant information.
+
+### Request
+
+* **Method:** `PATCH`
+* **Endpoint:** `/api/v1/catalog/admin/variants/{variant_id}/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Required
+* **Content-Type:** `application/json`
+
+### Editable Fields
+
+The following fields may be updated:
+
+* `sku`
+* `price`
+* `attribute_value_ids`
+* `low_stock_threshold`
+
+### Example Request
+
+```
+{
+    "sku": "HCB-BLU-UPDATED-001",
+    "price": "949.00",
+    "attribute_value_ids": [1, 2],
+    "low_stock_threshold": 5
+}
+```
+
+### Success Response — `200 OK`
+
+Returns the complete updated variant object using the standard variant response structure.
+
+### Important Stock Rule
+
+`stock` is read-only when updating an existing variant.
+
+If `stock` is included in a PATCH request, it is ignored and the stored stock value remains unchanged.
+
+Example:
+
+```
+{
+    "stock": 99
+}
+```
+
+The request may return:
+
+```
+HTTP 200 OK
+```
+
+but the existing stock value remains unchanged.
+
+Inventory changes must therefore be handled through the dedicated inventory functionality rather than the general variant update endpoint.
+
+### Important Currency Rule
+
+`currency` is read-only and backend-controlled.
+
+The frontend must not attempt to change the currency through PATCH.
+
+The current backend currency is:
+
+```
+"currency": "INR"
+```
+
+### Validation
+
+The same variant validation rules used during creation also apply when changing SKU, price, or attribute values.
+
+This includes:
+
+* SKU uniqueness
+* Price greater than zero
+* One value per attribute
+* No duplicate attribute combinations
+* No mixing of default/no-option and attribute-based variants
+* Only one default/no-option variant per product
+* Non-negative low-stock threshold
+
+---
+
+### 2.14.9 Deactivate Product Variant
+
+Deactivates a variant without deleting it.
+
+### Request
+
+* **Method:** `PATCH`
+* **Endpoint:** `/api/v1/catalog/admin/variants/{variant_id}/deactivate/`
+* **Authentication:** Required
+* **Permission:** Admin/staff
+* **CSRF:** Required
+* **Content-Type:** `application/json`
+* **Request Body:** None
+
+### Success Response — `200 OK`
+
+Returns the updated variant with:
+
+```
+"is_active": false
+```
+
+The remaining variant information is preserved, including:
+
+* Variant ID
+* Product ID
+* SKU
+* Attributes
+* Price
+* Currency
+* Stock
+* Low-stock threshold
+* Created timestamp
+* Updated timestamp
+
+### Behavior
+
+* Deactivation does not delete the variant.
+* Historical variant information remains available to the admin.
+* The variant becomes inactive through `is_active: false`.
+* The endpoint does not require a request body.
+* The variant can still be retrieved through the admin variant detail endpoint.
+
+### Not Found — `404 Not Found`
+
+Returned when the specified variant does not exist.
+
+---
+
+### 2.14.10 Frontend Integration Notes
+
+The frontend admin dashboard should:
+
+1. Fetch available attributes from `/api/v1/catalog/admin/attributes/`.
+2. Use the returned attribute value IDs when creating or updating variants.
+3. Fetch product variants using the product-specific variants endpoint.
+4. Use the variant detail endpoint when an individual variant needs to be loaded.
+5. Treat `stock` as read-only in the general variant editing form.
+6. Use the dedicated inventory API when inventory management is implemented.
+7. Treat `currency` as backend-controlled.
+8. Use `is_active` to determine whether a variant is active.
+9. Never generate or assume attribute IDs, attribute value IDs, product IDs, or variant IDs.
+10. Use the IDs returned by the backend as the source of truth.

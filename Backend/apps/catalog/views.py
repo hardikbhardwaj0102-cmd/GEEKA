@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAdminUser,AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Product, Category
+from .models import Product, Category , Attribute, ProductVariant
 from .product_image_service import create_product_image
 from .serializers import (
     AdminCategorySerializer,
@@ -14,6 +14,9 @@ from .serializers import (
     ProductImageUploadSerializer,
     PublicProductListSerializer,
     PublicProductDetailSerializer,
+    AdminAttributeSerializer,
+    AdminAttributeValueSerializer,
+    AdminProductVariantSerializer,
 )
 
 from .supabase_storage import create_product_image_signed_url
@@ -379,5 +382,196 @@ class AdminProductStatusView(APIView):
 
         return Response(
             AdminProductSerializer(product).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+
+class AdminAttributeListCreateView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        attributes = Attribute.objects.prefetch_related(
+            "values"
+        ).order_by("name")
+
+        serializer = AdminAttributeSerializer(
+            attributes,
+            many=True,
+        )
+
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = AdminAttributeSerializer(
+            data=request.data
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        attribute = serializer.save()
+
+        return Response(
+            AdminAttributeSerializer(attribute).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class AdminAttributeValueListCreateView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, attribute_id):
+        attribute = get_object_or_404(
+            Attribute,
+            id=attribute_id,
+        )
+
+        values = attribute.values.all().order_by("value")
+
+        serializer = AdminAttributeValueSerializer(
+            values,
+            many=True,
+        )
+
+        return Response(serializer.data)
+
+    def post(self, request, attribute_id):
+        attribute = get_object_or_404(
+            Attribute,
+            id=attribute_id,
+        )
+
+        serializer = AdminAttributeValueSerializer(
+            data=request.data
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        attribute_value = serializer.save(
+            attribute=attribute
+        )
+
+        return Response(
+            AdminAttributeValueSerializer(attribute_value).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+
+class AdminProductVariantListCreateView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, product_id):
+        product = get_object_or_404(
+            Product,
+            id=product_id,
+        )
+
+        variants = (
+            product.variants
+            .prefetch_related(
+                "attribute_values__attribute"
+            )
+            .order_by("created_at")
+        )
+
+        serializer = AdminProductVariantSerializer(
+            variants,
+            many=True,
+        )
+
+        return Response(serializer.data)
+
+    def post(self, request, product_id):
+        product = get_object_or_404(
+            Product,
+            id=product_id,
+        )
+
+        serializer = AdminProductVariantSerializer(
+            data=request.data,
+            context={
+                "product": product,
+            },
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        variant = serializer.save(
+            product=product,
+            currency="INR",
+        )
+
+        return Response(
+            AdminProductVariantSerializer(variant).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+class AdminProductVariantDetailView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, variant_id):
+        variant = get_object_or_404(
+            ProductVariant.objects.prefetch_related(
+                "attribute_values__attribute"
+            ),
+            id=variant_id,
+        )
+
+        serializer = AdminProductVariantSerializer(
+            variant
+        )
+
+        return Response(serializer.data)
+
+    def patch(self, request, variant_id):
+        variant = get_object_or_404(
+            ProductVariant.objects.prefetch_related(
+                "attribute_values__attribute"
+            ),
+            id=variant_id,
+        )
+
+        serializer = AdminProductVariantSerializer(
+            variant,
+            data=request.data,
+            partial=True,
+        )
+
+        serializer.is_valid(raise_exception=True)
+
+        variant = serializer.save()
+
+        return Response(
+            AdminProductVariantSerializer(variant).data,
+            status=status.HTTP_200_OK,
+        )
+
+
+class AdminProductVariantDeactivateView(APIView):
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def patch(self, request, variant_id):
+        variant = get_object_or_404(
+            ProductVariant,
+            id=variant_id,
+        )
+
+        variant.is_active = False
+        variant.save(
+            update_fields=[
+                "is_active",
+                "updated_at",
+            ]
+        )
+
+        return Response(
+            AdminProductVariantSerializer(variant).data,
             status=status.HTTP_200_OK,
         )
