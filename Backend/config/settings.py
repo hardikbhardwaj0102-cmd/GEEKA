@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "apps.users",
     "apps.authentication",
     "apps.catalog",
+    "apps.cart",
 
     "rest_framework",
     "corsheaders",
