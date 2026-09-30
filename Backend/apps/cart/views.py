@@ -4,7 +4,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
-
+from .models import Wishlist, WishlistItem
 from .serializers import (
     AddCartItemSerializer,
     CartSerializer,
@@ -21,6 +21,20 @@ from .services import (
     remove_cart_item,
     clear_cart,
 )
+from rest_framework.permissions import IsAuthenticated
+from apps.catalog.models import Product
+from apps.cart.services import (
+    get_or_create_wishlist,
+    add_product_to_wishlist,
+    remove_product_from_wishlist,
+    clear_wishlist,
+)
+from apps.cart.serializers import (
+    WishlistSerializer,
+    WishlistItemSerializer,
+    AddWishlistItemSerializer,
+)
+
 
 
 class CartDetailView(APIView):
@@ -221,4 +235,111 @@ class CartItemUpdateView(APIView):
 
         return Response(
             status=status.HTTP_204_NO_CONTENT,
+        )
+
+
+
+class WishlistDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        wishlist = get_or_create_wishlist(request.user)
+
+        wishlist = (
+            Wishlist.objects
+            .prefetch_related(
+                "items__product__category"
+            )
+            .get(id=wishlist.id)
+        )
+
+        return Response(
+            WishlistSerializer(wishlist).data,
+            status=status.HTTP_200_OK,
+        )
+
+    def delete(self, request):
+        clear_wishlist(user=request.user)
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT
+        )
+
+
+class WishlistItemCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = AddWishlistItemSerializer(
+            data=request.data
+        )
+        serializer.is_valid(raise_exception=True)
+
+        product_id = serializer.validated_data["product_id"]
+
+        product = (
+            Product.objects
+            .select_related("category")
+            .filter(
+                id=product_id,
+                status=Product.Status.PUBLISHED,
+            )
+            .first()
+        )
+
+        if product is None:
+            return Response(
+                {
+                    "detail": "Product does not exist or is not available."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        item, created = add_product_to_wishlist(
+            user=request.user,
+            product=product,
+        )
+
+        response_status = (
+            status.HTTP_201_CREATED
+            if created
+            else status.HTTP_200_OK
+        )
+
+        return Response(
+            WishlistItemSerializer(item).data,
+            status=response_status,
+        )
+
+
+class WishlistItemDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, item_id):
+        wishlist = get_or_create_wishlist(request.user)
+
+        item = (
+            WishlistItem.objects
+            .filter(
+                id=item_id,
+                wishlist=wishlist,
+            )
+            .first()
+        )
+
+        if item is None:
+            return Response(
+                {
+                    "detail": "Wishlist item does not exist."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        remove_product_from_wishlist(
+            user=request.user,
+            product=item.product,
+        )
+
+        return Response(
+            status=status.HTTP_204_NO_CONTENT
         )
