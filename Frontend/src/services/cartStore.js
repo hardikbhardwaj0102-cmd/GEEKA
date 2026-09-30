@@ -1,157 +1,60 @@
 import { useSyncExternalStore } from "react";
 
-/*
-|--------------------------------------------------------------------------
-| CART STORAGE
-|--------------------------------------------------------------------------
-| We use a new key so the old demo cart data is not loaded.
-|--------------------------------------------------------------------------
-*/
-
-const CART_STORAGE_KEY = "geeka-cart-v2";
+import {
+    getCart,
+    addCartItem,
+    updateCartItem,
+    removeCartItem,
+    clearCart as clearBackendCart,
+    getCartErrorMessage,
+} from "./cartService";
 
 
 /*
 |--------------------------------------------------------------------------
 | CART BUSINESS RULES
 |--------------------------------------------------------------------------
-| These are temporary frontend rules.
-| Your backend developer can later move these rules to the backend.
+| These are retained for compatibility with the existing Cart UI.
+|
+| IMPORTANT:
+| Product price, stock and purchasability come from Django.
+| Shipping is not currently part of the documented Cart API response,
+| so this frontend shipping rule is retained until checkout/shipping
+| endpoints are available from the backend.
 |--------------------------------------------------------------------------
 */
 
 export const FREE_SHIPPING_THRESHOLD = 999;
+
 export const SHIPPING_FEE = 99;
 
 
 /*
 |--------------------------------------------------------------------------
-| INTERNAL CART STATE
+| INTERNAL STATE
 |--------------------------------------------------------------------------
 */
 
-let cartItems = readCart();
+let cartItems = [];
+
+let isLoading = false;
+
+let isInitialized = false;
+
+let cartError = null;
 
 const listeners = new Set();
 
-
-/*
-|--------------------------------------------------------------------------
-| READ CART FROM LOCAL STORAGE
-|--------------------------------------------------------------------------
-*/
-
-function readCart() {
-    try {
-        const saved = localStorage.getItem(
-            CART_STORAGE_KEY
-        );
-
-        const parsed = saved
-            ? JSON.parse(saved)
-            : [];
-
-        if (!Array.isArray(parsed)) {
-            return [];
-        }
-
-        return parsed
-            .map(normalizeCartItem)
-            .filter(Boolean);
-
-    } catch {
-        return [];
-    }
-}
+let initializationPromise = null;
 
 
 /*
 |--------------------------------------------------------------------------
-| NORMALIZE CART ITEM
-|--------------------------------------------------------------------------
-| Makes sure every cart item has a consistent structure.
-|--------------------------------------------------------------------------
-*/
-
-function normalizeCartItem(item) {
-
-    if (
-        !item ||
-        item.id === undefined ||
-        item.id === null
-    ) {
-        return null;
-    }
-
-    const price = Number(item.price);
-    const quantity = Number(item.quantity);
-
-    if (
-        !Number.isFinite(price) ||
-        !Number.isFinite(quantity)
-    ) {
-        return null;
-    }
-
-    return {
-        id: item.id,
-
-        name:
-            item.name ||
-            "Product",
-
-        category:
-            item.category ||
-            "",
-
-        color:
-            item.color ||
-            "",
-
-        price,
-
-        image:
-            item.image ||
-            "",
-
-        quantity:
-            Math.max(
-                1,
-                Math.floor(quantity)
-            ),
-    };
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| SAVE CART
-|--------------------------------------------------------------------------
-*/
-
-function persist() {
-
-    try {
-
-        localStorage.setItem(
-            CART_STORAGE_KEY,
-            JSON.stringify(cartItems)
-        );
-
-    } catch {
-        // In-memory cart still works if localStorage fails.
-    }
-}
-
-
-/*
-|--------------------------------------------------------------------------
-| NOTIFY SUBSCRIBERS
+| SNAPSHOT
 |--------------------------------------------------------------------------
 */
 
 function notify() {
-
     listeners.forEach(
         (listener) => listener()
     );
@@ -160,32 +63,11 @@ function notify() {
 
 /*
 |--------------------------------------------------------------------------
-| UPDATE INTERNAL CART
-|--------------------------------------------------------------------------
-*/
-
-function update(nextItems) {
-
-    cartItems = nextItems
-        .map(normalizeCartItem)
-        .filter(Boolean);
-
-    persist();
-
-    notify();
-}
-
-
-/*
-|--------------------------------------------------------------------------
 | SUBSCRIBE
-|--------------------------------------------------------------------------
-| Used by useSyncExternalStore.
 |--------------------------------------------------------------------------
 */
 
 export function subscribe(listener) {
-
     listeners.add(listener);
 
     return () => {
@@ -196,7 +78,7 @@ export function subscribe(listener) {
 
 /*
 |--------------------------------------------------------------------------
-| GET CURRENT CART
+| GET SNAPSHOT
 |--------------------------------------------------------------------------
 */
 
@@ -207,130 +89,454 @@ export function getCartSnapshot() {
 
 /*
 |--------------------------------------------------------------------------
-| ADD PRODUCT TO CART
+| SERVER SNAPSHOT
 |--------------------------------------------------------------------------
-| If product already exists:
-|     quantity + 1
-|
-| Otherwise:
-|     create new cart item with quantity 1
+| Used by React during SSR/hydration-safe rendering.
 |--------------------------------------------------------------------------
 */
 
-export function addToCart(product) {
-
-    if (
-        !product ||
-        product.inStock === false
-    ) {
-        return;
-    }
-
-    const existing = cartItems.find(
-        (item) =>
-            String(item.id) ===
-            String(product.id)
-    );
-
-    /*
-    |--------------------------------------------------------------
-    | PRODUCT ALREADY IN CART
-    |--------------------------------------------------------------
-    */
-
-    if (existing) {
-
-        update(
-
-            cartItems.map((item) =>
-
-                String(item.id) ===
-                    String(product.id)
-
-                    ? {
-                        ...item,
-
-                        quantity:
-                            item.quantity + 1,
-                    }
-
-                    : item
-            )
-
-        );
-
-        return;
-    }
-
-
-    /*
-    |--------------------------------------------------------------
-    | NEW PRODUCT
-    |--------------------------------------------------------------
-    */
-
-    update([
-        ...cartItems,
-
-        {
-            id: product.id,
-
-            name: product.name,
-
-            category:
-                product.category,
-
-            color:
-                product.color || "",
-
-            price:
-                product.price,
-
-            image:
-                product.image || "",
-
-            quantity: 1,
-        },
-    ]);
+export function getCartServerSnapshot() {
+    return [];
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| CHANGE QUANTITY
-|--------------------------------------------------------------------------
-| change = +1
-| change = -1
+| STATUS
 |--------------------------------------------------------------------------
 */
 
-export function updateCartQuantity(
-    productId,
-    change
+export function isCartLoading() {
+    return isLoading;
+}
+
+export function getCartError() {
+    return cartError;
+}
+
+export function isCartInitialized() {
+    return isInitialized;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| NORMALIZE EXTERNAL CART ITEMS
+|--------------------------------------------------------------------------
+*/
+
+function normalizeItems(items) {
+    if (!Array.isArray(items)) {
+        return [];
+    }
+
+    return items.filter(
+        (item) =>
+            item &&
+            item.id &&
+            item.variant_id
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| SET STATE
+|--------------------------------------------------------------------------
+*/
+
+function setState(
+    nextItems,
+    {
+        loading = isLoading,
+        error = cartError,
+        initialized = isInitialized,
+    } = {}
 ) {
+    cartItems =
+        normalizeItems(nextItems);
 
-    update(
+    isLoading = loading;
 
-        cartItems.map((item) => {
+    cartError = error;
 
-            if (
-                String(item.id) !==
-                String(productId)
-            ) {
-                return item;
+    isInitialized =
+        initialized;
+
+    notify();
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| LOAD CART FROM DJANGO
+|--------------------------------------------------------------------------
+*/
+
+export async function loadCart() {
+    if (initializationPromise) {
+        return initializationPromise;
+    }
+
+    isLoading = true;
+
+    cartError = null;
+
+    notify();
+
+    initializationPromise =
+        getCart()
+            .then((cart) => {
+                const items =
+                    normalizeItems(
+                        cart?.items
+                    );
+
+                setState(
+                    items,
+                    {
+                        loading: false,
+                        error: null,
+                        initialized: true,
+                    }
+                );
+
+                return items;
+            })
+            .catch((error) => {
+                const message =
+                    getCartErrorMessage(
+                        error
+                    );
+
+                setState(
+                    [],
+                    {
+                        loading: false,
+                        error: message,
+                        initialized: true,
+                    }
+                );
+
+                throw error;
+            })
+            .finally(() => {
+                initializationPromise =
+                    null;
+            });
+
+    return initializationPromise;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| INITIALIZE CART
+|--------------------------------------------------------------------------
+| Called automatically by the first consumer of useCart().
+|--------------------------------------------------------------------------
+*/
+
+export function initializeCart() {
+    if (
+        !isInitialized &&
+        !isLoading
+    ) {
+        loadCart().catch(() => {
+            /*
+            |--------------------------------------------------------------
+            | Error is already stored in cartError.
+            |--------------------------------------------------------------
+            */
+        });
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ADD TO CART
+|--------------------------------------------------------------------------
+|
+| Supported call styles:
+|
+| 1.
+| addToCart(variantId, quantity)
+|
+| 2.
+| addToCart(product, variant, quantity)
+|
+| 3.
+| addToCart({
+|      product,
+|      variant,
+|      quantity
+|    })
+|
+| This keeps the store flexible while the product pages are being
+| migrated from the old product-level cart to the variant-level cart.
+|--------------------------------------------------------------------------
+*/
+
+export async function addToCart(
+    firstArg,
+    secondArg,
+    thirdArg
+) {
+    let variantId = "";
+
+    let quantity = 1;
+
+    /*
+    |--------------------------------------------------------------------------
+    | STYLE 1
+    |--------------------------------------------------------------------------
+    | addToCart("variant-uuid", 1)
+    */
+
+    if (
+        typeof firstArg === "string" ||
+        typeof firstArg === "number"
+    ) {
+        variantId =
+            String(
+                firstArg
+            ).trim();
+
+        quantity =
+            secondArg ?? 1;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | STYLE 2
+    |--------------------------------------------------------------------------
+    | addToCart(product, variant, quantity)
+    */
+
+    else if (
+        firstArg &&
+        secondArg
+    ) {
+        const variant =
+            secondArg;
+
+        variantId =
+            String(
+                variant?.id ??
+                variant?.variant_id ??
+                ""
+            ).trim();
+
+        quantity =
+            thirdArg ?? 1;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | STYLE 3
+    |--------------------------------------------------------------------------
+    | addToCart({
+    |   product,
+    |   variant,
+    |   quantity
+    | })
+    */
+
+    else if (
+        firstArg &&
+        typeof firstArg ===
+        "object"
+    ) {
+        const payload =
+            firstArg;
+
+        const variant =
+            payload?.variant ||
+            payload;
+
+        variantId =
+            String(
+                payload?.variant_id ??
+                variant?.variant_id ??
+                variant?.id ??
+                ""
+            ).trim();
+
+        quantity =
+            payload?.quantity ??
+            secondArg ??
+            1;
+    }
+
+    if (!variantId) {
+        const error =
+            new Error(
+                "Select a product variant before adding the item to cart."
+            );
+
+        cartError =
+            error.message;
+
+        notify();
+
+        throw error;
+    }
+
+    const safeQuantity =
+        Math.max(
+            1,
+            Math.floor(
+                Number(quantity) || 1
+            )
+        );
+
+    isLoading = true;
+
+    cartError = null;
+
+    notify();
+
+    try {
+        await addCartItem(
+            variantId,
+            safeQuantity
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Re-fetch complete cart.
+        |
+        | This ensures we use backend-calculated:
+        | - price
+        | - quantity
+        | - subtotal
+        | - stock
+        | - is_purchasable
+        |--------------------------------------------------------------------------
+        */
+
+        const cart =
+            await getCart();
+
+        setState(
+            cart?.items || [],
+            {
+                loading: false,
+                error: null,
+                initialized: true,
             }
+        );
 
-            return {
-                ...item,
+        return cart;
+    } catch (error) {
+        const message =
+            getCartErrorMessage(
+                error
+            );
 
-                quantity:
-                    Math.max(
-                        1,
-                        item.quantity + change
-                    ),
-            };
-        })
+        isLoading = false;
 
+        cartError = message;
+
+        notify();
+
+        throw error;
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| UPDATE QUANTITY
+|--------------------------------------------------------------------------
+|
+| New preferred usage:
+|
+| updateCartQuantity(cartItemId, quantity)
+|
+| Legacy usage:
+|
+| updateCartQuantity(id, +1)
+| updateCartQuantity(id, -1)
+|
+|--------------------------------------------------------------------------
+*/
+
+export async function updateCartQuantity(
+    itemId,
+    quantityOrChange
+) {
+    const item =
+        cartItems.find(
+            (cartItem) =>
+                String(
+                    cartItem.id
+                ) ===
+                String(itemId)
+        );
+
+    if (!item) {
+        throw new Error(
+            "Cart item was not found."
+        );
+    }
+
+    let nextQuantity;
+
+    /*
+    |--------------------------------------------------------------------------
+    | Explicit quantity
+    |--------------------------------------------------------------------------
+    | set to current quantity when value is greater than 0.
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        Number.isInteger(
+            Number(
+                quantityOrChange
+            )
+        )
+    ) {
+        const numericValue =
+            Number(
+                quantityOrChange
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Preserve the old +1 / -1 interface.
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            numericValue === 1 ||
+            numericValue === -1
+        ) {
+            nextQuantity =
+                Math.max(
+                    1,
+                    item.quantity +
+                    numericValue
+                );
+        } else {
+            nextQuantity =
+                Math.max(
+                    1,
+                    Math.floor(
+                        numericValue
+                    )
+                );
+        }
+    } else {
+        nextQuantity =
+            item.quantity;
+    }
+
+    return setCartQuantity(
+        itemId,
+        nextQuantity
     );
 }
 
@@ -341,10 +547,20 @@ export function updateCartQuantity(
 |--------------------------------------------------------------------------
 */
 
-export function setCartQuantity(
-    productId,
+export async function setCartQuantity(
+    itemId,
     quantity
 ) {
+    const safeItemId =
+        String(
+            itemId ?? ""
+        ).trim();
+
+    if (!safeItemId) {
+        throw new Error(
+            "A cart item ID is required."
+        );
+    }
 
     const safeQuantity =
         Math.max(
@@ -354,45 +570,108 @@ export function setCartQuantity(
             )
         );
 
-    update(
+    isLoading = true;
 
-        cartItems.map((item) =>
+    cartError = null;
 
-            String(item.id) ===
-                String(productId)
+    notify();
 
-                ? {
-                    ...item,
-                    quantity:
-                        safeQuantity,
-                }
+    try {
+        await updateCartItem(
+            safeItemId,
+            safeQuantity
+        );
 
-                : item
-        )
+        const cart =
+            await getCart();
 
-    );
+        setState(
+            cart?.items || [],
+            {
+                loading: false,
+                error: null,
+                initialized: true,
+            }
+        );
+
+        return cart;
+    } catch (error) {
+        const message =
+            getCartErrorMessage(
+                error
+            );
+
+        isLoading = false;
+
+        cartError =
+            message;
+
+        notify();
+
+        throw error;
+    }
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| REMOVE PRODUCT
+| REMOVE ITEM
 |--------------------------------------------------------------------------
 */
 
-export function removeFromCart(
-    productId
+export async function removeFromCart(
+    itemId
 ) {
+    const safeItemId =
+        String(
+            itemId ?? ""
+        ).trim();
 
-    update(
+    if (!safeItemId) {
+        throw new Error(
+            "A cart item ID is required."
+        );
+    }
 
-        cartItems.filter(
-            (item) =>
-                String(item.id) !==
-                String(productId)
-        )
+    isLoading = true;
 
-    );
+    cartError = null;
+
+    notify();
+
+    try {
+        await removeCartItem(
+            safeItemId
+        );
+
+        const cart =
+            await getCart();
+
+        setState(
+            cart?.items || [],
+            {
+                loading: false,
+                error: null,
+                initialized: true,
+            }
+        );
+
+        return cart;
+    } catch (error) {
+        const message =
+            getCartErrorMessage(
+                error
+            );
+
+        isLoading = false;
+
+        cartError =
+            message;
+
+        notify();
+
+        throw error;
+    }
 }
 
 
@@ -402,26 +681,62 @@ export function removeFromCart(
 |--------------------------------------------------------------------------
 */
 
-export function clearCart() {
+export async function clearCart() {
+    isLoading = true;
 
-    update([]);
+    cartError = null;
+
+    notify();
+
+    try {
+        await clearBackendCart();
+
+        setState(
+            [],
+            {
+                loading: false,
+                error: null,
+                initialized: true,
+            }
+        );
+
+        return true;
+    } catch (error) {
+        const message =
+            getCartErrorMessage(
+                error
+            );
+
+        isLoading = false;
+
+        cartError =
+            message;
+
+        notify();
+
+        throw error;
+    }
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| TOTAL ITEM COUNT
+| CART COUNT
 |--------------------------------------------------------------------------
 */
 
 export function getCartCount(
     items = cartItems
 ) {
-
     return items.reduce(
         (total, item) =>
-            total + item.quantity,
-
+            total +
+            Math.max(
+                0,
+                Number(
+                    item?.quantity
+                ) || 0
+            ),
         0
     );
 }
@@ -429,20 +744,33 @@ export function getCartCount(
 
 /*
 |--------------------------------------------------------------------------
-| SUBTOTAL
+| CART SUBTOTAL
+|--------------------------------------------------------------------------
+| Uses backend-returned/current cart item prices.
 |--------------------------------------------------------------------------
 */
 
 export function getCartSubtotal(
     items = cartItems
 ) {
-
     return items.reduce(
-        (total, item) =>
-            total +
-            item.price *
-            item.quantity,
+        (total, item) => {
+            const price =
+                Number(
+                    item?.price
+                ) || 0;
 
+            const quantity =
+                Number(
+                    item?.quantity
+                ) || 0;
+
+            return (
+                total +
+                price *
+                quantity
+            );
+        },
         0
     );
 }
@@ -457,9 +785,10 @@ export function getCartSubtotal(
 export function getCartShipping(
     items = cartItems
 ) {
-
     const subtotal =
-        getCartSubtotal(items);
+        getCartSubtotal(
+            items
+        );
 
     if (
         subtotal === 0 ||
@@ -482,82 +811,109 @@ export function getCartShipping(
 export function getCartTotal(
     items = cartItems
 ) {
-
     return (
-        getCartSubtotal(items) +
-        getCartShipping(items)
+        getCartSubtotal(
+            items
+        ) +
+        getCartShipping(
+            items
+        )
     );
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| CROSS-TAB SYNCHRONIZATION
-|--------------------------------------------------------------------------
-| Keeps the cart synchronized if the same website is opened
-| in another browser tab.
+| RELOAD CART
 |--------------------------------------------------------------------------
 */
 
-function handleStorage(event) {
-
-    if (
-        event.key !==
-        CART_STORAGE_KEY
-    ) {
-        return;
-    }
-
-    cartItems = readCart();
-
-    notify();
-}
-
-
-if (
-    typeof window !==
-    "undefined"
-) {
-
-    window.addEventListener(
-        "storage",
-        handleStorage
-    );
+export async function refreshCart() {
+    return loadCart();
 }
 
 
 /*
 |--------------------------------------------------------------------------
-| REACT CART HOOK
-|--------------------------------------------------------------------------
-| This lets Header, Shop and Cart all use the SAME cart.
+| REACT HOOK
 |--------------------------------------------------------------------------
 */
 
 export function useCart() {
-
     const items =
         useSyncExternalStore(
             subscribe,
             getCartSnapshot,
-            () => []
+            getCartServerSnapshot
         );
 
-    return {
+    /*
+    |--------------------------------------------------------------------------
+    | Ensure the backend cart is loaded.
+    |--------------------------------------------------------------------------
+    */
 
-        cartItems: items,
+    initializeCart();
+
+    return {
+        /*
+        |--------------------------------------------------------------------------
+        | Data
+        |--------------------------------------------------------------------------
+        */
+
+        cartItems:
+            items,
+
+        /*
+        |--------------------------------------------------------------------------
+        | Cart totals
+        |--------------------------------------------------------------------------
+        */
 
         cartCount:
-            getCartCount(items),
+            getCartCount(
+                items
+            ),
 
         subtotal:
-            getCartSubtotal(items),
+            getCartSubtotal(
+                items
+            ),
 
         shipping:
-            getCartShipping(items),
+            getCartShipping(
+                items
+            ),
 
         total:
-            getCartTotal(items),
+            getCartTotal(
+                items
+            ),
+
+        /*
+        |--------------------------------------------------------------------------
+        | State
+        |--------------------------------------------------------------------------
+        */
+
+        loading:
+            isLoading,
+
+        isLoading:
+            isLoading,
+
+        initialized:
+            isInitialized,
+
+        error:
+            cartError,
+
+        /*
+        |--------------------------------------------------------------------------
+        | Actions
+        |--------------------------------------------------------------------------
+        */
 
         addItem:
             addToCart,
@@ -572,5 +928,8 @@ export function useCart() {
             removeFromCart,
 
         clearCart,
+
+        refreshCart:
+            loadCart,
     };
 }

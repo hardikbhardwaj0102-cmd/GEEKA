@@ -2206,3 +2206,25 @@
             32px;
     }
 }
+
+/* =========================================================
+   BACKEND CATALOGUE BRIDGE ADDITIONS
+========================================================= */
+
+.new-arrival-toast {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 3000;
+    max-width: min(360px, calc(100vw - 44px));
+    padding: 13px 16px;
+    border: 1px solid rgba(93, 62, 53, 0.12);
+    background: #5d3e35;
+    color: #fffaf6;
+    font-family: "DM Sans", sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    line-height: 1.45;
+    box-shadow: 0 15px 40px rgba(67, 45, 39, 0.16);
+}
