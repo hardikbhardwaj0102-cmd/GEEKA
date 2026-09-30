@@ -1,6 +1,6 @@
 import {
-    useLayoutEffect,
     useEffect,
+    useLayoutEffect,
     useMemo,
     useState,
 } from "react";
@@ -15,866 +15,513 @@ import "../style/Shop.css";
 
 import Header from "./Header";
 
-import {
-    useCart,
-} from "../hooks/useCart";
-
-import {
-    getProducts,
-} from "../services/productService";
-
 import shopBanner from "../assets/top-banner.jpg";
 
+import {
+    getAllProducts,
+    getProductCards,
+} from "../services/productService";
 
-/* =========================================================
-   COLLECTION FILTER CONFIGURATION
-========================================================= */
-
-const COLLECTION_FILTERS = {
-    ethnic: {
-        label: "Ethnic Wear",
-
-        categories: [
-            "Ethnic Wear",
-            "Kurti & Kurta Sets",
-            "Sarees",
-            "Anarkali",
-            "Co-ord Sets",
-        ],
-    },
-
-    jewellery: {
-        label: "Jewellery",
-
-        categories: [
-            "Jewellery",
-            "Earrings",
-            "Necklaces",
-            "Rings",
-            "Bracelets",
-            "Jewelry",
-        ],
-    },
-
-    creative: {
-        label: "Creative",
-
-        categories: [
-            "Creative",
-            "Crochet Bags",
-            "Keychains",
-            "Hair Accessories",
-            "Home Décor",
-            "Home Decor",
-        ],
-    },
-};
+import { useCart } from "../hooks/useCart";
 
 
-/* =========================================================
-   NORMALIZE CATEGORY
-========================================================= */
+const WISHLIST_KEY = "geeka-wishlist";
 
-function normalizeCategory(
-    value
+
+/*
+|--------------------------------------------------------------------------
+| WISHLIST
+|--------------------------------------------------------------------------
+*/
+
+function readWishlist() {
+    try {
+        const parsed = JSON.parse(
+            localStorage.getItem(
+                WISHLIST_KEY
+            ) || "[]"
+        );
+
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+
+        return [
+            ...new Set(
+                parsed
+                    .map((item) =>
+                        typeof item ===
+                            "object" &&
+                            item !== null
+                            ? item?.id ??
+                            item?.productId ??
+                            item?._id ??
+                            item?.uuid
+                            : item
+                    )
+                    .map((id) =>
+                        String(
+                            id ?? ""
+                        ).trim()
+                    )
+                    .filter(Boolean)
+            ),
+        ];
+    } catch {
+        return [];
+    }
+}
+
+
+function writeWishlist(items) {
+    try {
+        localStorage.setItem(
+            WISHLIST_KEY,
+            JSON.stringify([
+                ...new Set(
+                    items
+                        .map((id) =>
+                            String(
+                                id
+                            ).trim()
+                        )
+                        .filter(Boolean)
+                ),
+            ])
+        );
+    } catch {
+        // Ignore localStorage failures.
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| PRICE
+|--------------------------------------------------------------------------
+*/
+
+function formatPrice(
+    value,
+    currency = "INR"
 ) {
+    const amount =
+        Number(value);
 
+    if (!Number.isFinite(amount)) {
+        return "PRICE ON REQUEST";
+    }
+
+    try {
+        return new Intl.NumberFormat(
+            "en-IN",
+            {
+                style: "currency",
+                currency,
+                maximumFractionDigits: 0,
+            }
+        ).format(amount);
+    } catch {
+        return `₹${amount.toLocaleString(
+            "en-IN"
+        )}`;
+    }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| PRODUCT HELPERS
+|--------------------------------------------------------------------------
+*/
+
+function productId(product) {
     return String(
-        value || ""
+        product?.id ?? ""
+    ).trim();
+}
+
+
+function categoryName(product) {
+    return String(
+        product?.categoryName ||
+        product?.category?.name ||
+        ""
+    ).trim();
+}
+
+
+function categorySlug(product) {
+    return String(
+        product?.categorySlug ||
+        product?.category?.slug ||
+        ""
     )
         .trim()
         .toLowerCase();
-
 }
 
 
-/* =========================================================
-   GET PRODUCT ID
-========================================================= */
+function collectionMatches(
+    product,
+    collection
+) {
+    if (!collection) {
+        return true;
+    }
 
-function getProductId(
+    const name =
+        categoryName(
+            product
+        ).toLowerCase();
+
+    const slug =
+        categorySlug(product);
+
+    const collectionKey =
+        collection.toLowerCase();
+
+    if (
+        collectionKey ===
+        "ethnic"
+    ) {
+        return (
+            name.includes(
+                "ethnic"
+            ) ||
+            slug.includes(
+                "ethnic"
+            )
+        );
+    }
+
+    if (
+        collectionKey ===
+        "jewellery"
+    ) {
+        return (
+            name.includes(
+                "jewel"
+            ) ||
+            name.includes(
+                "jewelry"
+            ) ||
+            slug.includes(
+                "jewel"
+            ) ||
+            slug.includes(
+                "jewelry"
+            )
+        );
+    }
+
+    if (
+        collectionKey ===
+        "creative"
+    ) {
+        return (
+            name.includes(
+                "creative"
+            ) ||
+            name.includes(
+                "handmade"
+            ) ||
+            name.includes(
+                "crochet"
+            ) ||
+            slug.includes(
+                "creative"
+            ) ||
+            slug.includes(
+                "handmade"
+            ) ||
+            slug.includes(
+                "crochet"
+            )
+        );
+    }
+
+    return true;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| BACKEND STOCK CHECK
+|--------------------------------------------------------------------------
+*/
+
+function hasAvailableStock(
     product
 ) {
-
-    if (!product) {
-        return "";
-    }
-
-
-    return String(
-        product?.id ??
-        product?.productId ??
-        product?._id ??
-        product?.uuid ??
-        ""
-    ).trim();
-
-}
-
-
-/* =========================================================
-   COLLECTION MATCH
-========================================================= */
-
-function productBelongsToCollection(
-    product,
-    collectionId
-) {
-
-    if (
-        !collectionId ||
-        !COLLECTION_FILTERS[
-        collectionId
-        ]
-    ) {
-
-        return true;
-
-    }
-
-
-    const collection =
-        COLLECTION_FILTERS[
-        collectionId
-        ];
-
-
-    const productCategory =
-        normalizeCategory(
-            product.category
-        );
-
-
-    const collectionCategories =
-        collection.categories.map(
-            normalizeCategory
-        );
-
-
-    /* =========================================================
-       CATEGORY MATCH
-    ========================================================= */
-
-    if (
-        collectionCategories.includes(
-            productCategory
+    const variants =
+        Array.isArray(
+            product?.detail?.variants
         )
-    ) {
+            ? product.detail.variants
+            : [];
 
-        return true;
-
-    }
-
-
-    /* =========================================================
-       BACKEND COLLECTION FIELD
-    ========================================================= */
-
-    const productCollection =
-        normalizeCategory(
-            product.collection
-        );
-
-
-    const productCollectionId =
-        normalizeCategory(
-            product.collectionId
-        );
-
-
-    if (
-        productCollection ===
-        normalizeCategory(
-            collection.label
-        ) ||
-        productCollection ===
-        normalizeCategory(
-            collectionId
-        ) ||
-        productCollectionId ===
-        normalizeCategory(
-            collectionId
-        )
-    ) {
-
-        return true;
-
-    }
-
-
-    return false;
-
+    return variants.some(
+        (variant) =>
+            variant?.is_active ===
+            true &&
+            variant?.in_stock ===
+            true &&
+            Number(
+                variant?.stock
+            ) > 0
+    );
 }
 
 
-/* =========================================================
-   PRICE FORMAT
-========================================================= */
+/*
+|--------------------------------------------------------------------------
+| DEFAULT PURCHASABLE VARIANT
+|--------------------------------------------------------------------------
+*/
 
-function formatPrice(
-    price
+function getPurchasableVariant(
+    product
 ) {
-
-    const amount =
-        Number(
-            price || 0
-        );
-
-
-    return `₹${amount.toLocaleString(
-        "en-IN"
-    )}`;
-
-}
-
-
-/* =========================================================
-   SEARCH ICON
-========================================================= */
-
-function SearchIcon() {
+    const variants =
+        Array.isArray(
+            product?.detail?.variants
+        )
+            ? product.detail.variants
+            : [];
 
     return (
+        variants.find(
+            (variant) =>
+                variant?.is_active ===
+                true &&
+                variant?.in_stock ===
+                true &&
+                Number(
+                    variant?.stock
+                ) > 0
+        ) || null
+    );
+}
 
+
+/*
+|--------------------------------------------------------------------------
+| ICONS
+|--------------------------------------------------------------------------
+*/
+
+function ArrowIcon() {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+        >
+            <path
+                d="M5 12h13"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+            />
+
+            <path
+                d="m13 6 6 6-6 6"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}
+
+
+function SearchIcon() {
+    return (
         <svg
             viewBox="0 0 24 24"
             aria-hidden="true"
         >
-
             <circle
                 cx="10.8"
                 cy="10.8"
-                r="6.2"
+                r="6.5"
             />
 
-            <path
-                d="M15.5 15.5 21 21"
-            />
-
+            <path d="m16 16 4.2 4.2" />
         </svg>
-
     );
-
 }
 
 
-/* =========================================================
-   HEART ICON
-========================================================= */
+function CloseIcon() {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+        >
+            <path
+                d="M6 6 18 18"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+            />
+
+            <path
+                d="M18 6 6 18"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+            />
+        </svg>
+    );
+}
+
+
+function PlusIcon() {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+        >
+            <path
+                d="M12 5v14M5 12h14"
+                stroke="currentColor"
+                strokeWidth="1.3"
+                strokeLinecap="round"
+            />
+        </svg>
+    );
+}
+
 
 function HeartIcon({
     filled = false,
 }) {
-
     return (
-
         <svg
             viewBox="0 0 24 24"
             aria-hidden="true"
-            className={
-                filled
-                    ? "filled"
-                    : ""
-            }
+            fill="none"
         >
-
-            <path d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.7Z" />
-
+            <path
+                d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.7Z"
+                fill={
+                    filled
+                        ? "currentColor"
+                        : "none"
+                }
+                stroke="currentColor"
+                strokeWidth="1.35"
+            />
         </svg>
-
     );
-
 }
 
 
-/* =========================================================
-   CLOSE ICON
-========================================================= */
-
-function CloseIcon() {
-
-    return (
-
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-        >
-
-            <path d="M6 6 18 18M18 6 6 18" />
-
-        </svg>
-
-    );
-
-}
-
-
-/* =========================================================
-   PLUS ICON
-========================================================= */
-
-function PlusIcon() {
-
-    return (
-
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-        >
-
-            <path d="M12 5v14M5 12h14" />
-
-        </svg>
-
-    );
-
-}
-
-
-/* =========================================================
-   FILTER ICON
-========================================================= */
-
-function FilterIcon() {
-
-    return (
-
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-        >
-
-            <path d="M4 7h16M7 12h10M10 17h4" />
-
-        </svg>
-
-    );
-
-}
-
-
-/* =========================================================
-   ARROW ICON
-========================================================= */
-
-function ArrowIcon() {
-
-    return (
-
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-        >
-
-            <path d="M5 12h13M13 6l6 6-6 6" />
-
-        </svg>
-
-    );
-
-}
-
-
-/* =========================================================
-   PRODUCT CARD
-========================================================= */
-
-function ProductCard({
-    product,
-    isWishlisted,
-    onToggleWishlist,
-    onQuickView,
-    onAddToCart,
-}) {
-
-    const navigate =
-        useNavigate();
-
-
-    const productId =
-        getProductId(
-            product
-        );
-
-
-    const productName =
-        product?.name ||
-        "Geeka Product";
-
-
-    /* =====================================================
-       OPEN PRODUCT DETAILS
-    ===================================================== */
-
-    function handleProductClick() {
-
-        if (!productId) {
-            return;
-        }
-
-
-        navigate(
-            `/product/${encodeURIComponent(
-                productId
-            )}`
-        );
-
-    }
-
-
-    /* =====================================================
-       KEYBOARD NAVIGATION
-    ===================================================== */
-
-    function handleCardKeyDown(
-        event
-    ) {
-
-        if (
-            event.key ===
-            "Enter" ||
-            event.key ===
-            " "
-        ) {
-
-            event.preventDefault();
-
-            handleProductClick();
-
-        }
-
-    }
-
-
-    return (
-
-        <article
-            className="shop-product-card"
-            onClick={
-                handleProductClick
-            }
-            onKeyDown={
-                handleCardKeyDown
-            }
-            role="link"
-            tabIndex={
-                productId
-                    ? 0
-                    : -1
-            }
-            aria-label={
-                `View ${productName}`
-            }
-        >
-
-            {/* =================================================
-                IMAGE
-            ================================================== */}
-
-            <div className="shop-product-image">
-
-                <img
-                    src={
-                        product.image
-                    }
-                    alt={
-                        productName
-                    }
-                    loading="lazy"
-                />
-
-
-                {product.isNew && (
-
-                    <span className="shop-product-new">
-
-                        NEW
-
-                    </span>
-
-                )}
-
-
-                {/* =================================================
-                    WISHLIST
-                    STOP CARD NAVIGATION
-                ================================================== */}
-
-                <button
-                    type="button"
-                    className={`shop-product-heart ${isWishlisted
-                            ? "active"
-                            : ""
-                        }`}
-                    onPointerDown={(event) => {
-
-                        event.preventDefault();
-
-                        event.stopPropagation();
-
-                    }}
-                    onClick={(event) => {
-
-                        event.preventDefault();
-
-                        event.stopPropagation();
-
-                        onToggleWishlist(
-                            productId
-                        );
-
-                    }}
-                    aria-label={
-                        isWishlisted
-                            ? `Remove ${productName} from wishlist`
-                            : `Add ${productName} to wishlist`
-                    }
-                    aria-pressed={
-                        isWishlisted
-                    }
-                >
-
-                    <HeartIcon
-                        filled={
-                            isWishlisted
-                        }
-                    />
-
-                </button>
-
-
-                {/* =================================================
-                    QUICK VIEW
-                    STOP CARD NAVIGATION
-                ================================================== */}
-
-                <div
-                    className="shop-image-actions"
-                    onClick={(event) =>
-                        event.stopPropagation()
-                    }
-                >
-
-                    <button
-                        type="button"
-                        onPointerDown={(event) => {
-
-                            event.stopPropagation();
-
-                        }}
-                        onClick={(event) => {
-
-                            event.preventDefault();
-
-                            event.stopPropagation();
-
-                            onQuickView(
-                                product
-                            );
-
-                        }}
-                    >
-
-                        QUICK VIEW
-
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            {/* =================================================
-                PRODUCT INFORMATION
-            ================================================== */}
-
-            <div
-                className="shop-product-info"
-                onClick={(event) => {
-
-                    /*
-                     * The information area itself should
-                     * navigate through the card click.
-                     * The button below explicitly stops it.
-                     */
-
-                    event.stopPropagation();
-
-                    handleProductClick();
-
-                }}
-            >
-
-                <span className="shop-product-category">
-
-                    {
-                        product.category ||
-                        "COLLECTION"
-                    }
-
-                </span>
-
-
-                {/* =================================================
-                    PRODUCT NAME
-                ================================================== */}
-
-                {productId ? (
-
-                    <h3>
-
-                        <Link
-                            to={`/product/${encodeURIComponent(
-                                productId
-                            )}`}
-                            className="shop-product-name-link"
-                            onClick={(event) =>
-                                event.stopPropagation()
-                            }
-                        >
-
-                            {
-                                productName
-                            }
-
-                        </Link>
-
-                    </h3>
-
-                ) : (
-
-                    <h3>
-
-                        {
-                            productName
-                        }
-
-                    </h3>
-
-                )}
-
-
-                {/* =================================================
-                    PRICE
-                ================================================== */}
-
-                <div
-                    className="shop-product-price"
-                    onClick={(event) =>
-                        event.stopPropagation()
-                    }
-                >
-
-                    <strong>
-
-                        {
-                            formatPrice(
-                                product.price
-                            )
-                        }
-
-                    </strong>
-
-
-                    {product.oldPrice && (
-
-                        <del>
-
-                            {
-                                formatPrice(
-                                    product.oldPrice
-                                )
-                            }
-
-                        </del>
-
-                    )}
-
-                </div>
-
-
-                {/* =================================================
-                    ADD TO CART
-                ================================================== */}
-
-                <button
-                    type="button"
-                    className="shop-add-cart"
-                    disabled={
-                        !product.inStock
-                    }
-                    onPointerDown={(event) => {
-
-                        event.preventDefault();
-
-                        event.stopPropagation();
-
-                    }}
-                    onClick={(event) => {
-
-                        event.preventDefault();
-
-                        event.stopPropagation();
-
-                        onAddToCart(
-                            product
-                        );
-
-                    }}
-                >
-
-                    {
-                        product.inStock
-                            ? "ADD TO CART"
-                            : "SOLD OUT"
-                    }
-
-
-                    {product.inStock && (
-
-                        <PlusIcon />
-
-                    )}
-
-                </button>
-
-            </div>
-
-        </article>
-
-    );
-
-}
-
-
-/* =========================================================
-   SHOP
-========================================================= */
+/*
+|--------------------------------------------------------------------------
+| SHOP COMPONENT
+|--------------------------------------------------------------------------
+*/
 
 export default function Shop() {
-
     const location =
         useLocation();
 
-
     const navigate =
         useNavigate();
 
+    const {
+        addItem,
+    } = useCart();
 
-    /* =====================================================
-       ALWAYS START SHOP AT TOP
-    ===================================================== */
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCROLL TOP
+    |--------------------------------------------------------------------------
+    */
 
     useLayoutEffect(() => {
-
         window.scrollTo({
             top: 0,
             left: 0,
             behavior: "auto",
         });
-
-    }, [
-        location.pathname,
-    ]);
+    }, [location.pathname]);
 
 
-    /* =====================================================
-       FILTER STATE
-    ===================================================== */
+    /*
+    |--------------------------------------------------------------------------
+    | URL PARAMETERS
+    |--------------------------------------------------------------------------
+    */
 
-    const [
-        category,
-        setCategory,
-    ] = useState(
-        "All"
+    const params = useMemo(
+        () =>
+            new URLSearchParams(
+                location.search
+            ),
+        [location.search]
     );
-
-
-    /* =====================================================
-       URL PARAMETERS
-    ===================================================== */
-
-    const urlParams =
-        useMemo(
-            () =>
-                new URLSearchParams(
-                    location.search
-                ),
-            [
-                location.search,
-            ]
-        );
-
-
-    /* =====================================================
-       COLLECTION
-    ===================================================== */
-
-    const collectionFilter =
-        urlParams.get(
-            "collection"
-        ) || "";
-
-
-    const activeCollection =
-        COLLECTION_FILTERS[
-        collectionFilter
-        ] || null;
-
-
-    /* =====================================================
-       SEARCH
-    ===================================================== */
 
     const search =
-        urlParams.get(
-            "search"
-        ) || "";
+        (
+            params.get(
+                "search"
+            ) || ""
+        ).trim();
+
+    const requestedCategory =
+        (
+            params.get(
+                "category"
+            ) || ""
+        )
+            .trim()
+            .toLowerCase();
+
+    const collection =
+        (
+            params.get(
+                "collection"
+            ) || ""
+        )
+            .trim()
+            .toLowerCase();
 
 
-    /* =====================================================
-       PRICE
-    ===================================================== */
-
-    const [
-        minPrice,
-        setMinPrice,
-    ] = useState(
-        0
-    );
-
-
-    const [
-        maxPrice,
-        setMaxPrice,
-    ] = useState(
-        2500
-    );
-
-
-    /* =====================================================
-       OTHER FILTERS
-    ===================================================== */
-
-    const [
-        newOnly,
-        setNewOnly,
-    ] = useState(
-        false
-    );
-
+    /*
+    |--------------------------------------------------------------------------
+    | STATE
+    |--------------------------------------------------------------------------
+    */
 
     const [
-        stockOnly,
-        setStockOnly,
+        products,
+        setProducts,
+    ] = useState([]);
+
+    const [
+        loading,
+        setLoading,
+    ] = useState(true);
+
+    const [
+        error,
+        setError,
+    ] = useState("");
+
+    const [
+        wishlist,
+        setWishlist,
     ] = useState(
-        false
+        readWishlist
     );
-
-
-    /* =====================================================
-       SORT
-    ===================================================== */
 
     const [
         sortBy,
@@ -883,795 +530,708 @@ export default function Shop() {
         "featured"
     );
 
-
-    /* =====================================================
-       WISHLIST
-    ===================================================== */
+    const [
+        minPrice,
+        setMinPrice,
+    ] = useState(0);
 
     const [
-        wishlist,
-        setWishlist,
-    ] = useState(() => {
+        maxPrice,
+        setMaxPrice,
+    ] = useState(
+        100000
+    );
 
-        try {
-
-            const saved =
-                localStorage.getItem(
-                    "geeka-wishlist"
-                );
-
-
-            if (!saved) {
-                return [];
-            }
-
-
-            const parsed =
-                JSON.parse(
-                    saved
-                );
-
-
-            if (!Array.isArray(
-                parsed
-            )) {
-
-                return [];
-
-            }
-
-
-            return parsed
-                .map(
-                    (item) => {
-
-                        if (
-                            item !== null &&
-                            typeof item ===
-                            "object"
-                        ) {
-
-                            return String(
-                                item?.id ??
-                                item?.productId ??
-                                item?._id ??
-                                item?.uuid ??
-                                ""
-                            ).trim();
-
-                        }
-
-
-                        return String(
-                            item ?? ""
-                        ).trim();
-
-                    }
-                )
-                .filter(Boolean);
-
-        } catch {
-
-            return [];
-
-        }
-
-    });
-
-
-    /* =====================================================
-       QUICK VIEW
-    ===================================================== */
+    const [
+        stockOnly,
+        setStockOnly,
+    ] = useState(false);
 
     const [
         quickView,
         setQuickView,
-    ] = useState(
-        null
-    );
-
-
-    /* =====================================================
-       MOBILE FILTERS
-    ===================================================== */
-
-    const [
-        mobileFilters,
-        setMobileFilters,
-    ] = useState(
-        false
-    );
-
-
-    /* =====================================================
-       CART MESSAGE
-    ===================================================== */
+    ] = useState(null);
 
     const [
         cartMessage,
         setCartMessage,
-    ] = useState(
-        false
-    );
-
-
-    /* =====================================================
-       CART
-    ===================================================== */
-
-    const {
-        addItem,
-        cartCount,
-    } = useCart();
-
-
-    /* =====================================================
-       PRODUCTS
-    ===================================================== */
+    ] = useState("");
 
     const [
-        products,
-        setProducts,
-    ] = useState(
-        []
-    );
+        mobileFilters,
+        setMobileFilters,
+    ] = useState(false);
 
 
-    /* =====================================================
-       LOAD PRODUCTS
-    ===================================================== */
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD PRODUCTS
+    |--------------------------------------------------------------------------
+    */
 
     useEffect(() => {
+        let active = true;
 
-        let active =
-            true;
-
-
-        async function loadProducts() {
+        async function load() {
+            setLoading(true);
+            setError("");
 
             try {
+                /*
+                |--------------------------------------------------------------------------
+                | Backend catalog
+                |--------------------------------------------------------------------------
+                |
+                | getAllProducts() follows backend pagination and collects the
+                | complete published catalogue.
+                |--------------------------------------------------------------------------
+                */
 
-                const items =
-                    await getProducts();
+                const baseProducts =
+                    await getAllProducts();
 
-
-                if (active) {
-
-                    setProducts(
-                        Array.isArray(
-                            items
-                        )
-                            ? items
-                            : []
+                const cards =
+                    await getProductCards(
+                        baseProducts
                     );
 
-                }
-
-            } catch {
-
                 if (active) {
-
+                    setProducts(
+                        Array.isArray(
+                            cards
+                        )
+                            ? cards
+                            : []
+                    );
+                }
+            } catch (
+            requestError
+            ) {
+                if (active) {
                     setProducts(
                         []
                     );
 
+                    setError(
+                        requestError?.message ||
+                        "Unable to load products from the Geeka backend."
+                    );
                 }
-
+            } finally {
+                if (active) {
+                    setLoading(
+                        false
+                    );
+                }
             }
-
         }
 
-
-        loadProducts();
-
+        load();
 
         return () => {
-
-            active =
-                false;
-
+            active = false;
         };
-
     }, []);
 
 
-    /* =====================================================
-       CATEGORIES
-    ===================================================== */
+    /*
+    |--------------------------------------------------------------------------
+    | CATEGORY OPTIONS
+    |--------------------------------------------------------------------------
+    */
 
-    const categories =
+    const categoryOptions =
         useMemo(() => {
+            const map =
+                new Map();
 
-            const uniqueCategories =
-                [
-                    ...new Set(
-                        products
-                            .map(
-                                (product) =>
-                                    product.category
-                            )
-                            .filter(Boolean)
-                    ),
-                ];
-
-
-            return [
-                "All",
-                ...uniqueCategories,
-            ];
-
-        }, [
-            products,
-        ]);
-
-
-    /* =====================================================
-       SAVE WISHLIST
-    ===================================================== */
-
-    useEffect(() => {
-
-        localStorage.setItem(
-            "geeka-wishlist",
-            JSON.stringify(
-                wishlist
-            )
-        );
-
-
-        window.dispatchEvent(
-            new Event(
-                "geeka-wishlist-updated"
-            )
-        );
-
-    }, [
-        wishlist,
-    ]);
-
-
-    /* =====================================================
-       BODY OVERFLOW
-    ===================================================== */
-
-    useEffect(() => {
-
-        document.body.style.overflow =
-            mobileFilters ||
-                quickView
-                ? "hidden"
-                : "";
-
-
-        return () => {
-
-            document.body.style.overflow =
-                "";
-
-        };
-
-    }, [
-        mobileFilters,
-        quickView,
-    ]);
-
-
-    /* =====================================================
-       CART MESSAGE
-    ===================================================== */
-
-    useEffect(() => {
-
-        if (!cartMessage) {
-            return;
-        }
-
-
-        const timer =
-            setTimeout(
-                () => {
-
-                    setCartMessage(
-                        false
-                    );
-
-                },
-                2200
-            );
-
-
-        return () =>
-            clearTimeout(
-                timer
-            );
-
-    }, [
-        cartMessage,
-    ]);
-
-
-    /* =====================================================
-       FILTERED PRODUCTS
-    ===================================================== */
-
-    const filteredProducts =
-        useMemo(() => {
-
-            const query =
-                search
-                    .trim()
-                    .toLowerCase();
-
-
-            const results =
-                products.filter(
-                    (product) => {
-
-                        const matchesCategory =
-                            category ===
-                            "All" ||
-                            product.category ===
-                            category;
-
-
-                        const matchesCollection =
-                            productBelongsToCollection(
-                                product,
-                                collectionFilter
-                            );
-
-
-                        const productName =
-                            String(
-                                product.name ||
-                                ""
-                            ).toLowerCase();
-
-
-                        const productCategory =
-                            String(
-                                product.category ||
-                                ""
-                            ).toLowerCase();
-
-
-                        const matchesSearch =
-                            !query ||
-                            productName.includes(
-                                query
-                            ) ||
-                            productCategory.includes(
-                                query
-                            );
-
-
-                        const matchesPrice =
-                            Number(
-                                product.price
-                            ) >=
-                            minPrice &&
-                            Number(
-                                product.price
-                            ) <=
-                            maxPrice;
-
-
-                        const matchesNew =
-                            !newOnly ||
-                            Boolean(
-                                product.isNew
-                            );
-
-
-                        const matchesStock =
-                            !stockOnly ||
-                            Boolean(
-                                product.inStock
-                            );
-
-
-                        return (
-                            matchesCategory &&
-                            matchesCollection &&
-                            matchesSearch &&
-                            matchesPrice &&
-                            matchesNew &&
-                            matchesStock
+            products.forEach(
+                (product) => {
+                    const name =
+                        categoryName(
+                            product
                         );
 
-                    }
-                );
+                    const slug =
+                        categorySlug(
+                            product
+                        );
 
-
-            return [
-                ...results,
-            ].sort(
-                (a, b) => {
-
-                    switch (
-                    sortBy
+                    if (
+                        name &&
+                        slug
                     ) {
-
-                        case "newest":
-
-                            return (
-                                Number(
-                                    b.isNew
-                                ) -
-                                Number(
-                                    a.isNew
-                                )
-                            );
-
-
-                        case "price-low":
-
-                            return (
-                                Number(
-                                    a.price
-                                ) -
-                                Number(
-                                    b.price
-                                )
-                            );
-
-
-                        case "price-high":
-
-                            return (
-                                Number(
-                                    b.price
-                                ) -
-                                Number(
-                                    a.price
-                                )
-                            );
-
-
-                        case "name":
-
-                            return String(
-                                a.name ||
-                                ""
-                            ).localeCompare(
-                                String(
-                                    b.name ||
-                                    ""
-                                )
-                            );
-
-
-                        case "featured":
-
-                        default:
-
-                            return (
-                                Number(
-                                    b.featured
-                                ) -
-                                Number(
-                                    a.featured
-                                )
-                            );
-
+                        map.set(
+                            slug,
+                            name
+                        );
                     }
-
                 }
             );
 
-        }, [
-            category,
-            collectionFilter,
-            search,
-            minPrice,
-            maxPrice,
-            newOnly,
-            stockOnly,
-            sortBy,
-            products,
-        ]);
+            return Array.from(
+                map.entries()
+            ).map(
+                ([
+                    slug,
+                    name,
+                ]) => ({
+                    slug,
+                    name,
+                })
+            );
+        }, [products]);
 
 
-    /* =====================================================
-       CATEGORY CHANGE
-    ===================================================== */
+    /*
+    |--------------------------------------------------------------------------
+    | PRICE BOUNDS
+    |--------------------------------------------------------------------------
+    */
 
-    function handleCategoryChange(
-        item
-    ) {
-
-        setCategory(
-            item
+    const prices =
+        useMemo(
+            () =>
+                products
+                    .map(
+                        (
+                            product
+                        ) =>
+                            Number(
+                                product.price
+                            )
+                    )
+                    .filter(
+                        (value) =>
+                            Number.isFinite(
+                                value
+                            )
+                    ),
+            [products]
         );
 
+    const priceBounds =
+        useMemo(() => {
+            if (
+                !prices.length
+            ) {
+                return {
+                    min: 0,
+                    max: 0,
+                };
+            }
 
+            return {
+                min: Math.floor(
+                    Math.min(
+                        ...prices
+                    )
+                ),
+
+                max: Math.ceil(
+                    Math.max(
+                        ...prices
+                    )
+                ),
+            };
+        }, [prices]);
+
+
+    useEffect(() => {
         if (
-            collectionFilter
+            !prices.length
         ) {
+            return;
+        }
 
-            const params =
-                new URLSearchParams(
-                    location.search
+        setMinPrice(
+            priceBounds.min
+        );
+
+        setMaxPrice(
+            priceBounds.max
+        );
+    }, [
+        priceBounds.min,
+        priceBounds.max,
+        prices.length,
+    ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SELECTED CATEGORY
+    |--------------------------------------------------------------------------
+    */
+
+    const selectedCategory =
+        requestedCategory ||
+        "all";
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FILTER + SORT
+    |--------------------------------------------------------------------------
+    */
+
+    const filteredProducts =
+        useMemo(() => {
+            const normalizedSearch =
+                search.toLowerCase();
+
+            const result =
+                products.filter(
+                    (product) => {
+                        /*
+                        |--------------------------------------------------------------------------
+                        | CATEGORY
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            selectedCategory !==
+                            "all" &&
+                            categorySlug(
+                                product
+                            ) !==
+                            selectedCategory
+                        ) {
+                            return false;
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | COLLECTION
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            !collectionMatches(
+                                product,
+                                collection
+                            )
+                        ) {
+                            return false;
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | SEARCH
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            normalizedSearch
+                        ) {
+                            const haystack =
+                                [
+                                    product.name,
+                                    categoryName(
+                                        product
+                                    ),
+                                    categorySlug(
+                                        product
+                                    ),
+                                ]
+                                    .join(
+                                        " "
+                                    )
+                                    .toLowerCase();
+
+                            if (
+                                !haystack.includes(
+                                    normalizedSearch
+                                )
+                            ) {
+                                return false;
+                            }
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | PRICE
+                        |--------------------------------------------------------------------------
+                        */
+
+                        const price =
+                            Number(
+                                product.price
+                            );
+
+                        if (
+                            Number.isFinite(
+                                price
+                            )
+                        ) {
+                            if (
+                                price <
+                                minPrice ||
+                                price >
+                                maxPrice
+                            ) {
+                                return false;
+                            }
+                        }
+
+
+                        /*
+                        |--------------------------------------------------------------------------
+                        | STOCK
+                        |--------------------------------------------------------------------------
+                        */
+
+                        if (
+                            stockOnly &&
+                            !hasAvailableStock(
+                                product
+                            )
+                        ) {
+                            return false;
+                        }
+
+                        return true;
+                    }
                 );
 
 
-            params.delete(
-                "collection"
+            /*
+            |--------------------------------------------------------------------------
+            | FRONTEND-SAFE SORTING
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                sortBy ===
+                "price-low"
+            ) {
+                result.sort(
+                    (a, b) =>
+                        (a.price ??
+                            Infinity) -
+                        (b.price ??
+                            Infinity)
+                );
+            } else if (
+                sortBy ===
+                "price-high"
+            ) {
+                result.sort(
+                    (a, b) =>
+                        (b.price ??
+                            -Infinity) -
+                        (a.price ??
+                            -Infinity)
+                );
+            } else if (
+                sortBy === "name"
+            ) {
+                result.sort(
+                    (a, b) =>
+                        a.name.localeCompare(
+                            b.name
+                        )
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | "featured"
+            |--------------------------------------------------------------------------
+            |
+            | The documented public product response does not expose a
+            | frontend "featured" field. Therefore we intentionally keep
+            | backend ordering here.
+            |--------------------------------------------------------------------------
+            */
+
+            return result;
+        }, [
+            collection,
+            maxPrice,
+            minPrice,
+            products,
+            search,
+            selectedCategory,
+            sortBy,
+            stockOnly,
+        ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | QUERY UPDATE
+    |--------------------------------------------------------------------------
+    */
+
+    const updateQuery = (
+        key,
+        value
+    ) => {
+        const next =
+            new URLSearchParams(
+                location.search
             );
 
-
-            const nextQuery =
-                params.toString();
-
-
-            navigate(
-                nextQuery
-                    ? `/shop?${nextQuery}`
-                    : "/shop"
+        if (value) {
+            next.set(
+                key,
+                value
             );
-
+        } else {
+            next.delete(
+                key
+            );
         }
 
-    }
+        navigate(
+            {
+                pathname:
+                    "/shop",
 
-
-    /* =====================================================
-       CLEAR FILTERS
-    ===================================================== */
-
-    function clearFilters() {
-
-        setCategory(
-            "All"
+                search:
+                    next.toString()
+                        ? `?${next.toString()}`
+                        : "",
+            },
+            {
+                replace: true,
+            }
         );
+    };
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | RESET FILTERS
+    |--------------------------------------------------------------------------
+    */
+
+    const resetFilters = () => {
         setMinPrice(
-            0
+            priceBounds.min
         );
-
 
         setMaxPrice(
-            2500
+            priceBounds.max
         );
-
-
-        setNewOnly(
-            false
-        );
-
 
         setStockOnly(
             false
         );
 
-
         setSortBy(
             "featured"
         );
 
-
         navigate(
-            "/shop"
+            "/shop",
+            {
+                replace: true,
+            }
         );
-
-    }
-
-
-    /* =====================================================
-       CLEAR SEARCH
-    ===================================================== */
-
-    function clearSearch() {
-
-        const params =
-            new URLSearchParams(
-                location.search
-            );
+    };
 
 
-        params.delete(
-            "search"
-        );
+    /*
+    |--------------------------------------------------------------------------
+    | WISHLIST
+    |--------------------------------------------------------------------------
+    */
 
-
-        const nextQuery =
-            params.toString();
-
-
-        navigate(
-            nextQuery
-                ? `/shop?${nextQuery}`
-                : "/shop"
-        );
-
-    }
-
-
-    /* =====================================================
-       WISHLIST
-    ===================================================== */
-
-    function toggleWishlist(
-        productId
-    ) {
-
-        const normalizedId =
-            String(
-                productId
-            ).trim();
-
-
-        if (!normalizedId) {
+    const toggleWishlist = (
+        id
+    ) => {
+        if (!id) {
             return;
         }
-
 
         setWishlist(
             (current) => {
-
-                return current.includes(
-                    normalizedId
-                )
-
-                    ? current.filter(
-                        (id) =>
-                            id !==
-                            normalizedId
+                const next =
+                    current.includes(
+                        id
                     )
+                        ? current.filter(
+                            (
+                                item
+                            ) =>
+                                item !==
+                                id
+                        )
+                        : [
+                            ...current,
+                            id,
+                        ];
 
-                    : [
-                        ...current,
-                        normalizedId,
-                    ];
+                writeWishlist(
+                    next
+                );
 
+                window.dispatchEvent(
+                    new CustomEvent(
+                        "geeka-wishlist-updated"
+                    )
+                );
+
+                return next;
             }
         );
+    };
 
-    }
 
+    /*
+    |--------------------------------------------------------------------------
+    | ADD TO CART
+    |--------------------------------------------------------------------------
+    |
+    | IMPORTANT:
+    | Shop now uses the same useCart() store as Cart.jsx/Header.jsx.
+    |
+    | The store then calls Django:
+    |
+    | POST /api/v1/cart/items/
+    |--------------------------------------------------------------------------
+    */
 
-    /* =====================================================
-       ADD TO CART
-    ===================================================== */
-
-    function addToCart(
+    const addToCart = async (
         product
-    ) {
+    ) => {
+        const variant =
+            getPurchasableVariant(
+                product
+            );
 
-        if (
-            !product ||
-            product.inStock === false
-        ) {
+        /*
+        |--------------------------------------------------------------------------
+        | No purchasable variant
+        |--------------------------------------------------------------------------
+        */
+
+        if (!variant) {
+            navigate(
+                `/product/${encodeURIComponent(
+                    productId(
+                        product
+                    )
+                )}`
+            );
 
             return;
-
         }
 
+        try {
+            await addItem(
+                product,
+                variant,
+                1
+            );
 
-        addItem(
-            product
-        );
+            setCartMessage(
+                `${product.name} ADDED TO BAG`
+            );
 
-
-        setCartMessage(
-            true
-        );
-
-    }
-
-
-    /* =====================================================
-       CATEGORY COUNT
-    ===================================================== */
-
-    function categoryCount(
-        selectedCategory
-    ) {
-
-        if (
-            selectedCategory ===
-            "All"
+            window.setTimeout(
+                () =>
+                    setCartMessage(
+                        ""
+                    ),
+                2600
+            );
+        } catch (
+        requestError
         ) {
+            setCartMessage(
+                requestError?.message ||
+                "Unable to add this item to bag."
+            );
 
-            return products.length;
-
+            window.setTimeout(
+                () =>
+                    setCartMessage(
+                        ""
+                    ),
+                3200
+            );
         }
+    };
 
 
-        return products.filter(
-            (product) =>
-                product.category ===
-                selectedCategory
-        ).length;
+    /*
+    |--------------------------------------------------------------------------
+    | ACTIVE FILTER LABELS
+    |--------------------------------------------------------------------------
+    */
 
-    }
+    const activeFilterLabels = [
+        selectedCategory !==
+            "all"
+            ? categoryOptions.find(
+                (
+                    item
+                ) =>
+                    item.slug ===
+                    selectedCategory
+            )?.name ||
+            selectedCategory
+            : "",
+
+        collection
+            ? collection.toUpperCase()
+            : "",
+
+        search
+            ? `SEARCH: ${search}`
+            : "",
+
+        stockOnly
+            ? "IN STOCK"
+            : "",
+    ].filter(Boolean);
 
 
-    /* =====================================================
-       HAS FILTERS
-    ===================================================== */
-
-    const hasFilters =
-        category !==
-        "All" ||
-        Boolean(
-            collectionFilter
-        ) ||
-        minPrice !==
-        0 ||
-        maxPrice !==
-        2500 ||
-        newOnly ||
-        stockOnly ||
-        search.trim() !==
-        "";
-
-
-    /* =====================================================
-       RENDER
-    ===================================================== */
+    /*
+    |--------------------------------------------------------------------------
+    | RENDER
+    |--------------------------------------------------------------------------
+    */
 
     return (
-
         <>
-
-            {/* =================================================
-                NAVBAR
-            ================================================== */}
-
             <Header />
-
-
-            {/* =================================================
-                SHOP PAGE
-            ================================================== */}
 
             <main className="shop-page">
 
-
-                {/* =================================================
-                    SHOP HERO BANNER
-                ================================================== */}
+                {/* =====================================================
+                    BANNER
+                   ===================================================== */}
 
                 <section className="shop-banner">
 
                     <img
-                        src={
-                            shopBanner
-                        }
-                        alt="Geeka collection"
                         className="top-banner-image"
+                        src={shopBanner}
+                        alt="Geeka collection"
                     />
-
 
                     <div className="shop-banner-content">
 
                         <span className="shop-banner-eyebrow">
-
-                            The Geeka Edit.
-
+                            Handpicked for you
                         </span>
 
-
                         <h1>
-
-                            Made to be
-
-                            <br />
-
-                            yours.
-
+                            Shop the Geeka collection.
                         </h1>
 
-
                         <p>
-
-                            Discover thoughtfully chosen
-                            ethnic wear, jewellery and
-                            handmade creations designed
-                            for everyday expression.
-
+                            Explore the published catalogue,
+                            with product availability and
+                            variant pricing supplied by the
+                            store backend.
                         </p>
 
                     </div>
@@ -1679,20 +1239,68 @@ export default function Shop() {
                 </section>
 
 
-                {/* =================================================
+                {/* =====================================================
                     SHOP CONTAINER
-                ================================================== */}
+                   ===================================================== */}
 
-                <section className="shop-container">
-
-
-                    {/* =================================================
-                        TOOLBAR
-                    ================================================== */}
+                <div className="shop-container">
 
                     <div className="shop-toolbar">
 
                         <div className="shop-toolbar-right">
+
+                            <span className="showing-count">
+                                SHOWING{" "}
+                                {
+                                    filteredProducts.length
+                                }{" "}
+                                OF{" "}
+                                {
+                                    products.length
+                                }
+                            </span>
+
+
+                            <div className="sort-box">
+
+                                <label htmlFor="shop-sort">
+                                    SORT BY
+                                </label>
+
+                                <select
+                                    id="shop-sort"
+                                    value={
+                                        sortBy
+                                    }
+                                    onChange={(
+                                        event
+                                    ) =>
+                                        setSortBy(
+                                            event
+                                                .target
+                                                .value
+                                        )
+                                    }
+                                >
+                                    <option value="featured">
+                                        Featured
+                                    </option>
+
+                                    <option value="price-low">
+                                        Price: Low to High
+                                    </option>
+
+                                    <option value="price-high">
+                                        Price: High to Low
+                                    </option>
+
+                                    <option value="name">
+                                        Name
+                                    </option>
+                                </select>
+
+                            </div>
+
 
                             <button
                                 type="button"
@@ -1703,345 +1311,186 @@ export default function Shop() {
                                     )
                                 }
                             >
-
-                                <FilterIcon />
-
-                                FILTER
-
+                                FILTERS
                             </button>
-
-
-                            <span className="showing-count">
-
-                                Showing 1 -{" "}
-
-                                {
-                                    filteredProducts.length
-                                }{" "}
-
-                                of{" "}
-
-                                {
-                                    products.length
-                                }{" "}
-
-                                products
-
-                            </span>
-
-
-                            <div className="sort-box">
-
-                                <label htmlFor="sort">
-
-                                    SORT BY:
-
-                                </label>
-
-
-                                <select
-                                    id="sort"
-                                    value={
-                                        sortBy
-                                    }
-                                    onChange={(event) =>
-                                        setSortBy(
-                                            event.target.value
-                                        )
-                                    }
-                                >
-
-                                    <option value="featured">
-                                        Featured
-                                    </option>
-
-                                    <option value="newest">
-                                        Newest
-                                    </option>
-
-                                    <option value="price-low">
-                                        Price: Low → High
-                                    </option>
-
-                                    <option value="price-high">
-                                        Price: High → Low
-                                    </option>
-
-                                    <option value="name">
-                                        Name
-                                    </option>
-
-                                </select>
-
-                            </div>
 
                         </div>
 
                     </div>
 
 
-                    {/* =================================================
+                    {/* =====================================================
                         ACTIVE FILTERS
-                    ================================================== */}
+                       ===================================================== */}
 
-                    {hasFilters && (
+                    {activeFilterLabels.length >
+                        0 && (
+                            <div className="active-filter-row">
 
-                        <div className="active-filter-row">
+                                <span>
+                                    ACTIVE FILTERS
+                                </span>
 
-                            <span>
-                                FILTERS:
-                            </span>
+                                {activeFilterLabels.map(
+                                    (
+                                        label
+                                    ) => (
+                                        <button
+                                            type="button"
+                                            key={
+                                                label
+                                            }
+                                            onClick={() => {
+                                                if (
+                                                    label.startsWith(
+                                                        "SEARCH:"
+                                                    )
+                                                ) {
+                                                    updateQuery(
+                                                        "search",
+                                                        ""
+                                                    );
+                                                } else if (
+                                                    label ===
+                                                    "IN STOCK"
+                                                ) {
+                                                    setStockOnly(
+                                                        false
+                                                    );
+                                                } else if (
+                                                    selectedCategory !==
+                                                    "all" &&
+                                                    label.toLowerCase() ===
+                                                    String(
+                                                        categoryOptions.find(
+                                                            (
+                                                                item
+                                                            ) =>
+                                                                item.slug ===
+                                                                selectedCategory
+                                                        )
+                                                            ?.name ||
+                                                        selectedCategory
+                                                    ).toLowerCase()
+                                                ) {
+                                                    updateQuery(
+                                                        "category",
+                                                        ""
+                                                    );
+                                                } else if (
+                                                    collection
+                                                ) {
+                                                    updateQuery(
+                                                        "collection",
+                                                        ""
+                                                    );
+                                                }
+                                            }}
+                                        >
+                                            {
+                                                label
+                                            }
 
-
-                            {activeCollection && (
-
-                                <button
-                                    type="button"
-                                    onClick={() => {
-
-                                        const params =
-                                            new URLSearchParams(
-                                                location.search
-                                            );
-
-
-                                        params.delete(
-                                            "collection"
-                                        );
-
-
-                                        const nextQuery =
-                                            params.toString();
-
-
-                                        navigate(
-                                            nextQuery
-                                                ? `/shop?${nextQuery}`
-                                                : "/shop"
-                                        );
-
-                                    }}
-                                >
-
-                                    {
-                                        activeCollection.label
-                                    }
-
-                                    <CloseIcon />
-
-                                </button>
-
-                            )}
-
-
-                            {category !==
-                                "All" && (
-
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            handleCategoryChange(
-                                                "All"
-                                            )
-                                        }
-                                    >
-
-                                        {
-                                            category
-                                        }
-
-                                        <CloseIcon />
-
-                                    </button>
-
+                                            <CloseIcon />
+                                        </button>
+                                    )
                                 )}
 
+                            </div>
+                        )}
 
-                            {search && (
-
-                                <button
-                                    type="button"
-                                    onClick={
-                                        clearSearch
-                                    }
-                                >
-
-                                    Search:
-                                    {" "}
-                                    {
-                                        search
-                                    }
-
-                                    <CloseIcon />
-
-                                </button>
-
-                            )}
-
-
-                            {(
-                                minPrice >
-                                0 ||
-                                maxPrice <
-                                2500
-                            ) && (
-
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-
-                                            setMinPrice(
-                                                0
-                                            );
-
-
-                                            setMaxPrice(
-                                                2500
-                                            );
-
-                                        }}
-                                    >
-
-                                        {
-                                            formatPrice(
-                                                minPrice
-                                            )
-                                        }
-
-                                        {" - "}
-
-                                        {
-                                            formatPrice(
-                                                maxPrice
-                                            )
-                                        }
-
-                                        <CloseIcon />
-
-                                    </button>
-
-                                )}
-
-
-                            {newOnly && (
-
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setNewOnly(
-                                            false
-                                        )
-                                    }
-                                >
-
-                                    New Arrivals
-
-                                    <CloseIcon />
-
-                                </button>
-
-                            )}
-
-
-                            {stockOnly && (
-
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setStockOnly(
-                                            false
-                                        )
-                                    }
-                                >
-
-                                    In Stock
-
-                                    <CloseIcon />
-
-                                </button>
-
-                            )}
-
-
-                            <button
-                                type="button"
-                                className="clear-all"
-                                onClick={
-                                    clearFilters
-                                }
-                            >
-
-                                CLEAR ALL
-
-                            </button>
-
-                        </div>
-
-                    )}
-
-
-                    {/* =================================================
-                        MAIN SHOP
-                    ================================================== */}
 
                     <div className="shop-main-layout">
 
-
                         {/* =================================================
-                            SIDEBAR
-                        ================================================== */}
+                            DESKTOP FILTERS
+                           ================================================= */}
 
                         <aside className="shop-filters">
-
 
                             <div className="filter-block">
 
                                 <h2>
-                                    Category
+                                    CATEGORY
                                 </h2>
-
 
                                 <div className="filter-category-list">
 
-                                    {categories.map(
-                                        (item) => (
+                                    <button
+                                        type="button"
+                                        className={
+                                            selectedCategory ===
+                                                "all"
+                                                ? "active"
+                                                : ""
+                                        }
+                                        onClick={() =>
+                                            updateQuery(
+                                                "category",
+                                                ""
+                                            )
+                                        }
+                                    >
+                                        <span>
+                                            All Products
+                                        </span>
 
-                                            <button
-                                                key={
-                                                    item
-                                                }
-                                                type="button"
-                                                className={
-                                                    category ===
-                                                        item
-                                                        ? "active"
-                                                        : ""
-                                                }
-                                                onClick={() =>
-                                                    handleCategoryChange(
-                                                        item
-                                                    )
-                                                }
-                                            >
+                                        <span>
+                                            {
+                                                products.length
+                                            }
+                                        </span>
+                                    </button>
 
-                                                <span>
-                                                    {
-                                                        item
+
+                                    {categoryOptions.map(
+                                        (
+                                            category
+                                        ) => {
+                                            const count =
+                                                products.filter(
+                                                    (
+                                                        product
+                                                    ) =>
+                                                        categorySlug(
+                                                            product
+                                                        ) ===
+                                                        category.slug
+                                                ).length;
+
+                                            return (
+                                                <button
+                                                    key={
+                                                        category.slug
                                                     }
-                                                </span>
-
-
-                                                <span>
-                                                    {
-                                                        categoryCount(
-                                                            item
+                                                    type="button"
+                                                    className={
+                                                        selectedCategory ===
+                                                            category.slug
+                                                            ? "active"
+                                                            : ""
+                                                    }
+                                                    onClick={() =>
+                                                        updateQuery(
+                                                            "category",
+                                                            category.slug
                                                         )
                                                     }
-                                                </span>
+                                                >
+                                                    <span>
+                                                        {
+                                                            category.name
+                                                        }
+                                                    </span>
 
-                                            </button>
-
-                                        )
+                                                    <span>
+                                                        {
+                                                            count
+                                                        }
+                                                    </span>
+                                                </button>
+                                            );
+                                        }
                                     )}
 
                                 </div>
@@ -2049,101 +1498,107 @@ export default function Shop() {
                             </div>
 
 
+                            {/* =================================================
+                                PRICE FILTER
+                               ================================================= */}
+
                             <div className="filter-block">
 
                                 <h2>
-                                    Price Range
+                                    PRICE
                                 </h2>
-
-
-                                <div className="price-values">
-
-                                    <span>
-                                        {
-                                            formatPrice(
-                                                minPrice
-                                            )
-                                        }
-                                    </span>
-
-
-                                    <span>
-                                        {
-                                            formatPrice(
-                                                maxPrice
-                                            )
-                                        }
-                                    </span>
-
-                                </div>
-
 
                                 <div className="range-container">
 
                                     <input
                                         type="range"
-                                        min="0"
-                                        max="2500"
-                                        step="50"
-                                        value={
-                                            minPrice
+                                        min={
+                                            priceBounds.min
                                         }
-                                        onChange={(event) => {
-
-                                            const value =
-                                                Number(
-                                                    event.target.value
-                                                );
-
-
+                                        max={Math.max(
+                                            priceBounds.max,
+                                            priceBounds.min
+                                        )}
+                                        value={Math.min(
+                                            minPrice,
+                                            priceBounds.max
+                                        )}
+                                        onChange={(
+                                            event
+                                        ) =>
                                             setMinPrice(
                                                 Math.min(
-                                                    value,
+                                                    Number(
+                                                        event
+                                                            .target
+                                                            .value
+                                                    ),
                                                     maxPrice
                                                 )
-                                            );
-
-                                        }}
+                                            )
+                                        }
                                     />
-
 
                                     <input
                                         type="range"
-                                        min="0"
-                                        max="2500"
-                                        step="50"
-                                        value={
-                                            maxPrice
+                                        min={
+                                            priceBounds.min
                                         }
-                                        onChange={(event) => {
-
-                                            const value =
-                                                Number(
-                                                    event.target.value
-                                                );
-
-
+                                        max={Math.max(
+                                            priceBounds.max,
+                                            priceBounds.min
+                                        )}
+                                        value={Math.max(
+                                            maxPrice,
+                                            priceBounds.min
+                                        )}
+                                        onChange={(
+                                            event
+                                        ) =>
                                             setMaxPrice(
                                                 Math.max(
-                                                    value,
+                                                    Number(
+                                                        event
+                                                            .target
+                                                            .value
+                                                    ),
                                                     minPrice
                                                 )
-                                            );
-
-                                        }}
+                                            )
+                                        }
                                     />
+
+                                </div>
+
+
+                                <div className="price-values">
+
+                                    <span>
+                                        {formatPrice(
+                                            minPrice
+                                        )}
+                                    </span>
+
+                                    <span>
+                                        {formatPrice(
+                                            maxPrice
+                                        )}
+                                    </span>
 
                                 </div>
 
                             </div>
 
 
+                            {/* =================================================
+                                AVAILABILITY
+                               ================================================= */}
+
                             <div className="filter-block">
 
                                 <h2>
-                                    Availability
+                                    AVAILABILITY
                                 </h2>
-
 
                                 <label className="filter-option">
 
@@ -2152,9 +1607,13 @@ export default function Shop() {
                                         checked={
                                             stockOnly
                                         }
-                                        onChange={(event) =>
+                                        onChange={(
+                                            event
+                                        ) =>
                                             setStockOnly(
-                                                event.target.checked
+                                                event
+                                                    .target
+                                                    .checked
                                             )
                                         }
                                     />
@@ -2162,30 +1621,7 @@ export default function Shop() {
                                     <span className="fake-checkbox" />
 
                                     <span>
-                                        Availability
-                                    </span>
-
-                                </label>
-
-
-                                <label className="filter-option">
-
-                                    <input
-                                        type="checkbox"
-                                        checked={
-                                            newOnly
-                                        }
-                                        onChange={(event) =>
-                                            setNewOnly(
-                                                event.target.checked
-                                            )
-                                        }
-                                    />
-
-                                    <span className="fake-checkbox" />
-
-                                    <span>
-                                        New Arrivals
+                                        Only show in-stock
                                     </span>
 
                                 </label>
@@ -2193,563 +1629,640 @@ export default function Shop() {
                             </div>
 
 
-                            {hasFilters && (
-
-                                <button
-                                    type="button"
-                                    className="reset-filters"
-                                    onClick={
-                                        clearFilters
-                                    }
-                                >
-
-                                    RESET FILTERS
-
-                                </button>
-
-                            )}
+                            <button
+                                type="button"
+                                className="reset-filters"
+                                onClick={
+                                    resetFilters
+                                }
+                            >
+                                RESET FILTERS
+                            </button>
 
                         </aside>
 
 
                         {/* =================================================
                             PRODUCTS
-                        ================================================== */}
+                           ================================================= */}
 
-                        <div className="shop-products-area">
+                        <section
+                            className="shop-products-area"
+                            aria-live="polite"
+                        >
 
-                            {filteredProducts.length >
-                                0 ? (
-
-                                <div className="shop-product-grid">
-
-                                    {filteredProducts.map(
-                                        (product) => {
-
-                                            const productId =
-                                                getProductId(
-                                                    product
-                                                );
-
-
-                                            return (
-
-                                                <ProductCard
-                                                    key={
-                                                        productId
-                                                    }
-                                                    product={
-                                                        product
-                                                    }
-                                                    isWishlisted={
-                                                        wishlist.includes(
-                                                            productId
-                                                        )
-                                                    }
-                                                    onToggleWishlist={
-                                                        toggleWishlist
-                                                    }
-                                                    onQuickView={
-                                                        setQuickView
-                                                    }
-                                                    onAddToCart={
-                                                        addToCart
-                                                    }
-                                                />
-
-                                            );
-
-                                        }
-                                    )}
-
-                                </div>
-
-                            ) : (
-
+                            {loading ? (
                                 <div className="shop-empty">
 
                                     <div className="empty-search-icon">
-
                                         <SearchIcon />
-
                                     </div>
 
-
                                     <h2>
-                                        No products found
+                                        Loading the collection.
                                     </h2>
 
-
                                     <p>
-
-                                        No products match your
-                                        search. Try different
-                                        keywords or filters.
-
+                                        Fetching published
+                                        products and their
+                                        current variant
+                                        information from Django.
                                     </p>
 
+                                </div>
+                            ) : error ? (
+                                <div className="shop-empty">
+
+                                    <div className="empty-search-icon">
+                                        <SearchIcon />
+                                    </div>
+
+                                    <h2>
+                                        Could not load products.
+                                    </h2>
+
+                                    <p>
+                                        {
+                                            error
+                                        }
+                                    </p>
+
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            window.location.reload()
+                                        }
+                                    >
+                                        TRY AGAIN{" "}
+                                        <ArrowIcon />
+                                    </button>
+
+                                </div>
+                            ) : filteredProducts.length ===
+                                0 ? (
+                                <div className="shop-empty">
+
+                                    <div className="empty-search-icon">
+                                        <SearchIcon />
+                                    </div>
+
+                                    <h2>
+                                        No products found.
+                                    </h2>
+
+                                    <p>
+                                        {search
+                                            ? `Nothing in the current published catalogue matches “${search}”.`
+                                            : "No published products match the current filters."}
+                                    </p>
 
                                     <button
                                         type="button"
                                         onClick={
-                                            clearFilters
+                                            resetFilters
                                         }
                                     >
-
-                                        CLEAR FILTERS
-
+                                        CLEAR FILTERS{" "}
                                         <ArrowIcon />
-
                                     </button>
 
                                 </div>
+                            ) : (
+                                <div className="shop-product-grid">
 
-                            )}
+                                    {filteredProducts.map(
+                                        (
+                                            product
+                                        ) => {
+                                            const id =
+                                                productId(
+                                                    product
+                                                );
 
-                        </div>
+                                            const wishlisted =
+                                                wishlist.includes(
+                                                    id
+                                                );
 
-                    </div>
+                                            const detail =
+                                                product?.detail;
 
-                </section>
+                                            const purchasable =
+                                                detail?.is_purchasable ===
+                                                true;
 
+                                            const available =
+                                                hasAvailableStock(
+                                                    product
+                                                );
 
-                {/* =================================================
-                    MOBILE FILTER
-                ================================================== */}
-
-                {mobileFilters && (
-
-                    <div
-                        className="mobile-filter-overlay"
-                        onClick={(event) => {
-
-                            if (
-                                event.target ===
-                                event.currentTarget
-                            ) {
-
-                                setMobileFilters(
-                                    false
-                                );
-
-                            }
-
-                        }}
-                    >
-
-                        <div className="mobile-filter-panel">
-
-
-                            <div className="mobile-filter-head">
-
-                                <div>
-
-                                    <span>
-                                        REFINE
-                                    </span>
-
-                                    <h2>
-                                        Filters
-                                    </h2>
-
-                                </div>
-
-
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        setMobileFilters(
-                                            false
-                                        )
-                                    }
-                                >
-
-                                    <CloseIcon />
-
-                                </button>
-
-                            </div>
-
-
-                            <div className="mobile-filter-body">
-
-                                <div className="filter-block">
-
-                                    <h2>
-                                        Category
-                                    </h2>
-
-
-                                    <div className="filter-category-list">
-
-                                        {categories.map(
-                                            (item) => (
-
-                                                <button
+                                            return (
+                                                <article
+                                                    className="shop-product-card"
                                                     key={
-                                                        item
-                                                    }
-                                                    type="button"
-                                                    className={
-                                                        category ===
-                                                            item
-                                                            ? "active"
-                                                            : ""
-                                                    }
-                                                    onClick={() =>
-                                                        handleCategoryChange(
-                                                            item
-                                                        )
+                                                        id
                                                     }
                                                 >
 
-                                                    <span>
-                                                        {
-                                                            item
-                                                        }
-                                                    </span>
+                                                    {/* =====================================
+                                                        IMAGE
+                                                       ===================================== */}
+
+                                                    <div className="shop-product-image">
+
+                                                        <Link
+                                                            to={`/product/${encodeURIComponent(
+                                                                id
+                                                            )}`}
+                                                        >
+
+                                                            {product.displayImage ? (
+                                                                <img
+                                                                    src={
+                                                                        product.displayImage
+                                                                    }
+                                                                    alt={
+                                                                        product.name
+                                                                    }
+                                                                    loading="lazy"
+                                                                />
+                                                            ) : (
+                                                                <div className="shop-empty-image-placeholder">
+                                                                    GEEKA
+                                                                </div>
+                                                            )}
+
+                                                        </Link>
 
 
-                                                    <span>
-                                                        {
-                                                            categoryCount(
-                                                                item
-                                                            )
-                                                        }
-                                                    </span>
+                                                        {available && (
+                                                            <span className="shop-product-new">
+                                                                AVAILABLE
+                                                            </span>
+                                                        )}
 
-                                                </button>
 
+                                                        <button
+                                                            type="button"
+                                                            className={`shop-product-heart ${wishlisted
+                                                                    ? "active"
+                                                                    : ""
+                                                                }`}
+                                                            onClick={(
+                                                                event
+                                                            ) => {
+                                                                event.preventDefault();
+                                                                event.stopPropagation();
+
+                                                                toggleWishlist(
+                                                                    id
+                                                                );
+                                                            }}
+                                                            aria-label={
+                                                                wishlisted
+                                                                    ? "Remove from wishlist"
+                                                                    : "Add to wishlist"
+                                                            }
+                                                            aria-pressed={
+                                                                wishlisted
+                                                            }
+                                                        >
+                                                            <HeartIcon
+                                                                filled={
+                                                                    wishlisted
+                                                                }
+                                                            />
+                                                        </button>
+
+
+                                                        <div className="shop-image-actions">
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={(
+                                                                    event
+                                                                ) => {
+                                                                    event.preventDefault();
+                                                                    event.stopPropagation();
+
+                                                                    setQuickView(
+                                                                        product
+                                                                    );
+                                                                }}
+                                                            >
+                                                                QUICK VIEW
+                                                            </button>
+
+                                                        </div>
+
+                                                    </div>
+
+
+                                                    {/* =====================================
+                                                        PRODUCT INFO
+                                                       ===================================== */}
+
+                                                    <div className="shop-product-info">
+
+                                                        <span className="shop-product-category">
+                                                            {
+                                                                categoryName(
+                                                                    product
+                                                                ) ||
+                                                                "COLLECTION"
+                                                            }
+                                                        </span>
+
+
+                                                        <h3>
+
+                                                            <Link
+                                                                to={`/product/${encodeURIComponent(
+                                                                    id
+                                                                )}`}
+                                                                className="shop-product-name-link"
+                                                            >
+                                                                {
+                                                                    product.name
+                                                                }
+                                                            </Link>
+
+                                                        </h3>
+
+
+                                                        <div className="shop-product-price">
+
+                                                            <strong>
+                                                                {product.price ===
+                                                                    null
+                                                                    ? "PRICE ON REQUEST"
+                                                                    : `FROM ${formatPrice(
+                                                                        product.price,
+                                                                        product.currency ||
+                                                                        "INR"
+                                                                    )}`}
+                                                            </strong>
+
+                                                        </div>
+
+
+                                                        <button
+                                                            type="button"
+                                                            className="shop-add-cart"
+                                                            disabled={
+                                                                !detail
+                                                            }
+                                                            onClick={() =>
+                                                                addToCart(
+                                                                    product
+                                                                )
+                                                            }
+                                                        >
+                                                            {purchasable &&
+                                                                available
+                                                                ? "ADD TO CART"
+                                                                : "VIEW PRODUCT"}
+
+                                                            {purchasable &&
+                                                                available && (
+                                                                    <PlusIcon />
+                                                                )}
+                                                        </button>
+
+                                                    </div>
+
+                                                </article>
+                                            );
+                                        }
+                                    )}
+
+                                </div>
+                            )}
+
+                        </section>
+
+                    </div>
+
+                </div>
+
+            </main>
+
+
+            {/* =====================================================
+                MOBILE FILTERS
+               ===================================================== */}
+
+            {mobileFilters && (
+                <div
+                    className="mobile-filter-overlay"
+                    role="dialog"
+                    aria-modal="true"
+                >
+
+                    <aside className="mobile-filter-panel">
+
+                        <div className="mobile-filter-head">
+
+                            <strong>
+                                FILTERS
+                            </strong>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setMobileFilters(
+                                        false
+                                    )
+                                }
+                                aria-label="Close filters"
+                            >
+                                <CloseIcon />
+                            </button>
+
+                        </div>
+
+
+                        <div className="mobile-filter-body">
+
+                            <div className="filter-block">
+
+                                <h2>
+                                    CATEGORY
+                                </h2>
+
+                                <div className="filter-category-list">
+
+                                    <button
+                                        type="button"
+                                        className={
+                                            selectedCategory ===
+                                                "all"
+                                                ? "active"
+                                                : ""
+                                        }
+                                        onClick={() =>
+                                            updateQuery(
+                                                "category",
+                                                ""
                                             )
-                                        )}
-
-                                    </div>
-
-                                </div>
-
-
-                                <div className="filter-block">
-
-                                    <h2>
-                                        Price Range
-                                    </h2>
-
-
-                                    <div className="price-values">
+                                        }
+                                    >
+                                        <span>
+                                            All Products
+                                        </span>
 
                                         <span>
                                             {
-                                                formatPrice(
-                                                    minPrice
-                                                )
+                                                products.length
                                             }
                                         </span>
+                                    </button>
 
 
-                                        <span>
-                                            {
-                                                formatPrice(
-                                                    maxPrice
-                                                )
-                                            }
-                                        </span>
-
-                                    </div>
-
-
-                                    <div className="range-container">
-
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="2500"
-                                            step="50"
-                                            value={
-                                                minPrice
-                                            }
-                                            onChange={(event) => {
-
-                                                const value =
-                                                    Number(
-                                                        event.target.value
-                                                    );
-
-
-                                                setMinPrice(
-                                                    Math.min(
-                                                        value,
-                                                        maxPrice
+                                    {categoryOptions.map(
+                                        (
+                                            category
+                                        ) => (
+                                            <button
+                                                key={
+                                                    category.slug
+                                                }
+                                                type="button"
+                                                className={
+                                                    selectedCategory ===
+                                                        category.slug
+                                                        ? "active"
+                                                        : ""
+                                                }
+                                                onClick={() =>
+                                                    updateQuery(
+                                                        "category",
+                                                        category.slug
                                                     )
-                                                );
+                                                }
+                                            >
+                                                <span>
+                                                    {
+                                                        category.name
+                                                    }
+                                                </span>
 
-                                            }}
-                                        />
-
-
-                                        <input
-                                            type="range"
-                                            min="0"
-                                            max="2500"
-                                            step="50"
-                                            value={
-                                                maxPrice
-                                            }
-                                            onChange={(event) => {
-
-                                                const value =
-                                                    Number(
-                                                        event.target.value
-                                                    );
-
-
-                                                setMaxPrice(
-                                                    Math.max(
-                                                        value,
-                                                        minPrice
-                                                    )
-                                                );
-
-                                            }}
-                                        />
-
-                                    </div>
-
-                                </div>
-
-
-                                <div className="filter-block">
-
-                                    <h2>
-                                        Availability
-                                    </h2>
-
-
-                                    <label className="filter-option">
-
-                                        <input
-                                            type="checkbox"
-                                            checked={
-                                                stockOnly
-                                            }
-                                            onChange={(event) =>
-                                                setStockOnly(
-                                                    event.target.checked
-                                                )
-                                            }
-                                        />
-
-                                        <span className="fake-checkbox" />
-
-                                        <span>
-                                            Availability
-                                        </span>
-
-                                    </label>
-
-
-                                    <label className="filter-option">
-
-                                        <input
-                                            type="checkbox"
-                                            checked={
-                                                newOnly
-                                            }
-                                            onChange={(event) =>
-                                                setNewOnly(
-                                                    event.target.checked
-                                                )
-                                            }
-                                        />
-
-                                        <span className="fake-checkbox" />
-
-                                        <span>
-                                            New Arrivals
-                                        </span>
-
-                                    </label>
+                                                <span>
+                                                    {
+                                                        products.filter(
+                                                            (
+                                                                item
+                                                            ) =>
+                                                                categorySlug(
+                                                                    item
+                                                                ) ===
+                                                                category.slug
+                                                        ).length
+                                                    }
+                                                </span>
+                                            </button>
+                                        )
+                                    )}
 
                                 </div>
 
                             </div>
 
 
-                            <div className="mobile-filter-footer">
+                            <div className="filter-block">
 
-                                <button
-                                    type="button"
-                                    onClick={
-                                        clearFilters
-                                    }
-                                >
+                                <h2>
+                                    AVAILABILITY
+                                </h2>
 
-                                    CLEAR
+                                <label className="filter-option">
 
-                                </button>
+                                    <input
+                                        type="checkbox"
+                                        checked={
+                                            stockOnly
+                                        }
+                                        onChange={(
+                                            event
+                                        ) =>
+                                            setStockOnly(
+                                                event
+                                                    .target
+                                                    .checked
+                                            )
+                                        }
+                                    />
 
+                                    <span className="fake-checkbox" />
 
-                                <button
-                                    type="button"
-                                    className="apply-mobile-filter"
-                                    onClick={() =>
-                                        setMobileFilters(
-                                            false
-                                        )
-                                    }
-                                >
+                                    <span>
+                                        Only show in-stock
+                                    </span>
 
-                                    SHOW{" "}
-
-                                    {
-                                        filteredProducts.length
-                                    }{" "}
-
-                                    products
-
-                                </button>
+                                </label>
 
                             </div>
 
                         </div>
 
-                    </div>
 
-                )}
-
-
-                {/* =================================================
-                    QUICK VIEW
-                ================================================== */}
-
-                {quickView && (
-
-                    <div
-                        className="quick-view-overlay"
-                        onClick={(event) => {
-
-                            if (
-                                event.target ===
-                                event.currentTarget
-                            ) {
-
-                                setQuickView(
-                                    null
-                                );
-
-                            }
-
-                        }}
-                    >
-
-                        <div
-                            className="quick-view-modal"
-                            onClick={(event) =>
-                                event.stopPropagation()
-                            }
-                        >
-
+                        <div className="mobile-filter-footer">
 
                             <button
                                 type="button"
-                                className="quick-view-close"
+                                className="reset-filters"
+                                onClick={
+                                    resetFilters
+                                }
+                            >
+                                RESET
+                            </button>
+
+                            <button
+                                type="button"
+                                className="apply-mobile-filter"
                                 onClick={() =>
-                                    setQuickView(
-                                        null
+                                    setMobileFilters(
+                                        false
                                     )
                                 }
                             >
-
-                                <CloseIcon />
-
+                                APPLY FILTERS{" "}
+                                <ArrowIcon />
                             </button>
 
+                        </div>
 
-                            <div className="quick-view-image">
+                    </aside>
 
+                </div>
+            )}
+
+
+            {/* =====================================================
+                QUICK VIEW
+               ===================================================== */}
+
+            {quickView && (
+                <div
+                    className="quick-view-overlay"
+                    role="dialog"
+                    aria-modal="true"
+                >
+
+                    <div className="quick-view-modal">
+
+                        <button
+                            type="button"
+                            className="quick-view-close"
+                            onClick={() =>
+                                setQuickView(
+                                    null
+                                )
+                            }
+                            aria-label="Close quick view"
+                        >
+                            <CloseIcon />
+                        </button>
+
+
+                        <div className="quick-view-image">
+
+                            {quickView.displayImage ? (
                                 <img
                                     src={
-                                        quickView.image
+                                        quickView.displayImage
                                     }
                                     alt={
                                         quickView.name
                                     }
                                 />
+                            ) : (
+                                <div className="shop-empty-image-placeholder">
+                                    GEEKA
+                                </div>
+                            )}
+
+                        </div>
+
+
+                        <div className="quick-view-content">
+
+                            <span>
+                                {
+                                    categoryName(
+                                        quickView
+                                    ) ||
+                                    "COLLECTION"
+                                }
+                            </span>
+
+                            <h2>
+                                {
+                                    quickView.name
+                                }
+                            </h2>
+
+
+                            <div className="quick-view-price">
+
+                                {quickView.price ===
+                                    null
+                                    ? "PRICE ON REQUEST"
+                                    : `FROM ${formatPrice(
+                                        quickView.price,
+                                        quickView.currency ||
+                                        "INR"
+                                    )}`}
 
                             </div>
 
 
-                            <div className="quick-view-content">
-
-                                <span>
-                                    {
-                                        quickView.category
-                                    }
-                                </span>
-
-
-                                <h2>
-                                    {
-                                        quickView.name
-                                    }
-                                </h2>
+                            <p>
+                                {
+                                    quickView.detail
+                                        ?.description ||
+                                    "Product details are available on the product page."
+                                }
+                            </p>
 
 
-                                <div className="quick-view-price">
-
-                                    <strong>
-                                        {
-                                            formatPrice(
-                                                quickView.price
-                                            )
-                                        }
-                                    </strong>
-
-
-                                    {quickView.oldPrice && (
-
-                                        <del>
-                                            {
-                                                formatPrice(
-                                                    quickView.oldPrice
-                                                )
-                                            }
-                                        </del>
-
-                                    )}
-
-                                </div>
-
-
-                                <p>
-                                    {
-                                        quickView.description
-                                    }
-                                </p>
-
+                            <div className="quick-view-actions">
 
                                 <button
                                     type="button"
                                     className="quick-view-add"
-                                    onClick={(event) => {
-
-                                        event.stopPropagation();
-
+                                    onClick={() =>
                                         addToCart(
                                             quickView
-                                        );
-
-
-                                        setQuickView(
-                                            null
-                                        );
-
-                                    }}
+                                        )
+                                    }
                                 >
+                                    {quickView.detail
+                                        ?.is_purchasable ===
+                                        true &&
+                                        hasAvailableStock(
+                                            quickView
+                                        )
+                                        ? "ADD TO CART"
+                                        : "VIEW PRODUCT"}
+                                </button>
 
-                                    ADD TO CART
 
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        navigate(
+                                            `/product/${encodeURIComponent(
+                                                productId(
+                                                    quickView
+                                                )
+                                            )}`
+                                        )
+                                    }
+                                >
+                                    SHOP PRODUCT{" "}
                                     <ArrowIcon />
-
                                 </button>
 
                             </div>
@@ -2758,51 +2271,25 @@ export default function Shop() {
 
                     </div>
 
-                )}
+                </div>
+            )}
 
 
-                {/* =================================================
-                    CART MESSAGE
-                ================================================== */}
+            {/* =====================================================
+                CART MESSAGE
+               ===================================================== */}
 
-                {cartMessage && (
-
-                    <div className="cart-message">
-
-                        <span>
-                            Added to your bag
-                        </span>
-
-
-                        <strong>
-                            {
-                                cartCount
-                            }
-                        </strong>
-
-
-                        <button
-                            type="button"
-                            onClick={() =>
-                                setCartMessage(
-                                    false
-                                )
-                            }
-                            aria-label="Close cart notification"
-                        >
-
-                            ×
-
-                        </button>
-
-                    </div>
-
-                )}
-
-            </main>
+            {cartMessage && (
+                <div
+                    className="cart-message"
+                    role="status"
+                >
+                    {
+                        cartMessage
+                    }
+                </div>
+            )}
 
         </>
-
     );
-
-} 
+}

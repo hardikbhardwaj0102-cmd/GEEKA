@@ -1,10 +1,51 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+    useEffect,
+    useMemo,
+    useState,
+} from "react";
+
 import { Link } from "react-router-dom";
+
 import Header from "./Header";
+
 import topBanner from "../assets/top-banner-3.jpg";
+
 import "../style/Cart.css";
+
 import { useCart } from "../hooks/useCart";
-import { getProducts } from "../services/productService";
+
+import {
+    getProducts,
+    getProductById,
+    getProductCards,
+    getDefaultPurchasableVariant,
+} from "../services/productService";
+
+
+/*
+|--------------------------------------------------------------------------
+| GEEKA CART
+|--------------------------------------------------------------------------
+| Cart data now comes from the Django backend.
+|
+| The cart store provides:
+|
+| - cartItems
+| - cartCount
+| - subtotal
+| - shipping
+| - total
+| - addItem
+| - updateQuantity
+| - removeItem
+| - clearCart
+|
+| Product catalog data is used only for additional display information
+| such as product images/category because the documented cart response
+| does not include those fields.
+|--------------------------------------------------------------------------
+*/
+
 
 function Cart() {
     const {
@@ -12,53 +53,510 @@ function Cart() {
         updateQuantity,
         removeItem,
         subtotal,
-        totalItems,
+        cartCount,
         shipping,
         total,
         addItem,
+        loading,
+        error: cartError,
+        initialized,
     } = useCart();
 
-    const [products, setProducts] = useState([]);
+
+    /*
+    |--------------------------------------------------------------------------
+    | PRODUCT DETAILS FOR CART DISPLAY
+    |--------------------------------------------------------------------------
+    | The backend cart gives us product_id but does not provide the product
+    | image in the documented response.
+    |
+    | Therefore we fetch the corresponding public product details only
+    | for display purposes.
+    |--------------------------------------------------------------------------
+    */
+
+    const [cartProductDetails, setCartProductDetails] =
+        useState({});
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | RECOMMENDATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    const [products, setProducts] =
+        useState([]);
+
+    const [
+        recommendationProducts,
+        setRecommendationProducts,
+    ] = useState([]);
+
+    const [recommendationsLoading, setRecommendationsLoading] =
+        useState(false);
+
+    const [quickAddingId, setQuickAddingId] =
+        useState("");
+
+    const [actionError, setActionError] =
+        useState("");
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD PRODUCT DETAILS FOR CART ITEMS
+    |--------------------------------------------------------------------------
+    */
 
     useEffect(() => {
         let active = true;
 
-        async function loadProducts() {
-            try {
-                const items = await getProducts();
+        async function loadCartProductDetails() {
+            if (!cartItems.length) {
+                if (active) {
+                    setCartProductDetails({});
+                }
 
+                return;
+            }
+
+            const uniqueProductIds = [
+                ...new Set(
+                    cartItems
+                        .map((item) =>
+                            String(
+                                item?.product_id || ""
+                            ).trim()
+                        )
+                        .filter(Boolean)
+                ),
+            ];
+
+            if (!uniqueProductIds.length) {
                 if (active) {
-                    setProducts(Array.isArray(items) ? items : []);
+                    setCartProductDetails({});
                 }
-            } catch {
-                if (active) {
-                    setProducts([]);
-                }
+
+                return;
+            }
+
+            const entries = await Promise.all(
+                uniqueProductIds.map(
+                    async (productId) => {
+                        try {
+                            const product =
+                                await getProductById(
+                                    productId
+                                );
+
+                            return [
+                                productId,
+                                product,
+                            ];
+                        } catch {
+                            return [
+                                productId,
+                                null,
+                            ];
+                        }
+                    }
+                )
+            );
+
+            if (active) {
+                setCartProductDetails(
+                    Object.fromEntries(
+                        entries
+                    )
+                );
             }
         }
 
-        loadProducts();
+        loadCartProductDetails();
 
         return () => {
             active = false;
         };
-    }, []);
+    }, [cartItems]);
 
-    const recommendedProducts = useMemo(() => {
-        const cartIds = new Set(
-            cartItems.map((item) => String(item.id))
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD RECOMMENDATIONS
+    |--------------------------------------------------------------------------
+    */
+
+    useEffect(() => {
+        let active = true;
+
+        async function loadRecommendations() {
+            setRecommendationsLoading(true);
+
+            try {
+                const catalogProducts =
+                    await getProducts();
+
+                if (!active) {
+                    return;
+                }
+
+                const items = Array.isArray(
+                    catalogProducts
+                )
+                    ? catalogProducts
+                    : [];
+
+                setProducts(items);
+
+                const cartProductIds =
+                    new Set(
+                        cartItems.map(
+                            (item) =>
+                                String(
+                                    item?.product_id ||
+                                    ""
+                                )
+                        )
+                    );
+
+                const candidates =
+                    items
+                        .filter(
+                            (product) =>
+                                product?.id &&
+                                !cartProductIds.has(
+                                    String(
+                                        product.id
+                                    )
+                                )
+                        )
+                        .slice(0, 5);
+
+                if (!candidates.length) {
+                    if (active) {
+                        setRecommendationProducts(
+                            []
+                        );
+                    }
+
+                    return;
+                }
+
+                const cards =
+                    await getProductCards(
+                        candidates
+                    );
+
+                if (active) {
+                    setRecommendationProducts(
+                        cards
+                            .filter(
+                                (product) =>
+                                    product?.id &&
+                                    product?.isPurchasable !== false
+                            )
+                            .slice(0, 5)
+                    );
+                }
+            } catch {
+                if (active) {
+                    setProducts([]);
+
+                    setRecommendationProducts(
+                        []
+                    );
+                }
+            } finally {
+                if (active) {
+                    setRecommendationsLoading(
+                        false
+                    );
+                }
+            }
+        }
+
+        if (initialized) {
+            loadRecommendations();
+        }
+
+        return () => {
+            active = false;
+        };
+    }, [cartItems, initialized]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | CART DISPLAY DATA
+    |--------------------------------------------------------------------------
+    */
+
+    const displayCartItems = useMemo(() => {
+        return cartItems.map((item) => {
+            const product =
+                cartProductDetails[
+                String(
+                    item?.product_id || ""
+                )
+                ] || null;
+
+            const primaryImage =
+                product?.images?.find(
+                    (image) =>
+                        image?.is_primary
+                ) ||
+                product?.images?.[0] ||
+                null;
+
+            const variant =
+                product?.variants?.find(
+                    (candidate) =>
+                        String(
+                            candidate?.id
+                        ) ===
+                        String(
+                            item?.variant_id
+                        )
+                ) || null;
+
+            return {
+                ...item,
+
+                displayName:
+                    item?.product_name ||
+                    product?.name ||
+                    item?.name ||
+                    "Product",
+
+                displayCategory:
+                    product?.category?.name ||
+                    product?.categoryName ||
+                    item?.category ||
+                    "",
+
+                displayImage:
+                    primaryImage?.image_url ||
+                    "",
+
+                variant,
+
+                variantAttributes:
+                    Array.isArray(
+                        variant?.attributes
+                    )
+                        ? variant.attributes
+                        : [],
+            };
+        });
+    }, [
+        cartItems,
+        cartProductDetails,
+    ]);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | VARIANT ATTRIBUTE HELPERS
+    |--------------------------------------------------------------------------
+    */
+
+    function getVariantAttribute(
+        attributes,
+        name
+    ) {
+        const target =
+            String(name)
+                .trim()
+                .toLowerCase();
+
+        const match =
+            attributes.find(
+                (attribute) =>
+                    String(
+                        attribute?.attribute ||
+                        ""
+                    )
+                        .trim()
+                        .toLowerCase() ===
+                    target
+            );
+
+        return match?.value || "";
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | QUANTITY HANDLERS
+    |--------------------------------------------------------------------------
+    */
+
+    async function handleQuantityChange(
+        item,
+        change
+    ) {
+        setActionError("");
+
+        try {
+            await updateQuantity(
+                item.id,
+                change
+            );
+        } catch (requestError) {
+            setActionError(
+                requestError?.message ||
+                "Unable to update the cart quantity."
+            );
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | REMOVE HANDLER
+    |--------------------------------------------------------------------------
+    */
+
+    async function handleRemove(
+        itemId
+    ) {
+        setActionError("");
+
+        try {
+            await removeItem(
+                itemId
+            );
+        } catch (requestError) {
+            setActionError(
+                requestError?.message ||
+                "Unable to remove this item."
+            );
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | QUICK ADD RECOMMENDATION
+    |--------------------------------------------------------------------------
+    */
+
+    async function handleQuickAdd(
+        event,
+        product
+    ) {
+        event.preventDefault();
+
+        event.stopPropagation();
+
+        setActionError("");
+
+        if (!product?.id) {
+            return;
+        }
+
+        const detail =
+            product?.detail;
+
+        const variant =
+            getDefaultPurchasableVariant(
+                detail
+            );
+
+        if (!variant?.id) {
+            setActionError(
+                "This product does not currently have an available variant."
+            );
+
+            return;
+        }
+
+        setQuickAddingId(
+            String(product.id)
         );
 
-        return products
-            .filter((product) =>
-                !cartIds.has(String(product.id)) &&
-                product.inStock !== false
-            )
-            .sort(
-                (a, b) => Number(b.featured) - Number(a.featured)
-            )
-            .slice(0, 5);
-    }, [products, cartItems]);
+        try {
+            await addItem(
+                product,
+                variant,
+                1
+            );
+        } catch (requestError) {
+            setActionError(
+                requestError?.message ||
+                "Unable to add this product to your cart."
+            );
+        } finally {
+            setQuickAddingId("");
+        }
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | FORMAT PRICE
+    |--------------------------------------------------------------------------
+    */
+
+    function formatPrice(value) {
+        const number =
+            Number(value);
+
+        if (!Number.isFinite(number)) {
+            return "0";
+        }
+
+        return number.toLocaleString(
+            "en-IN"
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOADING STATE
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        !initialized &&
+        loading
+    ) {
+        return (
+            <div className="cart-page">
+                <Header />
+
+                <main className="cart-main">
+
+                    <section className="empty-cart">
+
+                        <span className="empty-eyebrow">
+                            LOADING YOUR BAG
+                        </span>
+
+                        <h2>
+                            Preparing your cart.
+                        </h2>
+
+                        <p>
+                            Please wait while we load your
+                            latest cart items.
+                        </p>
+
+                    </section>
+
+                </main>
+            </div>
+        );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | MAIN UI
+    |--------------------------------------------------------------------------
+    */
 
     return (
         <div className="cart-page">
@@ -95,7 +593,8 @@ function Cart() {
                     </h1>
 
                     <p>
-                        Good things take time — and so does your perfect find.
+                        Good things take time — and so does
+                        your perfect find.
                     </p>
 
                 </div>
@@ -108,6 +607,18 @@ function Cart() {
                ===================================================== */}
 
             <main className="cart-main">
+
+                {(cartError ||
+                    actionError) && (
+                        <div
+                            className="cart-error"
+                            role="alert"
+                        >
+                            {actionError ||
+                                cartError}
+                        </div>
+                    )}
+
 
                 {cartItems.length > 0 ? (
                     <>
@@ -143,125 +654,225 @@ function Cart() {
 
                                 <div className="cart-items">
 
-                                    {cartItems.map((item) => (
+                                    {displayCartItems.map(
+                                        (item) => {
 
-                                        <article
-                                            className="cart-item"
-                                            key={item.id}
-                                        >
+                                            const color =
+                                                getVariantAttribute(
+                                                    item.variantAttributes,
+                                                    "color"
+                                                );
 
-                                            <div className="cart-product-info">
+                                            const size =
+                                                getVariantAttribute(
+                                                    item.variantAttributes,
+                                                    "size"
+                                                );
 
-                                                <div className="cart-product-image">
+                                            const currentItemLoading =
+                                                loading;
 
-                                                    <div className="empty-image-placeholder">
 
-                                                        <span>
-                                                            IMAGE
-                                                        </span>
+                                            return (
+                                                <article
+                                                    className="cart-item"
+                                                    key={
+                                                        item.id
+                                                    }
+                                                >
+
+                                                    <div className="cart-product-info">
+
+                                                        <div className="cart-product-image">
+
+                                                            {item.displayImage ? (
+                                                                <img
+                                                                    src={
+                                                                        item.displayImage
+                                                                    }
+                                                                    alt={
+                                                                        item.displayName
+                                                                    }
+                                                                    loading="lazy"
+                                                                />
+                                                            ) : (
+                                                                <div className="empty-image-placeholder">
+                                                                    <span>
+                                                                        IMAGE
+                                                                    </span>
+                                                                </div>
+                                                            )}
+
+                                                        </div>
+
+
+                                                        <div className="cart-product-details">
+
+                                                            <h2>
+                                                                {
+                                                                    item.displayName
+                                                                }
+                                                            </h2>
+
+                                                            {item.displayCategory && (
+                                                                <span className="cart-product-category">
+                                                                    {
+                                                                        item.displayCategory
+                                                                    }
+                                                                </span>
+                                                            )}
+
+
+                                                            {color && (
+                                                                <span className="cart-product-color">
+                                                                    Color:{" "}
+                                                                    {color}
+                                                                </span>
+                                                            )}
+
+
+                                                            {size && (
+                                                                <span className="cart-product-color">
+                                                                    Size:{" "}
+                                                                    {size}
+                                                                </span>
+                                                            )}
+
+
+                                                            {item.sku && (
+                                                                <span className="cart-product-color">
+                                                                    SKU:{" "}
+                                                                    {item.sku}
+                                                                </span>
+                                                            )}
+
+
+                                                            {!item.is_purchasable && (
+                                                                <span
+                                                                    className="cart-product-color"
+                                                                    style={{
+                                                                        color:
+                                                                            "#a05f55",
+                                                                    }}
+                                                                >
+                                                                    Currently unavailable
+                                                                </span>
+                                                            )}
+
+
+                                                            {item.is_purchasable &&
+                                                                item.stock >
+                                                                0 &&
+                                                                item.quantity >=
+                                                                item.stock && (
+                                                                    <span
+                                                                        className="cart-product-color"
+                                                                        style={{
+                                                                            color:
+                                                                                "#a05f55",
+                                                                        }}
+                                                                    >
+                                                                        Maximum available quantity reached
+                                                                    </span>
+                                                                )}
+
+
+                                                            <button
+                                                                type="button"
+                                                                className="remove-product"
+                                                                onClick={() =>
+                                                                    handleRemove(
+                                                                        item.id
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    currentItemLoading
+                                                                }
+                                                            >
+                                                                Remove
+                                                            </button>
+
+                                                        </div>
 
                                                     </div>
 
-                                                </div>
+
+                                                    <div className="cart-price">
+
+                                                        ₹
+                                                        {formatPrice(
+                                                            item.price
+                                                        )}
+
+                                                    </div>
 
 
-                                                <div className="cart-product-details">
+                                                    <div className="quantity-control">
 
-                                                    <h2>
-                                                        {item.name}
-                                                    </h2>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleQuantityChange(
+                                                                    item,
+                                                                    -1
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                currentItemLoading ||
+                                                                item.quantity <=
+                                                                1
+                                                            }
+                                                            aria-label="Decrease quantity"
+                                                        >
+                                                            −
+                                                        </button>
 
-                                                    <span className="cart-product-category">
-                                                        {item.category}
-                                                    </span>
-
-                                                    {item.color && (
-                                                        <span className="cart-product-color">
-                                                            {item.color}
+                                                        <span>
+                                                            {
+                                                                item.quantity
+                                                            }
                                                         </span>
-                                                    )}
 
-                                                    <button
-                                                        type="button"
-                                                        className="remove-product"
-                                                        onClick={() =>
-                                                            removeItem(item.id)
-                                                        }
-                                                    >
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleQuantityChange(
+                                                                    item,
+                                                                    1
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                currentItemLoading ||
+                                                                !item.is_purchasable ||
+                                                                (
+                                                                    item.stock >
+                                                                    0 &&
+                                                                    item.quantity >=
+                                                                    item.stock
+                                                                )
+                                                            }
+                                                            aria-label="Increase quantity"
+                                                        >
+                                                            +
+                                                        </button>
 
-                                                        <span className="remove-icon">
-                                                            ♧
-                                                        </span>
-
-                                                        Remove
-
-                                                    </button>
-
-                                                </div>
-
-                                            </div>
-
-
-                                            <div className="cart-price">
-
-                                                ₹
-                                                {item.price.toLocaleString(
-                                                    "en-IN"
-                                                )}
-
-                                            </div>
+                                                    </div>
 
 
-                                            <div className="quantity-control">
+                                                    <div className="cart-item-total">
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        updateQuantity(
-                                                            item.id,
-                                                            -1
-                                                        )
-                                                    }
-                                                    aria-label="Decrease quantity"
-                                                >
-                                                    −
-                                                </button>
+                                                        ₹
+                                                        {formatPrice(
+                                                            item.price *
+                                                            item.quantity
+                                                        )}
 
-                                                <span>
-                                                    {item.quantity}
-                                                </span>
+                                                    </div>
 
-                                                <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                        updateQuantity(
-                                                            item.id,
-                                                            1
-                                                        )
-                                                    }
-                                                    aria-label="Increase quantity"
-                                                >
-                                                    +
-                                                </button>
-
-                                            </div>
-
-
-                                            <div className="cart-item-total">
-
-                                                ₹
-                                                {(
-                                                    item.price *
-                                                    item.quantity
-                                                ).toLocaleString(
-                                                    "en-IN"
-                                                )}
-
-                                            </div>
-
-                                        </article>
-
-                                    ))}
+                                                </article>
+                                            );
+                                        }
+                                    )}
 
                                 </div>
 
@@ -272,7 +883,6 @@ function Cart() {
                                         to="/shop"
                                         className="continue-shopping"
                                     >
-
                                         <span>
                                             ←
                                         </span>
@@ -300,16 +910,20 @@ function Cart() {
                                 <div className="summary-row">
 
                                     <span>
-                                        Subtotal ({totalItems}{" "}
-                                        {totalItems === 1
+                                        Subtotal (
+                                        {
+                                            cartCount
+                                        }{" "}
+                                        {cartCount === 1
                                             ? "item"
-                                            : "items"})
+                                            : "items"}
+                                        )
                                     </span>
 
                                     <strong>
                                         ₹
-                                        {subtotal.toLocaleString(
-                                            "en-IN"
+                                        {formatPrice(
+                                            subtotal
                                         )}
                                     </strong>
 
@@ -325,7 +939,9 @@ function Cart() {
                                     <strong>
                                         {shipping === 0
                                             ? "Free"
-                                            : `₹${shipping}`}
+                                            : `₹${formatPrice(
+                                                shipping
+                                            )}`}
                                     </strong>
 
                                 </div>
@@ -342,8 +958,8 @@ function Cart() {
 
                                     <strong>
                                         ₹
-                                        {total.toLocaleString(
-                                            "en-IN"
+                                        {formatPrice(
+                                            total
                                         )}
                                     </strong>
 
@@ -353,8 +969,8 @@ function Cart() {
                                 <button
                                     type="button"
                                     className="checkout-button"
+                                    disabled
                                 >
-
                                     Proceed to Checkout
 
                                     <span>
@@ -365,36 +981,24 @@ function Cart() {
 
 
                                 <div className="secure-checkout">
-
-                                    <span className="lock-icon">
-                                        ♢
-                                    </span>
-
                                     Secure and Encrypted Checkout
-
                                 </div>
 
 
                                 <div className="artisan-message">
 
                                     <div className="artisan-icon">
-
                                         <span>
-                                            ❧
+                                            +
                                         </span>
-
                                     </div>
 
                                     <p>
-
-                                        Every purchase supports
-
+                                        Every purchase supports{" "}
                                         <strong>
                                             handmade artisans
-                                        </strong>
-
+                                        </strong>{" "}
                                         and sustainable fashion.
-
                                     </p>
 
                                 </div>
@@ -419,7 +1023,8 @@ function Cart() {
                                     </h2>
 
                                     <p>
-                                        Complete your style with more handcrafted pieces.
+                                        Complete your style with
+                                        more handcrafted pieces.
                                     </p>
 
                                 </div>
@@ -440,59 +1045,107 @@ function Cart() {
 
                             <div className="recommendation-grid">
 
-                                {recommendedProducts.map((product) => (
+                                {recommendationsLoading ? (
+                                    <div className="recommendations-loading">
+                                        Loading recommendations...
+                                    </div>
+                                ) : recommendationProducts.length > 0 ? (
+                                    recommendationProducts.map(
+                                        (product) => {
 
-                                    <Link
-                                        to="/shop"
-                                        className="recommended-product"
-                                        key={product.id}
-                                    >
+                                            const displayPrice =
+                                                product?.price;
 
-                                        <div className="recommended-image">
+                                            return (
+                                                <Link
+                                                    to="/shop"
+                                                    className="recommended-product"
+                                                    key={
+                                                        product.id
+                                                    }
+                                                >
 
-                                            <div className="empty-image-placeholder">
+                                                    <div className="recommended-image">
 
-                                                <span>
-                                                    IMAGE
-                                                </span>
-
-                                            </div>
-
-
-                                            <button
-                                                type="button"
-                                                className="quick-add"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    addItem(product);
-                                                }}
-                                                aria-label={`Add ${product.name} to cart`}
-                                            >
-                                                +
-                                            </button>
-
-                                        </div>
+                                                        {product.displayImage ? (
+                                                            <img
+                                                                src={
+                                                                    product.displayImage
+                                                                }
+                                                                alt={
+                                                                    product.name
+                                                                }
+                                                                loading="lazy"
+                                                            />
+                                                        ) : (
+                                                            <div className="empty-image-placeholder">
+                                                                <span>
+                                                                    IMAGE
+                                                                </span>
+                                                            </div>
+                                                        )}
 
 
-                                        <div className="recommended-info">
+                                                        <button
+                                                            type="button"
+                                                            className="quick-add"
+                                                            onClick={(
+                                                                event
+                                                            ) =>
+                                                                handleQuickAdd(
+                                                                    event,
+                                                                    product
+                                                                )
+                                                            }
+                                                            disabled={
+                                                                quickAddingId ===
+                                                                String(
+                                                                    product.id
+                                                                )
+                                                            }
+                                                            aria-label={`Add ${product.name} to cart`}
+                                                        >
+                                                            {quickAddingId ===
+                                                                String(
+                                                                    product.id
+                                                                )
+                                                                ? "..."
+                                                                : "+"}
+                                                        </button>
 
-                                            <h3>
-                                                {product.name}
-                                            </h3>
+                                                    </div>
 
-                                            <span>
-                                                ₹
-                                                {Number(product.price).toLocaleString(
-                                                    "en-IN"
-                                                )}
-                                            </span>
 
-                                        </div>
+                                                    <div className="recommended-info">
 
-                                    </Link>
+                                                        <h3>
+                                                            {
+                                                                product.name
+                                                            }
+                                                        </h3>
 
-                                ))}
+                                                        <span>
+                                                            {displayPrice !==
+                                                                null &&
+                                                                displayPrice !==
+                                                                undefined
+                                                                ? `₹${formatPrice(
+                                                                    displayPrice
+                                                                )}`
+                                                                : "View product"}
+                                                        </span>
+
+                                                    </div>
+
+                                                </Link>
+                                            );
+                                        }
+                                    )
+                                ) : (
+                                    <div className="recommendations-loading">
+                                        No recommendations available right now.
+                                    </div>
+                                )}
 
                             </div>
 
@@ -529,13 +1182,11 @@ function Cart() {
                             to="/shop"
                             className="empty-cart-button"
                         >
-
                             EXPLORE COLLECTIONS
 
                             <span>
                                 →
                             </span>
-
                         </Link>
 
                     </section>

@@ -384,6 +384,14 @@ async function getAdminProductVariants(
     );
 }
 
+async function getAdminProductImages(
+    productId
+) {
+    return catalogAdminRequest(
+        `/api/v1/catalog/admin/products/${productId}/images/`
+    );
+}
+
 async function createAdminProductVariant(
     productId,
     payload
@@ -768,9 +776,72 @@ export default function AdminProductEditor() {
                 setInitialStatus(
                     normalized.status
                 );
-                setImages(
-                    normalizeImages(data)
-                );
+
+                /*
+                |--------------------------------------------------------------
+                | LOAD PRODUCT IMAGES
+                |
+                | The admin product-detail endpoint does not include the
+                | product image collection in the API contract. Images are
+                | provided by the dedicated product-image endpoint, which also
+                | returns fresh temporary signed URLs.
+                |--------------------------------------------------------------
+                */
+
+                try {
+                    const imageData =
+                        await getAdminProductImages(
+                            normalized.id ||
+                            productId
+                        );
+
+                    const returnedImages =
+                        normalizeCollection(
+                            imageData
+                        )
+                            .filter(Boolean)
+                            .sort(
+                                (a, b) =>
+                                    Number(
+                                        a?.display_order ??
+                                        0
+                                    ) -
+                                    Number(
+                                        b?.display_order ??
+                                        0
+                                    )
+                            );
+
+                    if (!cancelled) {
+                        setImages(
+                            returnedImages
+                        );
+                    }
+                } catch (imageError) {
+                    /*
+                    |----------------------------------------------------------
+                    | Keep any image data returned by the product endpoint as
+                    | a fallback. The dedicated endpoint remains the source
+                    | of truth and is attempted first.
+                    |----------------------------------------------------------
+                    */
+                    const fallbackImages =
+                        normalizeImages(data);
+
+                    if (!cancelled) {
+                        setImages(
+                            fallbackImages
+                        );
+
+                        if (!fallbackImages.length) {
+                            setError(
+                                getApiErrorMessage(
+                                    imageError
+                                )
+                            );
+                        }
+                    }
+                }
 
                 const returnedVariants =
                     normalizeCollection(
@@ -2146,7 +2217,6 @@ export default function AdminProductEditor() {
                                                 )
                                             }
                                             placeholder="GEEKA-COLOR-M-001"
-                                            required
                                         />
                                     </label>
 
@@ -2171,7 +2241,6 @@ export default function AdminProductEditor() {
                                                 )
                                             }
                                             placeholder="899.00"
-                                            required
                                         />
                                     </label>
 
