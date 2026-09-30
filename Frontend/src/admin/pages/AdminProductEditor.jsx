@@ -2146,7 +2146,6 @@ export default function AdminProductEditor() {
                                                 )
                                             }
                                             placeholder="GEEKA-COLOR-M-001"
-                                            required
                                         />
                                     </label>
 
@@ -2171,7 +2170,6 @@ export default function AdminProductEditor() {
                                                 )
                                             }
                                             placeholder="899.00"
-                                            required
                                         />
                                     </label>
 
