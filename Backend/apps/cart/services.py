@@ -282,10 +282,15 @@ def merge_guest_cart_into_user_cart(*, user, guest_token):
         )
 
         if user_item is None:
+            quantity = guest_item.quantity
+
+            if variant.stock > 0:
+                quantity = min(quantity, variant.stock)
+
             CartItem.objects.create(
                 cart=user_cart,
                 product_variant=variant,
-                quantity=guest_item.quantity,
+                quantity=quantity,
             )
             continue
 
