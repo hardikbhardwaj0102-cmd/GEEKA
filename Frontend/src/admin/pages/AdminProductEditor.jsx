@@ -1909,12 +1909,7 @@ export default function AdminProductEditor() {
                         </div>
 
                         <div className="admin-attribute-create">
-                            <form
-                                onSubmit={
-                                    handleCreateAttribute
-                                }
-                                className="admin-inline-form"
-                            >
+                            <div className="admin-inline-form">
                                 <label>
                                     New attribute
                                     <input
@@ -1934,7 +1929,8 @@ export default function AdminProductEditor() {
                                 </label>
 
                                 <button
-                                    type="submit"
+                                    type="button"
+                                    onClick={handleCreateAttribute}
                                     className="admin-button admin-button-primary admin-small-button"
                                     disabled={
                                         creatingAttribute
@@ -1944,7 +1940,7 @@ export default function AdminProductEditor() {
                                         ? "Creating..."
                                         : "Create attribute"}
                                 </button>
-                            </form>
+                            </div>
                         </div>
 
                         {attributesLoading ? (
@@ -2024,17 +2020,7 @@ export default function AdminProductEditor() {
                                                     )}
                                                 </div>
 
-                                                <form
-                                                    onSubmit={(
-                                                        event
-                                                    ) =>
-                                                        handleCreateValue(
-                                                            event,
-                                                            attribute
-                                                        )
-                                                    }
-                                                    className="admin-inline-form admin-value-form"
-                                                >
+                                                <div className="admin-inline-form admin-value-form">
                                                     <label>
                                                         Add value
                                                         <input
@@ -2060,7 +2046,13 @@ export default function AdminProductEditor() {
                                                     </label>
 
                                                     <button
-                                                        type="submit"
+                                                        type="button"
+                                                        onClick={(event) =>
+                                                            handleCreateValue(
+                                                                event,
+                                                                attribute
+                                                            )
+                                                        }
                                                         className="admin-button admin-button-secondary admin-small-button"
                                                         disabled={
                                                             creating
@@ -2070,7 +2062,7 @@ export default function AdminProductEditor() {
                                                             ? "Adding..."
                                                             : "Add value"}
                                                     </button>
-                                                </form>
+                                                </div>
                                             </div>
                                         );
                                     }
@@ -2118,12 +2110,7 @@ export default function AdminProductEditor() {
                                 require the product UUID.
                             </div>
                         ) : (
-                            <form
-                                className="admin-variant-builder"
-                                onSubmit={
-                                    handleSaveVariant
-                                }
-                            >
+                            <div className="admin-variant-builder">
                                 <div className="admin-variant-editor-top">
                                     <div>
                                         <strong>
@@ -2384,7 +2371,8 @@ export default function AdminProductEditor() {
                                         )}
 
                                         <button
-                                            type="submit"
+                                            type="button"
+                                            onClick={handleSaveVariant}
                                             className="admin-button admin-button-primary admin-small-button"
                                             disabled={
                                                 savingVariant
@@ -2398,7 +2386,7 @@ export default function AdminProductEditor() {
                                         </button>
                                     </div>
                                 </div>
-                            </form>
+                            </div>
                         )}
                     </section>
 
