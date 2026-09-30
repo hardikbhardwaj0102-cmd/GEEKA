@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from .serializers import RegisterSerializer, VerifyEmailSerializer , LoginSerializer , PasswordResetConfirmSerializer, PasswordResetRequestSerializer , PasswordResetVerifySerializer
 from apps.users.services import verify_email_otp
 from django.contrib.auth import login
+from apps.cart.services import merge_guest_cart_into_user_cart
 from django.middleware.csrf import get_token
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import logout
@@ -121,9 +122,17 @@ class LoginView(APIView):
 
         user = serializer.validated_data["user"]
 
+        guest_token = request.COOKIES.get("geeka_guest_cart")
+
         login(request, user)
-        
-        return Response(
+
+        if guest_token:
+            merge_guest_cart_into_user_cart(
+                user=user,
+                guest_token=guest_token,
+            )
+
+        response = Response(
             {
                 "message": "Login successful.",
                 "user": {
@@ -135,6 +144,11 @@ class LoginView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+        if guest_token:
+            response.delete_cookie("geeka_guest_cart")
+
+        return response
 
 
 

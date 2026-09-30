@@ -3737,3 +3737,54 @@ No response body is returned.
 - Cart becomes empty after clearing → verified
 - Clearing an already-empty cart → `204 No Content`
 ```
+
+## 3.6 Guest Cart Merge on Login
+
+Guest customers can add products to a cart without authentication. The guest cart is identified by the server-generated `geeka_guest_cart` HttpOnly cookie.
+
+When a guest customer logs in successfully, the backend automatically merges the guest cart into the authenticated user's cart.
+
+### Merge Behavior
+
+- Guest cart items are merged into the authenticated user's cart.
+- If a variant exists only in the guest cart, it is added to the user's cart.
+- If the same variant already exists in both carts, their quantities are combined.
+- The merged quantity never exceeds the variant's current stock.
+- If the variant is unavailable or its stock is insufficient, the cart item is preserved rather than silently deleted.
+- Cart prices continue to use the current `ProductVariant.price`.
+- The merge operation is transactional.
+- After a successful merge, the guest cart is deleted.
+- The `geeka_guest_cart` cookie is cleared.
+- Authentication continues to use the existing Django session-based authentication.
+- No JWT or browser local/session storage is used for cart authentication or identity.
+
+### Example
+
+If the authenticated user's cart contains:
+
+```json
+{
+  "variant_id": "variant-uuid",
+  "quantity": 5
+}
+```
+
+and the guest cart contains:
+
+```json
+{
+  "variant_id": "variant-uuid",
+  "quantity": 4
+}
+```
+
+with current stock `6`, the resulting authenticated cart contains:
+
+```json
+{
+  "variant_id": "variant-uuid",
+  "quantity": 6
+}
+```
+
+rather than `9`.

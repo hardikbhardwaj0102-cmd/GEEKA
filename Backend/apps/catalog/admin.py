@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, ProductImage
+from .models import Category, Product, ProductImage, Attribute, AttributeValue, ProductVariant
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -58,3 +58,8 @@ class ProductImageAdmin(admin.ModelAdmin):
         "created_at",
         "updated_at",
     )
+
+
+admin.site.register(Attribute)
+admin.site.register(AttributeValue)
+admin.site.register(ProductVariant)
