@@ -637,22 +637,11 @@ export default function NewArrivals() {
                     </h2>
 
                     <p>
-                        Freshly published pieces
-                        from the Geeka catalogue,
-                        displayed in the order
-                        supplied by the store backend.
+                        Freshly published pieces from the Geeka catalogue,
+                        displayed in the order supplied by the store backend.
                     </p>
 
                 </div>
-
-
-                <Link
-                    className="new-arrival-shop"
-                    to="/shop"
-                >
-                    VIEW ALL{" "}
-                    <ArrowIcon />
-                </Link>
 
             </div>
 
@@ -948,6 +937,19 @@ export default function NewArrivals() {
                                 );
                             }
                         )}
+
+                    </div>
+
+
+                    <div className="new-arrivals-footer">
+
+                        <Link
+                            className="new-arrivals-footer-button"
+                            to="/shop"
+                        >
+                            VIEW ALL NEW ARRIVALS
+                            <ArrowIcon />
+                        </Link>
 
                     </div>
 
