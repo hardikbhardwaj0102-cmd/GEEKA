@@ -420,14 +420,12 @@ async function updateAdminProductVariant(
 }
 
 async function deactivateAdminProductVariant(
-    productId,
     variantId
 ) {
     return catalogAdminRequest(
-        `/api/v1/catalog/admin/products/${productId}/variants/${variantId}/deactivate/`,
+        `/api/v1/catalog/admin/variants/${variantId}/deactivate/`,
         {
-            method: "POST",
-            body: JSON.stringify({}),
+            method: "PATCH",
         }
     );
 }
@@ -1478,7 +1476,6 @@ export default function AdminProductEditor() {
         try {
             const response =
                 await deactivateAdminProductVariant(
-                    productId,
                     item.id
                 );
 
