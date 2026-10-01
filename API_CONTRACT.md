@@ -3737,3 +3737,257 @@ No response body is returned.
 - Cart becomes empty after clearing → verified
 - Clearing an already-empty cart → `204 No Content`
 ```
+
+## 3.6 Guest Cart Merge on Login
+
+Guest customers can add products to a cart without authentication. The guest cart is identified by the server-generated `geeka_guest_cart` HttpOnly cookie.
+
+When a guest customer logs in successfully, the backend automatically merges the guest cart into the authenticated user's cart.
+
+### Merge Behavior
+
+- Guest cart items are merged into the authenticated user's cart.
+- If a variant exists only in the guest cart, it is added to the user's cart.
+- If the same variant already exists in both carts, their quantities are combined.
+- The merged quantity never exceeds the variant's current stock.
+- If the variant is unavailable or its stock is insufficient, the cart item is preserved rather than silently deleted.
+- Cart prices continue to use the current `ProductVariant.price`.
+- The merge operation is transactional.
+- After a successful merge, the guest cart is deleted.
+- The `geeka_guest_cart` cookie is cleared.
+- Authentication continues to use the existing Django session-based authentication.
+- No JWT or browser local/session storage is used for cart authentication or identity.
+
+### Example
+
+If the authenticated user's cart contains:
+
+```json
+{
+  "variant_id": "variant-uuid",
+  "quantity": 5
+}
+```
+
+and the guest cart contains:
+
+```json
+{
+  "variant_id": "variant-uuid",
+  "quantity": 4
+}
+```
+
+with current stock `6`, the resulting authenticated cart contains:
+
+```json
+{
+  "variant_id": "variant-uuid",
+  "quantity": 6
+}
+```
+
+rather than `9`.
+
+
+## 4. Wishlist APIs
+
+Wishlist is available only to authenticated users.
+
+- Wishlist uses Django session-based authentication.
+- CSRF protection is required for state-changing requests.
+- A user has one wishlist.
+- A product can appear only once in a user's wishlist.
+- Wishlist items reference the Product, not a ProductVariant.
+- Only PUBLISHED products can be added through the API.
+- Wishlist data is stored server-side.
+- No JWT, localStorage, or sessionStorage is used for wishlist authentication or identity.
+
+### 4.1 Get Current Wishlist
+
+**Endpoint**
+
+```http
+GET /api/v1/cart/wishlist/
+```
+
+**Authentication**
+
+Required.
+
+**Success Response**
+
+```http
+200 OK
+```
+
+```json
+{
+    "id": "wishlist-uuid",
+    "items": [
+        {
+            "id": "wishlist-item-uuid",
+            "product_id": "product-uuid",
+            "product_name": "Handmade Crochet Bag",
+            "product_slug": "handmade-crochet-bag",
+            "category_id": 1,
+            "category_name": "Handmade",
+            "created_at": "2026-09-30T12:00:00Z"
+        }
+    ],
+    "created_at": "2026-09-30T11:00:00Z",
+    "updated_at": "2026-09-30T12:00:00Z"
+}
+```
+
+If the authenticated user does not have a wishlist yet, the backend creates one and returns an empty wishlist.
+
+---
+
+### 4.2 Add Product to Wishlist
+
+**Endpoint**
+
+```http
+POST /api/v1/cart/wishlist/items/
+```
+
+**Authentication**
+
+Required.
+
+**CSRF**
+
+Required.
+
+**Request Body**
+
+```json
+{
+    "product_id": "product-uuid"
+}
+```
+
+**Success Response — New Item**
+
+```http
+201 Created
+```
+
+```json
+{
+    "id": "wishlist-item-uuid",
+    "product_id": "product-uuid",
+    "product_name": "Handmade Crochet Bag",
+    "product_slug": "handmade-crochet-bag",
+    "category_id": 1,
+    "category_name": "Handmade",
+    "created_at": "2026-09-30T12:00:00Z"
+}
+```
+
+**Success Response — Product Already in Wishlist**
+
+```http
+200 OK
+```
+
+The existing wishlist item is returned.
+
+**Invalid or Unavailable Product**
+
+If the product does not exist or is not currently PUBLISHED:
+
+```http
+404 Not Found
+```
+
+```json
+{
+    "detail": "Product does not exist or is not available."
+}
+```
+
+The same product cannot be added more than once.
+
+---
+
+### 4.3 Remove Product from Wishlist
+
+**Endpoint**
+
+```http
+DELETE /api/v1/cart/wishlist/items/<wishlist_item_id>/
+```
+
+**Authentication**
+
+Required.
+
+**CSRF**
+
+Required.
+
+**Success Response**
+
+```http
+204 No Content
+```
+
+The `<wishlist_item_id>` is the UUID of the wishlist item, not the Product UUID.
+
+If the wishlist item does not exist or does not belong to the authenticated user's wishlist:
+
+```http
+404 Not Found
+```
+
+```json
+{
+    "detail": "Wishlist item does not exist."
+}
+```
+
+---
+
+### 4.4 Clear Wishlist
+
+**Endpoint**
+
+```http
+DELETE /api/v1/cart/wishlist/
+```
+
+**Authentication**
+
+Required.
+
+**CSRF**
+
+Required.
+
+**Success Response**
+
+```http
+204 No Content
+```
+
+All wishlist items belonging to the authenticated user are removed.
+
+The Wishlist itself remains available for future use.
+
+---
+
+### 4.5 Wishlist Rules
+
+- Wishlist access requires authentication.
+- Guest users cannot create or modify a wishlist through the API.
+- Only PUBLISHED products can be added through the wishlist API.
+- A product can exist only once in a user's wishlist.
+- Wishlist items reference products directly, not variants.
+- Removing a wishlist item requires the wishlist item UUID.
+- Clearing the wishlist removes all WishlistItems but does not delete the Wishlist.
+- Product deletion is protected while the product is referenced by a WishlistItem.
+- Wishlist data does not contain a separate product-price snapshot.
+- The frontend should use `product_id` to navigate to the existing product-detail API when full product information is required.
+- Product availability, pricing, variants, and images remain authoritative from the Product APIs.

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .services import calculate_cart_totals
-from .models import Cart, CartItem
+from apps.cart.models import CartItem, Cart, Wishlist, WishlistItem
 
 
 
@@ -108,3 +108,40 @@ class AddCartItemSerializer(serializers.Serializer):
 class UpdateCartItemSerializer(serializers.Serializer):
     quantity = serializers.IntegerField(min_value=1)
 
+
+
+class WishlistItemSerializer(serializers.ModelSerializer):
+    product_id = serializers.UUIDField(source="product.id", read_only=True)
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    product_slug = serializers.CharField(source="product.slug", read_only=True)
+    category_id = serializers.IntegerField(source="product.category.id", read_only=True)
+    category_name = serializers.CharField(source="product.category.name", read_only=True)
+
+    class Meta:
+        model = WishlistItem
+        fields = [
+            "id",
+            "product_id",
+            "product_name",
+            "product_slug",
+            "category_id",
+            "category_name",
+            "created_at",
+        ]
+
+
+class WishlistSerializer(serializers.ModelSerializer):
+    items = WishlistItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Wishlist
+        fields = [
+            "id",
+            "items",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class AddWishlistItemSerializer(serializers.Serializer):
+    product_id = serializers.UUIDField()

@@ -1,10 +1,13 @@
 import secrets
 from django.db import transaction
-from .models import Cart
+from .models import Cart, CartItem
 from django.core.exceptions import ValidationError
 from apps.catalog.models import ProductVariant
 from .models import CartItem
 from decimal import Decimal
+from apps.catalog.models import Product
+from apps.cart.models import Wishlist, WishlistItem
+
 
 GUEST_CART_COOKIE = "geeka_guest_cart"
 
@@ -220,3 +223,131 @@ def calculate_cart_totals(*, cart):
         "subtotal": subtotal,
         "total": subtotal,
     }
+
+
+
+@transaction.atomic
+def merge_guest_cart_into_user_cart(*, user, guest_token):
+    """
+    Merge a guest cart into the authenticated user's cart.
+
+    - New variants are moved into the user's cart.
+    - Existing variants have their quantities combined.
+    - Quantities never exceed current stock.
+    - Unavailable items are preserved.
+    - The guest cart is deleted after a successful merge.
+    """
+
+    if not guest_token:
+        return None
+
+    guest_cart = (
+        Cart.objects
+        .select_for_update()
+        .filter(guest_token=guest_token)
+        .first()
+    )
+
+    if guest_cart is None:
+        return None
+
+    user_cart, _ = Cart.objects.get_or_create(
+        user=user,
+    )
+
+    user_cart = (
+        Cart.objects
+        .select_for_update()
+        .get(id=user_cart.id)
+    )
+
+    guest_items = (
+        CartItem.objects
+        .select_related("product_variant__product")
+        .select_for_update()
+        .filter(cart=guest_cart)
+    )
+
+    for guest_item in guest_items:
+        variant = guest_item.product_variant
+
+        user_item = (
+            CartItem.objects
+            .select_for_update()
+            .filter(
+                cart=user_cart,
+                product_variant=variant,
+            )
+            .first()
+        )
+
+        if user_item is None:
+            quantity = guest_item.quantity
+
+            if variant.stock > 0:
+                quantity = min(quantity, variant.stock)
+
+            CartItem.objects.create(
+                cart=user_cart,
+                product_variant=variant,
+                quantity=quantity,
+            )
+            continue
+
+        combined_quantity = (
+            user_item.quantity + guest_item.quantity
+        )
+
+        if variant.stock > 0:
+            combined_quantity = min(
+                combined_quantity,
+                variant.stock,
+            )
+
+        user_item.quantity = combined_quantity
+        user_item.save(
+            update_fields=["quantity", "updated_at"]
+        )
+
+    guest_cart.delete()
+
+    return user_cart
+
+
+
+
+def get_or_create_wishlist(user):
+    wishlist, _ = Wishlist.objects.get_or_create(
+        user=user
+    )
+    return wishlist
+
+
+def add_product_to_wishlist(user, product):
+    wishlist = get_or_create_wishlist(user)
+
+    item, created = WishlistItem.objects.get_or_create(
+        wishlist=wishlist,
+        product=product,
+    )
+
+    return item, created
+
+
+def remove_product_from_wishlist(user, product):
+    wishlist = get_or_create_wishlist(user)
+
+    deleted_count, _ = WishlistItem.objects.filter(
+        wishlist=wishlist,
+        product=product,
+    ).delete()
+
+    return deleted_count > 0
+
+
+def clear_wishlist(user):
+    wishlist = get_or_create_wishlist(user)
+
+    deleted_count, _ = wishlist.items.all().delete()
+
+    return deleted_count
