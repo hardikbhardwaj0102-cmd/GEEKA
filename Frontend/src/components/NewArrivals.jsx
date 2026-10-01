@@ -1002,20 +1002,26 @@ export default function NewArrivals() {
 
                         <div className="new-arrival-quick-image">
 
-                            {quickView.displayImage ? (
-                                <img
-                                    src={
-                                        quickView.displayImage
-                                    }
-                                    alt={
-                                        quickView.name
-                                    }
-                                />
-                            ) : (
-                                <div className="new-arrival-image-placeholder">
-                                    GEEKA
-                                </div>
-                            )}
+                            <div className="new-arrival-quick-image-frame">
+
+                                {quickView.displayImage ? (
+                                    <img
+                                        className="new-arrival-quick-product-image"
+                                        src={
+                                            quickView.displayImage
+                                        }
+                                        alt={
+                                            quickView.name ||
+                                            "Geeka product"
+                                        }
+                                    />
+                                ) : (
+                                    <div className="new-arrival-image-placeholder">
+                                        GEEKA
+                                    </div>
+                                )}
+
+                            </div>
 
                         </div>
 
