@@ -137,6 +137,70 @@ function getProductId(product) {
 }
 
 
+function getProductImages(product) {
+    const candidates = [
+        product?.displayImage,
+        product?.image,
+        product?.imageUrl,
+        product?.image_url,
+        ...(Array.isArray(product?.images) ? product.images : []),
+        ...(Array.isArray(product?.gallery) ? product.gallery : []),
+        ...(Array.isArray(product?.imageUrls) ? product.imageUrls : []),
+        ...(Array.isArray(product?.image_urls) ? product.image_urls : []),
+        product?.detail?.displayImage,
+        product?.detail?.image,
+        product?.detail?.imageUrl,
+        product?.detail?.image_url,
+        ...(Array.isArray(product?.detail?.images) ? product.detail.images : []),
+        ...(Array.isArray(product?.detail?.gallery) ? product.detail.gallery : []),
+        ...(Array.isArray(product?.detail?.imageUrls) ? product.detail.imageUrls : []),
+        ...(Array.isArray(product?.detail?.image_urls) ? product.detail.image_urls : []),
+    ];
+
+    const flattened = candidates.flatMap((item) => {
+        if (!item) {
+            return [];
+        }
+
+        if (typeof item === "string") {
+            return [item];
+        }
+
+        if (typeof item === "object") {
+            return [
+                item?.url,
+                item?.image,
+                item?.imageUrl,
+                item?.image_url,
+                item?.src,
+            ].filter(Boolean);
+        }
+
+        return [];
+    });
+
+    return [
+        ...new Set(
+            flattened
+                .map((url) => String(url).trim())
+                .filter(Boolean)
+        ),
+    ];
+}
+
+function getQuickViewImages(product) {
+    const images = getProductImages(product);
+
+    if (images.length) {
+        return images;
+    }
+
+    return product?.displayImage
+        ? [product.displayImage]
+        : [];
+}
+
+
 /* =========================================================
    ICONS
 ========================================================= */
@@ -287,6 +351,11 @@ export default function ProductCatalog({
     ] = useState(null);
 
     const [
+        quickViewImage,
+        setQuickViewImage,
+    ] = useState("");
+
+    const [
         toast,
         setToast,
     ] = useState("");
@@ -397,8 +466,17 @@ export default function ProductCatalog({
 
     useEffect(() => {
         if (!quickView) {
+            setQuickViewImage("");
             return;
         }
+
+        const images = getQuickViewImages(quickView);
+
+        setQuickViewImage(
+            images[0] ||
+            quickView?.displayImage ||
+            ""
+        );
 
         const previousOverflow =
             document.body.style.overflow;
@@ -406,9 +484,25 @@ export default function ProductCatalog({
         document.body.style.overflow =
             "hidden";
 
+        const handleKeyDown = (event) => {
+            if (event.key === "Escape") {
+                setQuickView(null);
+            }
+        };
+
+        document.addEventListener(
+            "keydown",
+            handleKeyDown
+        );
+
         return () => {
             document.body.style.overflow =
                 previousOverflow;
+
+            document.removeEventListener(
+                "keydown",
+                handleKeyDown
+            );
         };
     }, [
         quickView,
@@ -1006,6 +1100,14 @@ export default function ProductCatalog({
                                                             product
                                                         );
 
+                                                        setQuickViewImage(
+                                                            getQuickViewImages(
+                                                                product
+                                                            )[0] ||
+                                                            product?.displayImage ||
+                                                            ""
+                                                        );
+
                                                     }}
                                                 >
 
@@ -1235,167 +1337,216 @@ export default function ProductCatalog({
                 QUICK VIEW
             ================================================= */}
 
-            {quickView && (
+            {quickView && (() => {
+                const quickImages =
+                    getQuickViewImages(
+                        quickView
+                    );
 
-                <div
-                    className="catalog-quick-overlay"
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label={`Quick view for ${quickView?.name ||
-                        "product"
-                        }`}
-                    onMouseDown={(
-                        event
-                    ) => {
+                const activeImage =
+                    quickViewImage ||
+                    quickImages[0] ||
+                    quickView?.displayImage ||
+                    "";
 
-                        if (
-                            event.target ===
-                            event.currentTarget
-                        ) {
-                            setQuickView(
-                                null
-                            );
-                        }
+                const quickVariant =
+                    getDefaultPurchasableVariant(
+                        quickView?.detail
+                    );
 
-                    }}
-                >
+                const quickPurchasable =
+                    Boolean(
+                        quickView?.isPurchasable
+                    );
 
+                const quickDescription =
+                    quickView?.detail
+                        ?.description ||
+                    quickView?.description ||
+                    "Product details are available on the product page.";
+
+                const quickPrice =
+                    quickView?.price === null ||
+                        quickView?.price === undefined
+                        ? "PRICE ON REQUEST"
+                        : `FROM ${formatPrice(
+                            quickView.price,
+                            quickView.currency || "INR"
+                        )}`;
+
+                return (
                     <div
-                        className="catalog-quick-modal"
-                        onMouseDown={(event) =>
-                            event.stopPropagation()
-                        }
-                    >
-
-                        <button
-                            type="button"
-                            className="catalog-quick-close"
-                            onClick={() =>
-                                setQuickView(
-                                    null
-                                )
+                        className="catalog-quick-overlay"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={`Quick view for ${quickView?.name || "product"
+                            }`}
+                        onMouseDown={(event) => {
+                            if (
+                                event.target ===
+                                event.currentTarget
+                            ) {
+                                setQuickView(null);
                             }
-                            aria-label="Close quick view"
+                        }}
+                    >
+                        <div
+                            className="catalog-quick-modal"
+                            onMouseDown={(event) =>
+                                event.stopPropagation()
+                            }
                         >
-                            <CloseIcon />
-                        </button>
+                            <button
+                                type="button"
+                                className="catalog-quick-close"
+                                onClick={() =>
+                                    setQuickView(null)
+                                }
+                                aria-label="Close quick view"
+                            >
+                                <CloseIcon />
+                            </button>
 
-
-                        <div className="catalog-quick-image">
-
-                            {quickView?.displayImage ? (
-
-                                <div className="catalog-quick-image-frame">
-                                    <img
-                                        src={
-                                            quickView.displayImage
-                                        }
-                                        alt={
-                                            quickView.name ||
-                                            "Geeka product"
-                                        }
-                                        className="catalog-quick-product-image"
-                                    />
+                            <div className="catalog-quick-image">
+                                <div className="catalog-quick-image-stage">
+                                    {activeImage ? (
+                                        <img
+                                            src={activeImage}
+                                            alt={
+                                                quickView?.name ||
+                                                "Geeka product"
+                                            }
+                                            className="catalog-quick-product-image"
+                                            onError={(event) => {
+                                                event.currentTarget.style.display =
+                                                    "none";
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="catalog-image-placeholder">
+                                            <span>GEEKA</span>
+                                        </div>
+                                    )}
                                 </div>
 
-                            ) : (
+                                {quickImages.length > 1 && (
+                                    <div
+                                        className="catalog-quick-thumbnails"
+                                        aria-label="Product images"
+                                    >
+                                        {quickImages.map(
+                                            (image, imageIndex) => (
+                                                <button
+                                                    type="button"
+                                                    key={`${image}-${imageIndex}`}
+                                                    className={
+                                                        activeImage === image
+                                                            ? "active"
+                                                            : ""
+                                                    }
+                                                    onClick={() =>
+                                                        setQuickViewImage(
+                                                            image
+                                                        )
+                                                    }
+                                                    aria-label={`View image ${imageIndex + 1
+                                                        }`}
+                                                    aria-pressed={
+                                                        activeImage === image
+                                                    }
+                                                >
+                                                    <img
+                                                        src={image}
+                                                        alt=""
+                                                        loading="lazy"
+                                                    />
+                                                </button>
+                                            )
+                                        )}
+                                    </div>
+                                )}
 
-                                <div className="catalog-image-placeholder">
-                                    <span>
-                                        GEEKA
-                                    </span>
-                                </div>
-
-                            )}
-
-                        </div>
-
-
-                        <div className="catalog-quick-content">
-
-                            <span className="catalog-quick-category">
-                                {
-                                    quickView?.categoryName ||
-                                    "COLLECTION"
-                                }
-                            </span>
-
-
-                            <h3>
-                                {
-                                    quickView?.name ||
-                                    "Geeka Product"
-                                }
-                            </h3>
-
-
-                            <div className="catalog-quick-price">
-                                {
-                                    quickView?.price ===
-                                        null ||
-                                        quickView?.price ===
-                                        undefined
-                                        ? "PRICE ON REQUEST"
-                                        : `FROM ${formatPrice(
-                                            quickView.price,
-                                            quickView.currency ||
-                                            "INR"
-                                        )}`
-                                }
+                                <span className="catalog-quick-image-count">
+                                    {quickImages.length > 1
+                                        ? `${Math.max(
+                                            quickImages.indexOf(
+                                                activeImage
+                                            ) + 1,
+                                            1
+                                        )} / ${quickImages.length}`
+                                        : "PRODUCT IMAGE"}
+                                </span>
                             </div>
 
-
-                            <p>
-                                {
-                                    quickView?.detail
-                                        ?.description ||
-                                    "Product details are available on the product page."
-                                }
-                            </p>
-
-
-                            <div className="catalog-quick-actions">
-
-                                <button
-                                    type="button"
-                                    className="catalog-quick-add"
-                                    onClick={() =>
-                                        handleAddToBag(
-                                            quickView
-                                        )
-                                    }
-                                >
+                            <div className="catalog-quick-content">
+                                <span className="catalog-quick-category">
                                     {
-                                        quickView?.isPurchasable
+                                        quickView?.categoryName ||
+                                        "COLLECTION"
+                                    }
+                                </span>
+
+                                <h3>
+                                    {
+                                        quickView?.name ||
+                                        "Geeka Product"
+                                    }
+                                </h3>
+
+                                <div className="catalog-quick-price">
+                                    {quickPrice}
+                                </div>
+
+                                <div className="catalog-quick-scroll">
+                                    <p>
+                                        {quickDescription}
+                                    </p>
+
+                                    {quickVariant && (
+                                        <div className="catalog-quick-stock">
+                                            <span>AVAILABILITY</span>
+                                            <strong>
+                                                {quickPurchasable
+                                                    ? "IN STOCK"
+                                                    : "OUT OF STOCK"}
+                                            </strong>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="catalog-quick-actions">
+                                    <button
+                                        type="button"
+                                        className="catalog-quick-add"
+                                        onClick={() =>
+                                            handleAddToBag(
+                                                quickView
+                                            )
+                                        }
+                                    >
+                                        {quickPurchasable
                                             ? "ADD TO BAG"
-                                            : "VIEW PRODUCT"
-                                    }
-                                </button>
+                                            : "VIEW PRODUCT"}
+                                    </button>
 
-
-                                <button
-                                    type="button"
-                                    className="catalog-quick-shop"
-                                    onClick={() =>
-                                        openProduct(
-                                            quickView
-                                        )
-                                    }
-                                >
-                                    SHOP PRODUCT
-
-                                    <ArrowIcon />
-                                </button>
-
+                                    <button
+                                        type="button"
+                                        className="catalog-quick-shop"
+                                        onClick={() =>
+                                            openProduct(
+                                                quickView
+                                            )
+                                        }
+                                    >
+                                        SHOP PRODUCT
+                                        <ArrowIcon />
+                                    </button>
+                                </div>
                             </div>
-
                         </div>
-
                     </div>
-
-                </div>
-
-            )}
+                );
+            })}
 
         </section>
     );
