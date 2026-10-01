@@ -1,0 +1,493 @@
+.handmade-banner {
+    position: relative;
+    width: calc(100% - 48px);
+    max-width: 1440px;
+    min-height: 500px;
+
+    margin: 70px auto;
+    padding: 0;
+
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 48% 52%;
+    align-items: stretch;
+
+    background:
+        radial-gradient(circle at 12% 30%,
+            rgba(190, 91, 112, 0.10),
+            transparent 32%),
+        #f8eee9;
+
+    color: #3d2527;
+    isolation: isolate;
+
+    border-radius: 4px;
+}
+
+/* =========================================================
+   PAPER TEXTURE
+========================================================= */
+
+.handmade-banner__texture {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.35;
+
+    background-image:
+        repeating-linear-gradient(0deg,
+            rgba(90, 55, 45, 0.018) 0px,
+            rgba(90, 55, 45, 0.018) 1px,
+            transparent 1px,
+            transparent 4px),
+        repeating-linear-gradient(90deg,
+            rgba(90, 55, 45, 0.012) 0px,
+            rgba(90, 55, 45, 0.012) 1px,
+            transparent 1px,
+            transparent 5px);
+}
+
+/* =========================================================
+   LEFT CONTENT
+========================================================= */
+
+.handmade-banner__content {
+    position: relative;
+    z-index: 5;
+    align-self: center;
+
+    padding: 75px 30px 75px clamp(30px, 7vw, 110px);
+}
+
+.handmade-banner__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+
+    margin-bottom: 25px;
+
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+
+    color: #9a5966;
+}
+
+.handmade-banner__eyebrow::before {
+    content: "";
+
+    width: 34px;
+    height: 1px;
+
+    background: #9a5966;
+}
+
+.handmade-banner h2 {
+    margin: 0;
+    max-width: 620px;
+
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(42px, 5vw, 76px);
+    font-weight: 400;
+    line-height: 0.96;
+    letter-spacing: -2px;
+
+    color: #40282a;
+}
+
+.handmade-banner h2 em {
+    color: #a65d6b;
+    font-style: italic;
+    font-weight: 400;
+}
+
+.handmade-banner__content>p {
+    max-width: 390px;
+
+    margin: 27px 0 0;
+
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.8;
+    letter-spacing: 0.2px;
+
+    color: #765b5b;
+}
+
+.handmade-banner__line {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+
+    margin-top: 34px;
+}
+
+.handmade-banner__line span {
+    width: 48px;
+    height: 1px;
+
+    background: #b87984;
+}
+
+.handmade-banner__line small {
+    font-family: Arial, sans-serif;
+    font-size: 8px;
+    letter-spacing: 2.5px;
+
+    color: #9a7477;
+}
+
+/* =========================================================
+   IMAGE / VISUAL SECTION
+========================================================= */
+
+.handmade-banner__visual {
+    position: relative;
+
+    min-height: 500px;
+
+    overflow: hidden;
+}
+
+/* Image placeholder */
+
+.handmade-banner__image-placeholder {
+    position: absolute;
+    inset: 38px 45px 38px 25px;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(135deg,
+            #ead4d0,
+            #f5e5df 48%,
+            #e1c2c2);
+
+    border-radius: 2px 90px 2px 90px;
+
+    background-position: center;
+    background-size: cover;
+}
+
+/* =========================================================
+   PLACEHOLDER
+========================================================= */
+
+.placeholder-card {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+}
+
+.placeholder-card span {
+    margin-bottom: 10px;
+
+    font-family: Arial, sans-serif;
+    font-size: 9px;
+    letter-spacing: 4px;
+
+    color: #9c6c70;
+}
+
+.placeholder-card strong {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(20px, 2vw, 30px);
+    font-weight: 400;
+    letter-spacing: 1px;
+
+    color: #6e464a;
+}
+
+/* =========================================================
+   THREADS
+========================================================= */
+
+.thread {
+    position: absolute;
+
+    z-index: 3;
+
+    pointer-events: none;
+
+    width: 220px;
+    height: 220px;
+
+    border: 1px solid rgba(153, 82, 99, 0.42);
+
+    border-left-color: transparent;
+    border-bottom-color: transparent;
+
+    border-radius: 50%;
+}
+
+.thread--one {
+    top: 20px;
+    right: 5px;
+
+    transform: rotate(28deg);
+}
+
+.thread--two {
+    bottom: -90px;
+    left: 10px;
+
+    transform: rotate(-35deg);
+
+    border-color: rgba(153, 82, 99, 0.25);
+    border-right-color: transparent;
+}
+
+/* =========================================================
+   FLOWERS — STATIC
+========================================================= */
+
+.flower {
+    position: absolute;
+
+    z-index: 5;
+
+    width: 72px;
+    height: 72px;
+
+    /* Rotation animation removed */
+    animation: none;
+}
+
+.flower i {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 25px;
+    height: 39px;
+
+    border-radius: 50% 50% 45% 45%;
+
+    background: rgba(255, 238, 232, 0.92);
+
+    transform-origin: 50% 100%;
+}
+
+.flower i:nth-child(1) {
+    transform: translate(-50%, -100%) rotate(0deg);
+}
+
+.flower i:nth-child(2) {
+    transform: translate(-50%, -100%) rotate(90deg);
+}
+
+.flower i:nth-child(3) {
+    transform: translate(-50%, -100%) rotate(180deg);
+}
+
+.flower i:nth-child(4) {
+    transform: translate(-50%, -100%) rotate(270deg);
+}
+
+.flower b {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 17px;
+    height: 17px;
+
+    transform: translate(-50%, -50%);
+
+    border-radius: 50%;
+
+    background: #b87680;
+}
+
+.flower--one {
+    top: 15px;
+    right: 35px;
+}
+
+.flower--two {
+    bottom: 20px;
+    left: 5px;
+
+    transform: scale(0.7);
+}
+
+/* =========================================================
+   YARN BALL
+========================================================= */
+
+.yarn-ball {
+    position: absolute;
+
+    z-index: 6;
+
+    right: 28px;
+    bottom: 18px;
+
+    width: 78px;
+    height: 78px;
+
+    border-radius: 50%;
+
+    background:
+        repeating-radial-gradient(circle at 35% 35%,
+            #b96f7b 0,
+            #b96f7b 2px,
+            #d08c95 3px,
+            #b96f7b 5px);
+
+    box-shadow:
+        0 12px 25px rgba(85, 45, 50, 0.16);
+}
+
+.yarn-ball span {
+    position: absolute;
+
+    display: block;
+
+    width: 54px;
+    height: 18px;
+
+    border: 1px solid rgba(255, 235, 232, 0.55);
+
+    border-radius: 50%;
+}
+
+.yarn-ball span:nth-child(1) {
+    top: 17px;
+    left: 12px;
+
+    transform: rotate(18deg);
+}
+
+.yarn-ball span:nth-child(2) {
+    top: 30px;
+    left: 9px;
+
+    transform: rotate(-18deg);
+}
+
+.yarn-ball span:nth-child(3) {
+    top: 43px;
+    left: 13px;
+
+    transform: rotate(12deg);
+}
+
+/* =========================================================
+   CORNER DETAIL
+========================================================= */
+
+.handmade-banner__corner {
+    position: absolute;
+
+    right: 0;
+    bottom: 0;
+
+    z-index: 10;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 12px 20px;
+
+    background: rgba(248, 238, 233, 0.9);
+}
+
+.handmade-banner__corner span {
+    font-family: Arial, sans-serif;
+    font-size: 8px;
+    letter-spacing: 2px;
+
+    color: #9b7074;
+}
+
+.handmade-banner__corner div {
+    width: 25px;
+    height: 1px;
+
+    background: #bd8991;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+    .handmade-banner {
+        width: calc(100% - 32px);
+
+        margin: 50px auto;
+
+        grid-template-columns: 1fr;
+    }
+
+    .handmade-banner__content {
+        padding: 65px 30px 40px;
+    }
+
+    .handmade-banner__visual {
+        min-height: 390px;
+    }
+
+    .handmade-banner__image-placeholder {
+        inset: 10px 25px 35px;
+    }
+
+    .handmade-banner__corner {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .handmade-banner {
+        width: calc(100% - 24px);
+
+        margin: 40px auto;
+    }
+
+    .handmade-banner__content {
+        padding: 55px 24px 30px;
+    }
+
+    .handmade-banner h2 {
+        font-size: 43px;
+        letter-spacing: -1.5px;
+    }
+
+    .handmade-banner__content>p {
+        font-size: 13px;
+        max-width: 310px;
+    }
+
+    .handmade-banner__visual {
+        min-height: 320px;
+    }
+
+    .handmade-banner__image-placeholder {
+        inset: 0 18px 25px;
+
+        border-radius: 2px 55px 2px 55px;
+    }
+
+    .flower--one {
+        right: 12px;
+    }
+
+    .yarn-ball {
+        right: 12px;
+        bottom: 10px;
+
+        transform: scale(0.8);
+    }
+}

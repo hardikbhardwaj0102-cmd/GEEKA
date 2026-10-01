@@ -19,6 +19,7 @@ import ProductCatalog from "./components/ProductCatalog";
 import Profile from "./components/Profile";
 import Shop from "./components/Shop";
 import About from "./components/About";
+import HandmadeBanner from "./components/HandmadeBanner";
 import Contact from "./components/Contact";
 import Cart from "./components/Cart";
 import ForgotPassword from "./components/ForgotPassword";
@@ -62,6 +63,8 @@ function HomePage() {
                 <ExploreShopBanner />
 
                 <ProductCatalog />
+
+                <HandmadeBanner />
 
                 <BenefitsStrip />
 
