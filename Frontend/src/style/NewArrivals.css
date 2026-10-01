@@ -5,6 +5,11 @@
    Exact editorial composition inspired by the approved mockup
 ========================================================= */
 
+.new-arrivals-section:has(.new-arrival-quick-overlay) {
+    /* Bring the whole section above the fixed site header while quick view is open. */
+    z-index: 2147483640;
+}
+
 .new-arrivals-section {
     --na-ink: #3a251f;
     --na-ink-soft: #5d423b;
@@ -736,7 +741,7 @@
 .new-arrival-quick-overlay {
     position: fixed;
     inset: 0;
-    z-index: 1000;
+    z-index: 2147483647;
 
     display: grid;
     place-items: center;
