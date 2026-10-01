@@ -1,2230 +1,672 @@
-/* =========================================================
-   GEEKA — NEW ARRIVALS
-   ABSTRACT EDITORIAL BACKGROUND
-========================================================= */
+@import "./GeekaTheme.css";
 
 .new-arrivals-section {
     position: relative;
     isolation: isolate;
-
     width: 100%;
-    padding: 96px 5% 88px;
-
+    padding: 90px 5% 86px;
     overflow: hidden;
-
-    color: #5d3e35;
-
-    background: #fffaf6;
+    background: #fffaf7;
+    color: var(--geeka-ink);
 }
 
-
-/* =========================================================
-   BACKGROUND DESIGN
-========================================================= */
-
-/*
-    Large abstract arch — top right
-*/
-
-.new-arrivals-section::before {
-    content: "";
-
-    position: absolute;
-
-    z-index: -3;
-
-    top: -170px;
-    right: -120px;
-
-    width: 540px;
-    height: 540px;
-
-    border-radius: 50%;
-
-    background:
-        #f0ddd3;
-
-    box-shadow:
-        inset 0 0 0 38px #fffaf6,
-        inset 0 0 0 40px #e7c9bc;
-
-    opacity: 0.75;
-
-    pointer-events: none;
-}
-
-
-/*
-    Large abstract arch — bottom left
-*/
-
+.new-arrivals-section::before,
 .new-arrivals-section::after {
     content: "";
-
     position: absolute;
-
-    z-index: -3;
-
-    bottom: -250px;
-    left: -145px;
-
-    width: 570px;
-    height: 570px;
-
-    border-radius: 50%;
-
-    background:
-        #ead4c9;
-
-    box-shadow:
-        inset 0 0 0 48px #fffaf6,
-        inset 0 0 0 50px #dfbbae;
-
-    opacity: 0.62;
-
     pointer-events: none;
-}
-
-
-/* =========================================================
-   DECORATIVE CONTOUR
-   Added through heading pseudo-element
-========================================================= */
-
-.new-arrivals-heading {
-    position: relative;
-
-    max-width: 650px;
-}
-
-
-/*
-    Thin editorial orbit / contour
-*/
-
-.new-arrivals-heading::before {
-    content: "";
-
-    position: absolute;
-
     z-index: -1;
-
-    top: -80px;
-    left: 180px;
-
-    width: 260px;
-    height: 105px;
-
-    border:
-        1px solid rgba(145, 101, 87, 0.20);
-
     border-radius: 50%;
-
-    transform:
-        rotate(-12deg);
-
-    pointer-events: none;
 }
 
-
-/*
-    Second contour
-*/
-
-.new-arrivals-heading::after {
-    content: "";
-
-    position: absolute;
-
-    z-index: -1;
-
-    top: -61px;
-    left: 207px;
-
-    width: 210px;
-    height: 76px;
-
-    border:
-        1px solid rgba(145, 101, 87, 0.12);
-
-    border-radius: 50%;
-
-    transform:
-        rotate(-12deg);
-
-    pointer-events: none;
+.new-arrivals-section::before {
+    width: 460px;
+    height: 460px;
+    top: -220px;
+    right: -120px;
+    border: 64px solid rgba(233, 205, 195, .46);
 }
 
-
-/* =========================================================
-   DECORATIVE DOT FIELD
-========================================================= */
+.new-arrivals-section::after {
+    width: 390px;
+    height: 390px;
+    bottom: -210px;
+    left: -120px;
+    border: 52px solid rgba(236, 211, 202, .4);
+}
 
 .new-arrivals-header {
     position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+    margin: 0 auto 34px;
+    max-width: var(--geeka-content);
+    z-index: 1;
 }
-
-
-.new-arrivals-header::before {
-    content: "";
-
-    position: absolute;
-
-    top: 4px;
-    right: 13%;
-
-    width: 5px;
-    height: 5px;
-
-    border-radius: 50%;
-
-    background:
-        #b48776;
-
-    box-shadow:
-        18px 12px 0 #d8b9aa,
-        38px -4px 0 #d8b9aa,
-        55px 17px 0 #b48776,
-        77px 3px 0 #e5cec3,
-        94px 22px 0 #c99f8e;
-
-    opacity: 0.62;
-
-    pointer-events: none;
-}
-
-
-/* =========================================================
-   SMALL CROSS DETAIL
-========================================================= */
 
 .new-arrivals-header::after {
-    content: "+";
-
+    content: "";
     position: absolute;
-
-    top: 34px;
-    right: 6%;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 18px;
-    font-weight: 300;
-
-    color:
-        rgba(125, 88, 76, 0.28);
-
-    pointer-events: none;
+    right: 8%;
+    top: -12px;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(168, 107, 103, .18);
+    border-radius: 50%;
 }
 
+.new-arrivals-heading {
+    max-width: 680px;
+}
 
-/* =========================================================
-   CONTENT ABOVE BACKGROUND
-========================================================= */
+.new-arrivals-eyebrow {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: var(--geeka-rose);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .19em;
+    text-transform: uppercase;
+}
 
-.new-arrivals-header,
-.new-arrivals-grid,
-.new-arrivals-pagination,
-.new-arrivals-page-status,
-.new-arrivals-loading,
-.new-arrivals-empty {
+.new-arrivals-heading h2 {
+    margin: 0;
+    color: var(--geeka-ink);
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(45px, 5vw, 66px);
+    font-weight: 500;
+    line-height: .9;
+    letter-spacing: -.05em;
+}
+
+.new-arrivals-heading p {
+    max-width: 510px;
+    margin: 15px 0 0;
+    color: var(--geeka-muted);
+    font-family: "Cormorant Garamond", serif;
+    font-size: 16px;
+    line-height: 1.55;
+}
+
+.new-arrivals-grid {
+    max-width: var(--geeka-content);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
     position: relative;
     z-index: 1;
 }
 
-
-/* =========================================================
-   HEADER
-========================================================= */
-
-.new-arrivals-header {
-    display: flex;
-
-    align-items: flex-end;
-
-    justify-content: space-between;
-
-    gap: 40px;
-
-    margin-bottom: 42px;
-}
-
-
-.new-arrivals-eyebrow {
-    display: inline-block;
-
-    margin-bottom: 13px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 10px;
-
-    font-weight: 600;
-
-    letter-spacing: 0.16em;
-
-    text-transform: uppercase;
-
-    color:
-        #94756a;
-}
-
-
-.new-arrivals-heading h2 {
-    margin: 0;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        clamp(34px, 4vw, 52px);
-
-    font-weight: 500;
-
-    line-height: 0.98;
-
-    letter-spacing:
-        -0.045em;
-
-    color:
-        #5d3e35;
-}
-
-
-.new-arrivals-heading p {
-    max-width: 500px;
-
-    margin:
-        17px 0 0;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 13px;
-
-    line-height: 1.75;
-
-    color:
-        #826a60;
-}
-
-
-/* =========================================================
-   PRODUCT GRID
-========================================================= */
-
-.new-arrivals-grid {
-    width: 100%;
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
-    gap: 22px;
-}
-
-
-/* =========================================================
-   PRODUCT CARD
-========================================================= */
-
 .new-arrival-card {
     min-width: 0;
-
-    background:
-        rgba(255, 255, 255, 0.97);
-
-    border:
-        1px solid rgba(93, 62, 53, 0.09);
-
-    overflow:
-        hidden;
-
-    transition:
-        transform 0.3s ease,
-        box-shadow 0.3s ease;
+    border: 1px solid var(--geeka-line);
+    border-radius: var(--geeka-radius);
+    overflow: hidden;
+    background: rgba(255, 255, 255, .96);
+    box-shadow: 0 4px 14px rgba(61, 40, 34, .03);
+    transition: transform .25s ease, box-shadow .25s ease;
 }
-
 
 .new-arrival-card:hover {
-    transform:
-        translateY(-4px);
-
-    box-shadow:
-        0 16px 40px rgba(67, 45, 39, 0.08);
+    transform: translateY(-4px);
+    box-shadow: var(--geeka-shadow-sm);
 }
-
-
-/* =========================================================
-   IMAGE
-========================================================= */
 
 .new-arrival-image {
-    position:
-        relative;
-
-    width:
-        100%;
-
-    aspect-ratio:
-        0.83;
-
-    overflow:
-        hidden;
-
-    background:
-        #f2e8e1;
+    position: relative;
+    aspect-ratio: .84;
+    overflow: hidden;
+    background: #f0e6e1;
 }
-
 
 .new-arrival-image img {
-    width:
-        100%;
-
-    height:
-        100%;
-
-    display:
-        block;
-
-    object-fit:
-        cover;
-
-    transition:
-        transform 0.55s ease;
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transition: transform .5s ease;
 }
-
 
 .new-arrival-card:hover .new-arrival-image img {
-    transform:
-        scale(1.035);
+    transform: scale(1.035);
 }
-
-
-/* =========================================================
-   IMAGE PLACEHOLDER
-========================================================= */
 
 .new-arrival-image-placeholder {
-    width:
-        100%;
-
-    height:
-        100%;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    background:
-        linear-gradient(145deg,
-            #f2e7df,
-            #eadbd1);
-
-    color:
-        rgba(93, 62, 53, 0.35);
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        12px;
-
-    letter-spacing:
-        0.20em;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(145deg, #f1e6df, #e9d9d1);
+    color: rgba(60, 45, 41, .34);
+    font-family: "Cormorant Garamond", serif;
+    font-size: 26px;
+    letter-spacing: .12em;
 }
-
-
-/* =========================================================
-   IMAGE TOP
-========================================================= */
 
 .new-arrival-image-top {
-    position:
-        absolute;
-
-    top:
-        14px;
-
-    left:
-        14px;
-
-    right:
-        14px;
-
-    z-index:
-        2;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        space-between;
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
-
-
-/* =========================================================
-   NEW LABEL
-========================================================= */
 
 .new-arrival-label {
-    padding:
-        7px 9px;
-
-    background:
-        rgba(255, 250, 246, 0.92);
-
-    color:
-        #5d3e35;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        8px;
-
-    font-weight:
-        700;
-
-    letter-spacing:
-        0.13em;
+    padding: 6px 9px;
+    border: 1px solid rgba(255, 255, 255, .55);
+    border-radius: 999px;
+    background: rgba(255, 250, 247, .9);
+    color: var(--geeka-ink);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
 }
-
-
-/* =========================================================
-   HEART
-========================================================= */
 
 .new-arrival-heart {
-    width:
-        35px;
-
-    height:
-        35px;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    padding:
-        0;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.12);
-
-    border-radius:
-        50%;
-
-    background:
-        rgba(255, 250, 246, 0.90);
-
-    color:
-        #5d3e35;
-
-    cursor:
-        pointer;
-
-    backdrop-filter:
-        blur(8px);
-
-    transition:
-        transform 0.2s ease,
-        background 0.2s ease;
+    width: 35px;
+    height: 35px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, .65);
+    border-radius: 50%;
+    background: rgba(255, 250, 247, .9);
+    color: var(--geeka-ink);
+    backdrop-filter: blur(8px);
+    transition: transform .2s ease, color .2s ease, background .2s ease;
 }
 
-
-.new-arrival-heart:hover {
-    transform:
-        scale(1.05);
-
-    background:
-        #fffaf6;
+.new-arrival-heart:hover,
+.new-arrival-heart.filled {
+    transform: scale(1.04);
+    color: var(--geeka-rose-dark);
+    background: #fff;
 }
-
 
 .new-arrival-heart svg {
-    width:
-        16px;
-
-    height:
-        16px;
-
-    fill:
-        none;
-
-    stroke:
-        currentColor;
-
-    stroke-width:
-        1.45;
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
 }
-
 
 .new-arrival-heart svg.filled {
-    fill:
-        currentColor;
+    fill: currentColor;
 }
 
-
-/* =========================================================
-   QUICK VIEW
-========================================================= */
-
-.new-arrival-quick-view {
-    position:
-        absolute;
-
-    left:
-        14px;
-
-    right:
-        14px;
-
-    bottom:
-        14px;
-
-    z-index:
-        2;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    gap:
-        9px;
-
-    min-height:
-        39px;
-
-    border:
-        1px solid rgba(255, 255, 255, 0.65);
-
-    background:
-        rgba(70, 47, 41, 0.78);
-
-    color:
-        #fffaf6;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        8px;
-
-    font-weight:
-        600;
-
-    letter-spacing:
-        0.12em;
-
-    cursor:
-        pointer;
-
-    opacity:
-        0;
-
-    transform:
-        translateY(8px);
-
-    transition:
-        opacity 0.25s ease,
-        transform 0.25s ease;
+.new-arrival-quick-view,
+.new-arrival-quick-actions {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 2;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: var(--geeka-radius-sm);
+    background: rgba(59, 42, 38, .78);
+    color: #fff;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    opacity: 0;
+    transform: translateY(7px);
+    transition: opacity .22s ease, transform .22s ease;
+    backdrop-filter: blur(8px);
 }
 
-
-.new-arrival-card:hover .new-arrival-quick-view {
-    opacity:
-        1;
-
-    transform:
-        translateY(0);
+.new-arrival-card:hover .new-arrival-quick-view,
+.new-arrival-card:hover .new-arrival-quick-actions {
+    opacity: 1;
+    transform: translateY(0);
 }
 
-
-.new-arrival-quick-view svg {
-    width:
-        14px;
-
-    height:
-        14px;
-
-    fill:
-        none;
-
-    stroke:
-        currentColor;
-
-    stroke-width:
-        1.35;
+.new-arrival-quick-view svg,
+.new-arrival-quick-shop svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.35;
 }
-
-
-/* =========================================================
-   DETAILS
-========================================================= */
 
 .new-arrival-details {
-    padding:
-        20px 19px 19px;
+    padding: 17px;
 }
-
 
 .new-arrival-meta {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        space-between;
-
-    gap:
-        10px;
-
-    margin-bottom:
-        9px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
 }
-
 
 .new-arrival-meta>span:first-child {
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        8px;
-
-    font-weight:
-        600;
-
-    letter-spacing:
-        0.13em;
-
-    text-transform:
-        uppercase;
-
-    color:
-        #a28377;
+    color: var(--geeka-muted);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
 }
-
 
 .new-arrival-sold {
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        8px;
-
-    font-weight:
-        600;
-
-    letter-spacing:
-        0.10em;
-
-    color:
-        #a05f55;
+    color: var(--geeka-rose-dark);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
 }
-
 
 .new-arrival-details h3 {
-    min-height:
-        42px;
-
-    margin:
-        0;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        16px;
-
-    font-weight:
-        500;
-
-    line-height:
-        1.35;
-
-    color:
-        #5d3e35;
+    min-height: 48px;
+    margin: 0;
+    color: var(--geeka-ink);
+    font-family: "Cormorant Garamond", serif;
+    font-size: 23px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -.02em;
 }
-
-
-/* =========================================================
-   BOTTOM
-========================================================= */
 
 .new-arrival-bottom {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        space-between;
-
-    gap:
-        12px;
-
-    margin-top:
-        16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 15px;
 }
-
 
 .new-arrival-price {
-    display:
-        flex;
-
-    align-items:
-        baseline;
-
-    gap:
-        7px;
-
-    min-width:
-        0;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
 }
-
 
 .new-arrival-price strong {
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        14px;
-
-    font-weight:
-        600;
-
-    color:
-        #5d3e35;
+    color: var(--geeka-ink);
+    font-size: 14px;
 }
-
 
 .new-arrival-price del {
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        10px;
-
-    color:
-        #ad978d;
+    color: var(--geeka-faint);
+    font-size: 10px;
 }
 
-
-/* =========================================================
-   SHOP
-========================================================= */
+.new-arrival-shop,
+.new-arrival-quick-shop {
+    border: 0;
+    background: transparent;
+    color: var(--geeka-rose-dark);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
 
 .new-arrival-shop {
-    flex-shrink:
-        0;
-
-    display:
-        inline-flex;
-
-    align-items:
-        center;
-
-    gap:
-        7px;
-
-    padding:
-        7px 0;
-
-    border:
-        none;
-
-    background:
-        transparent;
-
-    color:
-        #5d3e35;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        9px;
-
-    font-weight:
-        600;
-
-    letter-spacing:
-        0.10em;
-
-    cursor:
-        pointer;
-
-    transition:
-        gap 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 0;
 }
-
 
 .new-arrival-shop:hover {
-    gap:
-        11px;
+    color: var(--geeka-ink);
 }
-
-
-.new-arrival-shop svg {
-    width:
-        13px;
-
-    height:
-        13px;
-
-    fill:
-        none;
-
-    stroke:
-        currentColor;
-
-    stroke-width:
-        1.35;
-}
-
-
-/* =========================================================
-   ADD TO BAG
-========================================================= */
 
 .new-arrival-add {
-    width:
-        100%;
-
-    min-height:
-        40px;
-
-    margin-top:
-        14px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.18);
-
-    background:
-        transparent;
-
-    color:
-        #5d3e35;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        8px;
-
-    font-weight:
-        600;
-
-    letter-spacing:
-        0.13em;
-
-    cursor:
-        pointer;
-
-    transition:
-        background 0.2s ease,
-        color 0.2s ease,
-        border-color 0.2s ease;
+    width: 100%;
+    min-height: 40px;
+    margin-top: 13px;
+    border: 1px solid var(--geeka-line-strong);
+    border-radius: var(--geeka-radius-sm);
+    background: transparent;
+    color: var(--geeka-ink);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    transition: background .2s ease, color .2s ease, border-color .2s ease;
 }
-
 
 .new-arrival-add:hover:not(:disabled) {
-    background:
-        #5d3e35;
-
-    border-color:
-        #5d3e35;
-
-    color:
-        #fffaf6;
+    border-color: var(--geeka-ink);
+    background: var(--geeka-ink);
+    color: #fff;
 }
-
 
 .new-arrival-add:disabled {
-    opacity:
-        0.45;
-
-    cursor:
-        not-allowed;
+    opacity: .45;
 }
 
-
-/* =========================================================
-   PAGINATION
-========================================================= */
+.new-arrivals-pagination,
+.new-arrivals-page-status {
+    position: relative;
+    z-index: 1;
+}
 
 .new-arrivals-pagination {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    gap:
-        14px;
-
-    margin-top:
-        42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 28px;
 }
 
-
-.new-arrivals-page-numbers {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        7px;
+.new-arrivals-pagination button {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--geeka-line);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .76);
+    color: var(--geeka-ink);
 }
 
-
-.new-arrivals-page-numbers button,
-.new-arrivals-page-arrow {
-    width:
-        40px;
-
-    height:
-        40px;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    padding:
-        0;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.16);
-
-    border-radius:
-        50%;
-
-    background:
-        rgba(255, 250, 246, 0.50);
-
-    color:
-        #5d3e35;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        10px;
-
-    font-weight:
-        600;
-
-    cursor:
-        pointer;
-
-    transition:
-        background 0.2s ease,
-        color 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.2s ease;
+.new-arrivals-pagination button.active {
+    border-color: var(--geeka-rose-dark);
+    background: var(--geeka-rose-dark);
+    color: #fff;
 }
-
-
-.new-arrivals-page-numbers button:hover,
-.new-arrivals-page-arrow:hover:not(:disabled) {
-    border-color:
-        #5d3e35;
-
-    transform:
-        translateY(-1px);
-}
-
-
-.new-arrivals-page-numbers button.active {
-    background:
-        #5d3e35;
-
-    border-color:
-        #5d3e35;
-
-    color:
-        #fffaf6;
-}
-
-
-.new-arrivals-page-arrow svg {
-    width:
-        14px;
-
-    height:
-        14px;
-
-    fill:
-        none;
-
-    stroke:
-        currentColor;
-
-    stroke-width:
-        1.35;
-}
-
-
-.new-arrivals-page-arrow:disabled {
-    opacity:
-        0.30;
-
-    cursor:
-        not-allowed;
-}
-
-
-/* =========================================================
-   PAGE STATUS
-========================================================= */
 
 .new-arrivals-page-status {
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        9px;
-
-    width:
-        110px;
-
-    margin:
-        17px auto 0;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        8px;
-
-    font-weight:
-        600;
-
-    letter-spacing:
-        0.10em;
-
-    color:
-        #a28377;
+    margin-top: 11px;
+    color: var(--geeka-faint);
+    font-size: 9px;
+    text-align: center;
 }
 
-
-.new-arrivals-page-status>div {
-    flex:
-        1;
-
-    height:
-        1px;
-
-    background:
-        rgba(93, 62, 53, 0.16);
+.new-arrivals-loading,
+.new-arrivals-empty {
+    position: relative;
+    z-index: 1;
+    max-width: var(--geeka-content);
+    margin: 0 auto;
 }
-
-
-/* =========================================================
-   LOADING
-========================================================= */
-
-.new-arrivals-loading {
-    width:
-        100%;
-}
-
 
 .new-arrivals-loading-line {
-    width:
-        100%;
-
-    height:
-        1px;
-
-    margin-bottom:
-        25px;
-
-    background:
-        rgba(93, 62, 53, 0.09);
+    width: 120px;
+    height: 8px;
+    margin-bottom: 18px;
+    border-radius: 99px;
+    background: #eadbd5;
+    animation: geekaPulse 1.2s ease-in-out infinite;
 }
-
 
 .new-arrivals-loading-grid {
-    display:
-        grid;
-
-    grid-template-columns:
-        repeat(4, minmax(0, 1fr));
-
-    gap:
-        22px;
-
-    overflow:
-        hidden;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
 }
-
 
 .new-arrivals-loading-grid>div {
-    aspect-ratio:
-        0.83;
-
-    background:
-        linear-gradient(90deg,
-            #f5ece6 25%,
-            #fbf5f0 50%,
-            #f5ece6 75%);
-
-    background-size:
-        200% 100%;
-
-    animation:
-        new-arrival-loading 1.4s infinite;
+    aspect-ratio: .84;
+    border-radius: var(--geeka-radius);
+    background: linear-gradient(90deg, #f0e5df 25%, #f7efeb 37%, #f0e5df 63%);
+    background-size: 300% 100%;
+    animation: geekaShimmer 1.4s ease-in-out infinite;
 }
-
-
-@keyframes new-arrival-loading {
-
-    from {
-        background-position:
-            200% 0;
-    }
-
-    to {
-        background-position:
-            -200% 0;
-    }
-}
-
-
-/* =========================================================
-   EMPTY
-========================================================= */
 
 .new-arrivals-empty {
-    min-height:
-        300px;
-
-    display:
-        flex;
-
-    flex-direction:
-        column;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    text-align:
-        center;
-
-    padding:
-        50px 20px;
-
-    border-top:
-        1px solid rgba(93, 62, 53, 0.10);
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.10);
-
-    background:
-        rgba(255, 250, 246, 0.75);
+    padding: 70px 30px;
+    border: 1px dashed var(--geeka-line-strong);
+    border-radius: var(--geeka-radius);
+    background: rgba(255, 255, 255, .55);
+    text-align: center;
 }
-
 
 .new-arrivals-empty>span {
-    margin-bottom:
-        12px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        8px;
-
-    font-weight:
-        600;
-
-    letter-spacing:
-        0.16em;
-
-    color:
-        #a28377;
+    color: var(--geeka-rose);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
 }
-
 
 .new-arrivals-empty h3 {
-    margin:
-        0;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        25px;
-
-    font-weight:
-        500;
-
-    color:
-        #5d3e35;
+    margin: 9px 0 8px;
+    font-family: "Cormorant Garamond", serif;
+    font-size: 38px;
+    font-weight: 500;
 }
-
 
 .new-arrivals-empty p {
-    max-width:
-        440px;
-
-    margin:
-        12px 0 22px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        12px;
-
-    line-height:
-        1.7;
-
-    color:
-        #8d756b;
+    max-width: 420px;
+    margin: 0 auto 18px;
+    color: var(--geeka-muted);
+    font-family: "Cormorant Garamond", serif;
+    font-size: 16px;
+    line-height: 1.5;
 }
 
-
-.new-arrivals-empty button,
 .new-arrivals-empty-link {
-    display:
-        inline-flex;
-
-    align-items:
-        center;
-
-    gap:
-        9px;
-
-    padding:
-        11px 18px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.20);
-
-    background:
-        transparent;
-
-    color:
-        #5d3e35;
-
-    text-decoration:
-        none;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        8px;
-
-    font-weight:
-        600;
-
-    letter-spacing:
-        0.12em;
-
-    cursor:
-        pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 15px;
+    border: 1px solid var(--geeka-ink);
+    border-radius: var(--geeka-radius-sm);
+    background: var(--geeka-ink);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-decoration: none;
 }
 
-
-.new-arrivals-empty button:hover,
-.new-arrivals-empty-link:hover {
-    background:
-        #5d3e35;
-
-    color:
-        #fffaf6;
-}
-
-
-.new-arrivals-empty button svg,
 .new-arrivals-empty-link svg {
-    width:
-        14px;
-
-    height:
-        14px;
-
-    fill:
-        none;
-
-    stroke:
-        currentColor;
-
-    stroke-width:
-        1.35;
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.35;
 }
-
-
-/* =========================================================
-   QUICK VIEW
-========================================================= */
-
-.new-arrival-quick-overlay {
-    position:
-        fixed;
-
-    inset:
-        0;
-
-    z-index:
-        2000;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    padding:
-        30px;
-
-    background:
-        rgba(46, 31, 27, 0.45);
-
-    backdrop-filter:
-        blur(8px);
-}
-
 
 .new-arrival-quick-modal {
-    position:
-        relative;
-
-    width:
-        min(900px, 100%);
-
-    display:
-        grid;
-
-    grid-template-columns:
-        0.95fr 1fr;
-
-    background:
-        #fffaf6;
-
-    box-shadow:
-        0 30px 80px rgba(40, 27, 23, 0.20);
+    position: fixed;
+    inset: 0;
+    z-index: 220;
+    display: grid;
+    place-items: center;
+    padding: 22px;
 }
 
-
-.new-arrival-quick-close {
-    position:
-        absolute;
-
-    top:
-        14px;
-
-    right:
-        14px;
-
-    z-index:
-        2;
-
-    width:
-        36px;
-
-    height:
-        36px;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    padding:
-        0;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.10);
-
-    border-radius:
-        50%;
-
-    background:
-        rgba(255, 250, 246, 0.88);
-
-    color:
-        #5d3e35;
-
-    cursor:
-        pointer;
+.new-arrival-quick-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(44, 28, 25, .38);
+    backdrop-filter: blur(5px);
 }
-
-
-.new-arrival-quick-close svg {
-    width:
-        15px;
-
-    height:
-        15px;
-
-    fill:
-        none;
-
-    stroke:
-        currentColor;
-
-    stroke-width:
-        1.35;
-}
-
-
-.new-arrival-quick-image {
-    min-height:
-        520px;
-
-    background:
-        #f2e8e1;
-
-    overflow:
-        hidden;
-}
-
-
-.new-arrival-quick-image img {
-    width:
-        100%;
-
-    height:
-        100%;
-
-    display:
-        block;
-
-    object-fit:
-        cover;
-}
-
 
 .new-arrival-quick-content {
-    display:
-        flex;
-
-    flex-direction:
-        column;
-
-    justify-content:
-        center;
-
-    padding:
-        55px;
+    position: relative;
+    z-index: 1;
+    width: min(860px, 100%);
+    display: grid;
+    grid-template-columns: minmax(0, .92fr) minmax(300px, 1.08fr);
+    overflow: hidden;
+    border-radius: var(--geeka-radius-lg);
+    background: var(--geeka-surface);
+    box-shadow: var(--geeka-shadow-lg);
 }
 
-
-.new-arrival-quick-category {
-    margin-bottom:
-        12px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        8px;
-
-    font-weight:
-        600;
-
-    letter-spacing:
-        0.14em;
-
-    text-transform:
-        uppercase;
-
-    color:
-        #a28377;
+.new-arrival-quick-image {
+    min-height: 460px;
+    background: #eee3de;
 }
 
-
-.new-arrival-quick-content h3 {
-    margin:
-        0;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        34px;
-
-    font-weight:
-        500;
-
-    line-height:
-        1.05;
-
-    letter-spacing:
-        -0.03em;
-
-    color:
-        #5d3e35;
+.new-arrival-quick-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
 }
 
+.new-arrival-quick-content>div:last-child {
+    padding: 40px 34px;
+}
+
+.new-arrival-quick-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--geeka-line);
+    border-radius: 50%;
+    background: #fff;
+}
 
 .new-arrival-quick-price {
-    display:
-        flex;
-
-    align-items:
-        baseline;
-
-    gap:
-        9px;
-
-    margin-top:
-        19px;
+    margin: 10px 0 18px;
+    color: var(--geeka-ink);
+    font-family: "Cormorant Garamond", serif;
+    font-size: 32px;
 }
-
-
-.new-arrival-quick-price strong {
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        18px;
-
-    font-weight:
-        600;
-
-    color:
-        #5d3e35;
-}
-
-
-.new-arrival-quick-price del {
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        11px;
-
-    color:
-        #ad978d;
-}
-
-
-.new-arrival-quick-content p {
-    margin:
-        22px 0 0;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        12px;
-
-    line-height:
-        1.8;
-
-    color:
-        #826a60;
-}
-
-
-.new-arrival-quick-actions {
-    display:
-        flex;
-
-    flex-wrap:
-        wrap;
-
-    gap:
-        10px;
-
-    margin-top:
-        30px;
-}
-
-
-.new-arrival-quick-add,
-.new-arrival-quick-shop {
-    min-height:
-        43px;
-
-    padding:
-        0 18px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size:
-        8px;
-
-    font-weight:
-        600;
-
-    letter-spacing:
-        0.11em;
-
-    cursor:
-        pointer;
-}
-
-
-.new-arrival-quick-add {
-    display:
-        inline-flex;
-
-    align-items:
-        center;
-
-    gap:
-        9px;
-
-    border:
-        1px solid #5d3e35;
-
-    background:
-        #5d3e35;
-
-    color:
-        #fffaf6;
-}
-
-
-.new-arrival-quick-add:disabled {
-    opacity:
-        0.45;
-
-    cursor:
-        not-allowed;
-}
-
-
-.new-arrival-quick-add svg {
-    width:
-        14px;
-
-    height:
-        14px;
-
-    fill:
-        none;
-
-    stroke:
-        currentColor;
-
-    stroke-width:
-        1.35;
-}
-
-
-.new-arrival-quick-shop {
-    border:
-        1px solid rgba(93, 62, 53, 0.20);
-
-    background:
-        transparent;
-
-    color:
-        #5d3e35;
-}
-
-
-/* =========================================================
-   TABLET
-========================================================= */
-
-@media (max-width: 1050px) {
-
-    .new-arrivals-section {
-        padding:
-            78px 4% 70px;
-    }
-
-    .new-arrivals-grid {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-    }
-
-    .new-arrivals-loading-grid {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-    }
-
-    .new-arrivals-section::before {
-        width:
-            400px;
-
-        height:
-            400px;
-
-        top:
-            -120px;
-
-        right:
-            -140px;
-    }
-
-    .new-arrivals-section::after {
-        width:
-            430px;
-
-        height:
-            430px;
-
-        bottom:
-            -190px;
-
-        left:
-            -170px;
-    }
-
-    .new-arrivals-heading::before {
-        left:
-            120px;
-    }
-
-    .new-arrivals-heading::after {
-        left:
-            145px;
-    }
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 700px) {
-
-    .new-arrivals-section {
-        padding:
-            62px 4% 55px;
-    }
-
-    .new-arrivals-section::before {
-        width:
-            310px;
-
-        height:
-            310px;
-
-        top:
-            -90px;
-
-        right:
-            -150px;
-
-        opacity:
-            0.60;
-    }
-
-    .new-arrivals-section::after {
-        width:
-            340px;
-
-        height:
-            340px;
-
-        bottom:
-            -145px;
-
-        left:
-            -175px;
-
-        opacity:
-            0.52;
-    }
-
-    .new-arrivals-heading::before {
-        top:
-            -45px;
-
-        left:
-            82px;
-
-        width:
-            160px;
-
-        height:
-            68px;
-    }
-
-    .new-arrivals-heading::after {
-        top:
-            -32px;
-
-        left:
-            99px;
-
-        width:
-            130px;
-
-        height:
-            48px;
-    }
-
-    .new-arrivals-header::before {
-        top:
-            0;
-
-        right:
-            10%;
-    }
-
-    .new-arrivals-header::after {
-        top:
-            26px;
-
-        right:
-            3%;
-
-        font-size:
-            15px;
-    }
-
-    .new-arrivals-header {
-        align-items:
-            flex-start;
-
-        flex-direction:
-            column;
-
-        gap:
-            22px;
-
-        margin-bottom:
-            28px;
-    }
-
-    .new-arrivals-heading h2 {
-        font-size:
-            34px;
-    }
-
-    .new-arrivals-heading p {
-        font-size:
-            11px;
-
-        line-height:
-            1.65;
-    }
-
-    .new-arrivals-grid {
-        grid-template-columns:
-            repeat(2, minmax(0, 1fr));
-
-        gap:
-            13px;
-    }
-
-    .new-arrival-details {
-        padding:
-            16px 14px;
-    }
-
-    .new-arrival-details h3 {
-        min-height:
-            38px;
-
-        font-size:
-            14px;
-    }
-
-    .new-arrival-bottom {
-        align-items:
-            flex-end;
-
-        flex-direction:
-            column;
-
-        gap:
-            5px;
-
-        margin-top:
-            12px;
-    }
-
-    .new-arrival-shop {
-        padding:
-            4px 0;
-    }
-
-    .new-arrival-quick-view {
-        opacity:
-            1;
-
-        transform:
-            none;
-
-        min-height:
-            35px;
-    }
-
-    .new-arrival-image-top {
-        top:
-            10px;
-
-        left:
-            10px;
-
-        right:
-            10px;
-    }
-
-    .new-arrival-label {
-        padding:
-            6px 7px;
-
-        font-size:
-            7px;
-    }
-
-    .new-arrival-heart {
-        width:
-            31px;
-
-        height:
-            31px;
-    }
-
-    .new-arrivals-pagination {
-        margin-top:
-            30px;
-
-        gap:
-            9px;
-    }
-
-    .new-arrivals-page-numbers {
-        gap:
-            5px;
-    }
-
-    .new-arrivals-page-numbers button,
-    .new-arrivals-page-arrow {
-        width:
-            35px;
-
-        height:
-            35px;
-
-        font-size:
-            9px;
-    }
-
-    .new-arrivals-page-status {
-        margin-top:
-            14px;
-    }
-
-    .new-arrival-quick-overlay {
-        padding:
-            15px;
-    }
-
-    .new-arrival-quick-modal {
-        grid-template-columns:
-            1fr;
-    }
-
-    .new-arrival-quick-image {
-        min-height:
-            280px;
-
-        max-height:
-            38vh;
-    }
-
-    .new-arrival-quick-content {
-        padding:
-            28px;
-    }
-
-    .new-arrival-quick-content h3 {
-        font-size:
-            27px;
-    }
-}
-
-
-/* =========================================================
-   SMALL MOBILE
-========================================================= */
-
-@media (max-width: 420px) {
-
-    .new-arrivals-section {
-        padding:
-            52px 3.5% 48px;
-    }
-
-    .new-arrivals-section::before {
-        width:
-            260px;
-
-        height:
-            260px;
-
-        right:
-            -140px;
-    }
-
-    .new-arrivals-section::after {
-        width:
-            285px;
-
-        height:
-            285px;
-
-        left:
-            -150px;
-    }
-
-    .new-arrivals-heading::before {
-        left:
-            62px;
-
-        width:
-            135px;
-
-        height:
-            55px;
-    }
-
-    .new-arrivals-heading::after {
-        left:
-            76px;
-
-        width:
-            110px;
-
-        height:
-            40px;
-    }
-
-    .new-arrivals-grid {
-        gap:
-            10px;
-    }
-
-    .new-arrival-details {
-        padding:
-            14px 12px;
-    }
-
-    .new-arrival-details h3 {
-        font-size:
-            13px;
-    }
-
-    .new-arrival-price strong {
-        font-size:
-            12px;
-    }
-
-    .new-arrival-add {
-        min-height:
-            36px;
-
-        font-size:
-            7px;
-    }
-
-    .new-arrivals-page-numbers button,
-    .new-arrivals-page-arrow {
-        width:
-            32px;
-
-        height:
-            32px;
-    }
-}
-
-/* =========================================================
-   BACKEND CATALOGUE BRIDGE ADDITIONS
-========================================================= */
 
 .new-arrival-toast {
     position: fixed;
-    right: 22px;
-    bottom: 22px;
-    z-index: 3000;
-    max-width: min(360px, calc(100vw - 44px));
-    padding: 13px 16px;
-    border: 1px solid rgba(93, 62, 53, 0.12);
-    background: #5d3e35;
-    color: #fffaf6;
-    font-family: "DM Sans", sans-serif;
-    font-size: 8px;
+    right: 24px;
+    bottom: 24px;
+    z-index: 300;
+    padding: 12px 16px;
+    border: 1px solid var(--geeka-line-strong);
+    border-radius: 999px;
+    background: rgba(255, 253, 251, .96);
+    box-shadow: var(--geeka-shadow-md);
+    color: var(--geeka-ink);
+    font-size: 11px;
+}
+
+@keyframes geekaPulse {
+
+    0%,
+    100% {
+        opacity: .56;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes geekaShimmer {
+    0% {
+        background-position: 100% 0;
+    }
+
+    100% {
+        background-position: -100% 0;
+    }
+}
+
+@media (max-width: 1120px) {
+    .new-arrivals-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .new-arrivals-loading-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 820px) {
+    .new-arrivals-section {
+        padding: 74px 5% 70px;
+    }
+
+    .new-arrivals-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .new-arrivals-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .new-arrivals-loading-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .new-arrival-quick-content {
+        grid-template-columns: 1fr;
+        max-height: 90vh;
+        overflow: auto;
+    }
+
+    .new-arrival-quick-image {
+        min-height: 300px;
+    }
+}
+
+@media (max-width: 520px) {
+    .new-arrivals-section {
+        padding-inline: 16px;
+    }
+
+    .new-arrivals-grid,
+    .new-arrivals-loading-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .new-arrivals-heading h2 {
+        font-size: 48px;
+    }
+}
+
+.new-arrival-quick-category {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 4px 8px;
+    border: 1px solid var(--geeka-line);
+    border-radius: 999px;
+    color: var(--geeka-muted);
+    font-size: 9px;
     font-weight: 700;
-    letter-spacing: 0.12em;
-    line-height: 1.45;
-    box-shadow: 0 15px 40px rgba(67, 45, 39, 0.16);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.new-arrival-quick-add {
+    width: 100%;
+    min-height: 46px;
+    margin-top: 18px;
+    border: 1px solid var(--geeka-ink);
+    border-radius: 4px;
+    background: var(--geeka-ink);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.new-arrival-quick-add:hover:not(:disabled) {
+    background: var(--geeka-rose-dark);
+    border-color: var(--geeka-rose-dark);
+    transform: translateY(-1px);
+}
+
+.new-arrival-quick-add:disabled {
+    opacity: .5;
+    cursor: not-allowed;
 }
