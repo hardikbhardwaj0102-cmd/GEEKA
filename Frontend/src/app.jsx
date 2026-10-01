@@ -12,6 +12,7 @@ import BenefitsStrip from "./components/BenefitsStrip";
 import WhyChooseUs from "./components/WhyChooseUs";
 import Footer from "./components/Footer";
 import Login from "./components/Login";
+import ExploreShopBanner from "./components/ExploreShopBanner";
 import Register from "./components/Register";
 import NewArrivals from "./components/NewArrivals";
 import ProductCatalog from "./components/ProductCatalog";
@@ -57,6 +58,8 @@ function HomePage() {
                 <CollectionSection />
 
                 <NewArrivals />
+
+                <ExploreShopBanner />
 
                 <ProductCatalog />
 
