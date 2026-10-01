@@ -1,5 +1,14 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
+
+import {
+    Link,
+    useNavigate,
+} from "react-router-dom";
 
 import "../style/ProductCatalog.css";
 
@@ -9,25 +18,53 @@ import {
     getProductsPage,
 } from "../services/productService";
 
-import { addCartItem } from "../services/cartService";
+import {
+    addCartItem,
+} from "../services/cartService";
 
-const WISHLIST_KEY = "geeka-wishlist";
-const PRODUCTS_TO_SHOW = 8;
+
+const WISHLIST_KEY =
+    "geeka-wishlist";
+
+const PRODUCTS_TO_SHOW =
+    8;
+
+
+/* =========================================================
+   WISHLIST
+========================================================= */
 
 function readWishlist() {
     try {
-        const parsed = JSON.parse(localStorage.getItem(WISHLIST_KEY) || "[]");
-        if (!Array.isArray(parsed)) return [];
+        const parsed =
+            JSON.parse(
+                localStorage.getItem(
+                    WISHLIST_KEY
+                ) || "[]"
+            );
+
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
 
         return [
             ...new Set(
                 parsed
                     .map((item) =>
-                        typeof item === "object" && item !== null
-                            ? item?.id ?? item?.productId ?? item?._id ?? item?.uuid
+                        typeof item ===
+                            "object" &&
+                            item !== null
+                            ? item?.id ??
+                            item?.productId ??
+                            item?._id ??
+                            item?.uuid
                             : item
                     )
-                    .map((id) => String(id ?? "").trim())
+                    .map((id) =>
+                        String(
+                            id ?? ""
+                        ).trim()
+                    )
                     .filter(Boolean)
             ),
         ];
@@ -36,61 +73,90 @@ function readWishlist() {
     }
 }
 
+
 function writeWishlist(items) {
     try {
         localStorage.setItem(
             WISHLIST_KEY,
-            JSON.stringify([...new Set(items.map((id) => String(id).trim()).filter(Boolean))])
+            JSON.stringify(
+                [
+                    ...new Set(
+                        items
+                            .map((id) =>
+                                String(
+                                    id
+                                ).trim()
+                            )
+                            .filter(Boolean)
+                    ),
+                ]
+            )
         );
     } catch {
         // Ignore localStorage failures.
     }
 }
 
-function formatPrice(value, currency = "INR") {
-    const amount = Number(value);
 
-    if (!Number.isFinite(amount)) return "PRICE ON REQUEST";
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function formatPrice(
+    value,
+    currency = "INR"
+) {
+    const amount =
+        Number(value);
+
+    if (!Number.isFinite(amount)) {
+        return "PRICE ON REQUEST";
+    }
 
     try {
-        return new Intl.NumberFormat("en-IN", {
-            style: "currency",
-            currency,
-            maximumFractionDigits: 0,
-        }).format(amount);
+        return new Intl.NumberFormat(
+            "en-IN",
+            {
+                style: "currency",
+                currency,
+                maximumFractionDigits: 0,
+            }
+        ).format(amount);
     } catch {
-        return `₹${amount.toLocaleString("en-IN")}`;
+        return `₹${amount.toLocaleString(
+            "en-IN"
+        )}`;
     }
 }
 
+
 function getProductId(product) {
-    return String(product?.id ?? "").trim();
+    return String(
+        product?.id ?? ""
+    ).trim();
 }
+
+
+/* =========================================================
+   ICONS
+========================================================= */
 
 function ArrowIcon() {
     return (
-        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
-            <path d="M5 12h13" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
-            <path d="m13 6 6 6-6 6" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    );
-}
-
-function CloseIcon() {
-    return (
-        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
-            <path d="M6 6 18 18" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-            <path d="M18 6 6 18" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-        </svg>
-    );
-}
-
-function HeartIcon({ filled = false }) {
-    return (
-        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+        >
             <path
-                d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.7Z"
-                fill={filled ? "currentColor" : "none"}
+                d="M5 12h13"
+                stroke="currentColor"
+                strokeWidth="1.35"
+                strokeLinecap="round"
+            />
+
+            <path
+                d="m13 6 6 6-6 6"
                 stroke="currentColor"
                 strokeWidth="1.35"
                 strokeLinecap="round"
@@ -100,27 +166,145 @@ function HeartIcon({ filled = false }) {
     );
 }
 
-function BagCheckIcon() {
+
+function CloseIcon() {
     return (
-        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
-            <path d="M6.5 8.5h11l1 11h-13l1-11Z" stroke="currentColor" strokeWidth="1.35" strokeLinejoin="round" />
-            <path d="M9 8.5V6a3 3 0 0 1 6 0v2.5" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" />
-            <path d="m9.5 13 2 2 3.5-3.5" stroke="currentColor" strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" />
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+        >
+            <path
+                d="M6 6 18 18"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+            />
+
+            <path
+                d="M18 6 6 18"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+            />
         </svg>
     );
 }
 
-export default function ProductCatalog({ products: productsProp = null }) {
-    const navigate = useNavigate();
-    const timerRef = useRef(null);
 
-    const [products, setProducts] = useState([]);
-    const [activeCategory, setActiveCategory] = useState("ALL");
-    const [wishlist, setWishlist] = useState(readWishlist);
-    const [quickView, setQuickView] = useState(null);
-    const [toast, setToast] = useState("");
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+function HeartIcon({
+    filled = false,
+}) {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+        >
+            <path
+                d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.7Z"
+                fill={
+                    filled
+                        ? "currentColor"
+                        : "none"
+                }
+                stroke="currentColor"
+                strokeWidth="1.35"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}
+
+
+function BagCheckIcon() {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+        >
+            <path
+                d="M6.5 8.5h11l1 11h-13l1-11Z"
+                stroke="currentColor"
+                strokeWidth="1.35"
+                strokeLinejoin="round"
+            />
+
+            <path
+                d="M9 8.5V6a3 3 0 0 1 6 0v2.5"
+                stroke="currentColor"
+                strokeWidth="1.35"
+                strokeLinecap="round"
+            />
+
+            <path
+                d="m9.5 13 2 2 3.5-3.5"
+                stroke="currentColor"
+                strokeWidth="1.35"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    );
+}
+
+
+/* =========================================================
+   PRODUCT CATALOG
+========================================================= */
+
+export default function ProductCatalog({
+    products: productsProp = null,
+}) {
+    const navigate =
+        useNavigate();
+
+    const timerRef =
+        useRef(null);
+
+    const [
+        products,
+        setProducts,
+    ] = useState([]);
+
+    const [
+        activeCategory,
+        setActiveCategory,
+    ] = useState("ALL");
+
+    const [
+        wishlist,
+        setWishlist,
+    ] = useState(
+        readWishlist
+    );
+
+    const [
+        quickView,
+        setQuickView,
+    ] = useState(null);
+
+    const [
+        toast,
+        setToast,
+    ] = useState("");
+
+    const [
+        loading,
+        setLoading,
+    ] = useState(true);
+
+    const [
+        error,
+        setError,
+    ] = useState("");
+
+
+    /* =====================================================
+       LOAD PRODUCTS
+    ===================================================== */
 
     useEffect(() => {
         let active = true;
@@ -130,23 +314,64 @@ export default function ProductCatalog({ products: productsProp = null }) {
             setError("");
 
             try {
-                const baseProducts = Array.isArray(productsProp)
-                    ? productsProp.slice(0, PRODUCTS_TO_SHOW)
-                    : (await getProductsPage()).results.slice(0, PRODUCTS_TO_SHOW);
+                let baseProducts = [];
 
-                const cards = await getProductCards(baseProducts);
+                if (
+                    Array.isArray(
+                        productsProp
+                    )
+                ) {
+                    baseProducts =
+                        productsProp.slice(
+                            0,
+                            PRODUCTS_TO_SHOW
+                        );
+                } else {
+                    const response =
+                        await getProductsPage();
 
-                if (active) setProducts(cards);
-            } catch (requestError) {
-                if (active) {
-                    setProducts([]);
-                    setError(
-                        requestError?.message ||
-                        "Unable to load the product catalogue."
-                    );
+                    baseProducts =
+                        Array.isArray(
+                            response?.results
+                        )
+                            ? response.results.slice(
+                                0,
+                                PRODUCTS_TO_SHOW
+                            )
+                            : [];
                 }
+
+                const cards =
+                    await getProductCards(
+                        baseProducts
+                    );
+
+                if (!active) {
+                    return;
+                }
+
+                setProducts(
+                    Array.isArray(cards)
+                        ? cards
+                        : []
+                );
+            } catch (
+            requestError
+            ) {
+                if (!active) {
+                    return;
+                }
+
+                setProducts([]);
+
+                setError(
+                    requestError?.message ||
+                    "Unable to load the product catalogue."
+                );
             } finally {
-                if (active) setLoading(false);
+                if (active) {
+                    setLoading(false);
+                }
             }
         }
 
@@ -154,319 +379,1024 @@ export default function ProductCatalog({ products: productsProp = null }) {
 
         return () => {
             active = false;
-            if (timerRef.current) clearTimeout(timerRef.current);
+
+            if (timerRef.current) {
+                clearTimeout(
+                    timerRef.current
+                );
+            }
         };
-    }, [productsProp]);
+    }, [
+        productsProp,
+    ]);
 
-    const categories = useMemo(() => {
-        const values = products
-            .map((product) => product.categoryName)
-            .filter(Boolean);
 
-        return [
-            "ALL",
-            ...new Map(
-                values.map((value) => [value.toLowerCase(), value])
-            ).values(),
-        ];
-    }, [products]);
+    /* =====================================================
+       QUICK VIEW BODY LOCK
+    ===================================================== */
 
-    const visibleProducts = useMemo(() => {
-        if (activeCategory === "ALL") return products;
-
-        return products.filter(
-            (product) =>
-                product.categoryName?.toLowerCase() ===
-                activeCategory.toLowerCase()
-        );
-    }, [activeCategory, products]);
-
-    const showToast = (message) => {
-        setToast(message);
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => setToast(""), 2600);
-    };
-
-    const toggleWishlist = (id) => {
-        if (!id) return;
-
-        setWishlist((current) => {
-            const next = current.includes(id)
-                ? current.filter((item) => item !== id)
-                : [...current, id];
-
-            writeWishlist(next);
-            window.dispatchEvent(new CustomEvent("geeka-wishlist-updated"));
-            return next;
-        });
-    };
-
-    const handleAddToBag = async (product) => {
-        const variant = getDefaultPurchasableVariant(product?.detail);
-
-        if (!variant || !variant.in_stock || Number(variant.stock) < 1) {
-            navigate(`/product/${encodeURIComponent(getProductId(product))}`);
+    useEffect(() => {
+        if (!quickView) {
             return;
         }
 
-        try {
-            await addCartItem(variant.id, 1);
-            showToast(`${product.name} ADDED TO BAG`);
-        } catch (requestError) {
-            showToast(requestError?.message || "Unable to add this item to bag.");
-        }
-    };
+        const previousOverflow =
+            document.body.style.overflow;
+
+        document.body.style.overflow =
+            "hidden";
+
+        return () => {
+            document.body.style.overflow =
+                previousOverflow;
+        };
+    }, [
+        quickView,
+    ]);
+
+
+    /* =====================================================
+       CATEGORIES
+    ===================================================== */
+
+    const categories =
+        useMemo(() => {
+            const values =
+                products
+                    .map(
+                        (product) =>
+                            product?.categoryName
+                    )
+                    .filter(Boolean);
+
+            return [
+                "ALL",
+                ...new Map(
+                    values.map(
+                        (value) => [
+                            value.toLowerCase(),
+                            value,
+                        ]
+                    )
+                ).values(),
+            ];
+        }, [
+            products,
+        ]);
+
+
+    /* =====================================================
+       FILTERED PRODUCTS
+    ===================================================== */
+
+    const visibleProducts =
+        useMemo(() => {
+            if (
+                activeCategory ===
+                "ALL"
+            ) {
+                return products;
+            }
+
+            return products.filter(
+                (product) =>
+                    product?.categoryName
+                        ?.toLowerCase() ===
+                    activeCategory.toLowerCase()
+            );
+        }, [
+            activeCategory,
+            products,
+        ]);
+
+
+    /* =====================================================
+       TOAST
+    ===================================================== */
+
+    const showToast =
+        (message) => {
+            setToast(message);
+
+            if (
+                timerRef.current
+            ) {
+                clearTimeout(
+                    timerRef.current
+                );
+            }
+
+            timerRef.current =
+                setTimeout(
+                    () =>
+                        setToast(""),
+                    2600
+                );
+        };
+
+
+    /* =====================================================
+       WISHLIST
+    ===================================================== */
+
+    const toggleWishlist =
+        (id) => {
+            if (!id) {
+                return;
+            }
+
+            setWishlist(
+                (current) => {
+                    const next =
+                        current.includes(
+                            id
+                        )
+                            ? current.filter(
+                                (item) =>
+                                    item !==
+                                    id
+                            )
+                            : [
+                                ...current,
+                                id,
+                            ];
+
+                    writeWishlist(
+                        next
+                    );
+
+                    window.dispatchEvent(
+                        new CustomEvent(
+                            "geeka-wishlist-updated"
+                        )
+                    );
+
+                    return next;
+                }
+            );
+        };
+
+
+    /* =====================================================
+       ADD TO BAG
+    ===================================================== */
+
+    const handleAddToBag =
+        async (
+            product
+        ) => {
+            if (!product) {
+                return;
+            }
+
+            const variant =
+                getDefaultPurchasableVariant(
+                    product?.detail
+                );
+
+            if (
+                !variant?.id ||
+                variant?.in_stock !==
+                true ||
+                Number(
+                    variant?.stock
+                ) < 1
+            ) {
+                navigate(
+                    `/product/${encodeURIComponent(
+                        getProductId(
+                            product
+                        )
+                    )}`
+                );
+
+                return;
+            }
+
+            try {
+                await addCartItem(
+                    variant.id,
+                    1
+                );
+
+                showToast(
+                    `${product.name} ADDED TO BAG`
+                );
+            } catch (
+            requestError
+            ) {
+                showToast(
+                    requestError?.message ||
+                    "Unable to add this item to bag."
+                );
+            }
+        };
+
+
+    /* =====================================================
+       PRODUCT NAVIGATION
+    ===================================================== */
+
+    const openProduct =
+        (product) => {
+            const id =
+                getProductId(
+                    product
+                );
+
+            if (!id) {
+                navigate(
+                    "/shop"
+                );
+
+                return;
+            }
+
+            navigate(
+                `/product/${encodeURIComponent(
+                    id
+                )}`
+            );
+        };
+
+
+    /* =====================================================
+       RENDER
+    ===================================================== */
 
     return (
-        <section className="catalog-section">
+        <section
+            className="catalog-section"
+        >
             <div className="catalog-container">
+
+                {/* =================================================
+                    HEADER
+                ================================================= */}
+
                 <header className="catalog-header">
+
                     <div className="catalog-header-main">
+
                         <div className="catalog-eyebrow">
-                            <span /> CURATED STORE EDIT
+
+                            <span />
+
+                            CURATED STORE EDIT
+
                         </div>
+
+
                         <h2>
-                            <span>Shop</span> <em>the collection.</em>
+                            <span>
+                                Shop
+                            </span>
+
+                            {" "}
+
+                            <em>
+                                the collection.
+                            </em>
                         </h2>
+
+
                         <p>
-                            Every product shown here is loaded from the Geeka Django catalogue. Prices and availability come from its active variants.
+                            Explore published pieces from the
+                            Geeka catalogue, with pricing and
+                            availability controlled by the store.
                         </p>
+
                     </div>
+
 
                     <div className="catalog-header-side">
+
                         <div className="catalog-count">
-                            <strong>{products.length}</strong>
-                            <span>LOADED</span>
+
+                            <strong>
+                                {products.length}
+                            </strong>
+
+                            <span>
+                                LOADED
+                            </span>
+
                         </div>
-                        <div className="catalog-header-note">PUBLISHED PRODUCTS</div>
+
+
+                        <div className="catalog-header-note">
+                            PUBLISHED PRODUCTS
+                        </div>
+
                     </div>
+
                 </header>
 
-                <nav className="catalog-navigation" aria-label="Product categories">
+
+                {/* =================================================
+                    CATEGORY NAVIGATION
+                ================================================= */}
+
+                <nav
+                    className="catalog-navigation"
+                    aria-label="Product categories"
+                >
+
                     <div className="catalog-category-list">
-                        {categories.map((category) => (
-                            <button
-                                type="button"
-                                key={category}
-                                className={activeCategory === category ? "active" : ""}
-                                onClick={() => setActiveCategory(category)}
-                            >
-                                {category === "ALL" ? "ALL" : category}
-                            </button>
-                        ))}
+
+                        {categories.map(
+                            (category) => (
+
+                                <button
+                                    type="button"
+                                    key={category}
+                                    className={
+                                        activeCategory ===
+                                            category
+                                            ? "active"
+                                            : ""
+                                    }
+                                    onClick={() =>
+                                        setActiveCategory(
+                                            category
+                                        )
+                                    }
+                                >
+                                    {category ===
+                                        "ALL"
+                                        ? "ALL"
+                                        : category}
+                                </button>
+
+                            )
+                        )}
+
                     </div>
-                    <span className="catalog-navigation-label">GEEKA CATALOGUE</span>
+
+
+                    <span className="catalog-navigation-label">
+                        GEEKA CATALOGUE
+                    </span>
+
                 </nav>
 
+
+                {/* =================================================
+                    CONTENT
+                ================================================= */}
+
                 {loading ? (
-                    <div className="catalog-empty">
-                        <span>LOADING</span>
-                        <h3>Loading the catalogue.</h3>
-                        <p>Fetching the latest published products from the Geeka backend.</p>
-                    </div>
-                ) : error ? (
-                    <div className="catalog-empty">
-                        <span>ERROR</span>
-                        <h3>Catalogue unavailable.</h3>
-                        <p>{error}</p>
-                        <button type="button" onClick={() => window.location.reload()}>
-                            TRY AGAIN <ArrowIcon />
-                        </button>
-                    </div>
-                ) : visibleProducts.length === 0 ? (
-                    <div className="catalog-empty">
-                        <span>EMPTY</span>
-                        <h3>No products in this category.</h3>
-                        <p>The backend did not return any published products for this selection.</p>
-                        <button type="button" onClick={() => setActiveCategory("ALL")}>
-                            VIEW ALL <ArrowIcon />
-                        </button>
-                    </div>
-                ) : (
+
                     <div className="catalog-grid">
-                        {visibleProducts.map((product, index) => {
-                            const id = getProductId(product);
-                            const wishlisted = wishlist.includes(id);
-                            const image = product.displayImage;
-                            const price = product.price;
-                            const purchasable = Boolean(product.isPurchasable);
 
-                            return (
-                                <article className="catalog-card" key={id}>
-                                    <div
-                                        className="catalog-image-wrap"
-                                        onClick={() => navigate(`/product/${encodeURIComponent(id)}`)}
-                                        role="link"
-                                        tabIndex={0}
-                                        onKeyDown={(event) => {
-                                            if (event.key === "Enter" || event.key === " ") {
-                                                event.preventDefault();
-                                                navigate(`/product/${encodeURIComponent(id)}`);
-                                            }
-                                        }}
+                        {Array.from({
+                            length:
+                                PRODUCTS_TO_SHOW,
+                        }).map(
+                            (
+                                _,
+                                index
+                            ) => (
+                                <div
+                                    className="catalog-card catalog-card-skeleton"
+                                    key={index}
+                                >
+                                    <div className="catalog-skeleton-image" />
+
+                                    <div className="catalog-skeleton-info">
+                                        <span />
+                                        <span />
+                                        <span />
+                                    </div>
+                                </div>
+                            )
+                        )}
+
+                    </div>
+
+                ) : error ? (
+
+                    <div className="catalog-empty">
+
+                        <span>
+                            ERROR
+                        </span>
+
+                        <h3>
+                            Catalogue unavailable.
+                        </h3>
+
+                        <p>
+                            {error}
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                window.location.reload()
+                            }
+                        >
+                            TRY AGAIN
+
+                            <ArrowIcon />
+                        </button>
+
+                    </div>
+
+                ) : visibleProducts.length === 0 ? (
+
+                    <div className="catalog-empty">
+
+                        <span>
+                            EMPTY
+                        </span>
+
+                        <h3>
+                            No products in this category.
+                        </h3>
+
+                        <p>
+                            The catalogue does not contain
+                            published products in this selection.
+                        </p>
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setActiveCategory(
+                                    "ALL"
+                                )
+                            }
+                        >
+                            VIEW ALL
+
+                            <ArrowIcon />
+                        </button>
+
+                    </div>
+
+                ) : (
+
+                    <div className="catalog-grid">
+
+                        {visibleProducts.map(
+                            (
+                                product,
+                                index
+                            ) => {
+
+                                const id =
+                                    getProductId(
+                                        product
+                                    );
+
+                                const wishlisted =
+                                    wishlist.includes(
+                                        id
+                                    );
+
+                                const image =
+                                    product?.displayImage ||
+                                    "";
+
+                                const price =
+                                    product?.price;
+
+                                const purchasable =
+                                    Boolean(
+                                        product?.isPurchasable
+                                    );
+
+                                return (
+
+                                    <article
+                                        className="catalog-card"
+                                        key={id}
                                     >
-                                        {image ? (
-                                            <img className="catalog-image" src={image} alt={product.name} loading="lazy" />
-                                        ) : (
-                                            <div className="catalog-image-placeholder"><span>GEEKA</span></div>
-                                        )}
 
-                                        <span className="catalog-product-number">
-                                            {String(index + 1).padStart(2, "0")}
-                                        </span>
+                                        <div
+                                            className="catalog-image-wrap"
+                                            onClick={() =>
+                                                openProduct(
+                                                    product
+                                                )
+                                            }
+                                            role="link"
+                                            tabIndex={0}
+                                            onKeyDown={(
+                                                event
+                                            ) => {
 
-                                        <span className="catalog-product-badge">
-                                            {purchasable ? "AVAILABLE" : "SOLD OUT"}
-                                        </span>
+                                                if (
+                                                    event.key ===
+                                                    "Enter" ||
+                                                    event.key ===
+                                                    " "
+                                                ) {
+                                                    event.preventDefault();
 
-                                        <div className="catalog-quick-actions">
+                                                    openProduct(
+                                                        product
+                                                    );
+                                                }
+
+                                            }}
+                                        >
+
+                                            {image ? (
+
+                                                <img
+                                                    className="catalog-image"
+                                                    src={
+                                                        image
+                                                    }
+                                                    alt={
+                                                        product?.name ||
+                                                        "Geeka product"
+                                                    }
+                                                    loading={
+                                                        index < 4
+                                                            ? "eager"
+                                                            : "lazy"
+                                                    }
+                                                />
+
+                                            ) : (
+
+                                                <div className="catalog-image-placeholder">
+
+                                                    <span>
+                                                        GEEKA
+                                                    </span>
+
+                                                </div>
+
+                                            )}
+
+
+                                            <span className="catalog-product-number">
+                                                {String(
+                                                    index + 1
+                                                ).padStart(
+                                                    2,
+                                                    "0"
+                                                )}
+                                            </span>
+
+
+                                            <span className="catalog-product-badge">
+                                                {
+                                                    purchasable
+                                                        ? "AVAILABLE"
+                                                        : "SOLD OUT"
+                                                }
+                                            </span>
+
+
                                             <button
                                                 type="button"
-                                                className="catalog-quick-shop"
-                                                onClick={(event) => {
+                                                className={
+                                                    `catalog-wishlist ${wishlisted
+                                                        ? "active"
+                                                        : ""
+                                                    }`
+                                                }
+                                                onClick={(
+                                                    event
+                                                ) => {
+
                                                     event.preventDefault();
                                                     event.stopPropagation();
-                                                    setQuickView(product);
+
+                                                    toggleWishlist(
+                                                        id
+                                                    );
+
                                                 }}
+                                                aria-label={
+                                                    wishlisted
+                                                        ? "Remove from wishlist"
+                                                        : "Add to wishlist"
+                                                }
+                                                aria-pressed={
+                                                    wishlisted
+                                                }
                                             >
-                                                QUICK VIEW
+                                                <HeartIcon
+                                                    filled={
+                                                        wishlisted
+                                                    }
+                                                />
                                             </button>
-                                        </div>
 
-                                        <button
-                                            type="button"
-                                            className={`catalog-wishlist ${wishlisted ? "active" : ""}`}
-                                            onClick={(event) => {
-                                                event.preventDefault();
-                                                event.stopPropagation();
-                                                toggleWishlist(id);
-                                            }}
-                                            aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-                                            aria-pressed={wishlisted}
-                                        >
-                                            <HeartIcon filled={wishlisted} />
-                                        </button>
-                                    </div>
 
-                                    <div className="catalog-info">
-                                        <div className="catalog-meta">
-                                            <span>{product.categoryName || "COLLECTION"}</span>
-                                            {!purchasable && <span>OUT OF STOCK</span>}
-                                        </div>
+                                            <div className="catalog-quick-actions">
 
-                                        <h3>{product.name}</h3>
+                                                <button
+                                                    type="button"
+                                                    className="catalog-quick-shop"
+                                                    onClick={(
+                                                        event
+                                                    ) => {
 
-                                        <div className="catalog-bottom">
-                                            <div className="catalog-price-area">
-                                                <strong className="catalog-price">
-                                                    {price === null
-                                                        ? "PRICE ON REQUEST"
-                                                        : `FROM ${formatPrice(price, product.currency || "INR")}`}
-                                                </strong>
+                                                        event.preventDefault();
+                                                        event.stopPropagation();
+
+                                                        setQuickView(
+                                                            product
+                                                        );
+
+                                                    }}
+                                                >
+
+                                                    <span>
+                                                        QUICK VIEW
+                                                    </span>
+
+                                                    <svg
+                                                        viewBox="0 0 24 24"
+                                                        aria-hidden="true"
+                                                    >
+                                                        <path
+                                                            d="M2.8 12s3.5-5.4 9.2-5.4S21.2 12 21.2 12s-3.5 5.4-9.2 5.4S2.8 12 2.8 12Z"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="1.3"
+                                                        />
+
+                                                        <circle
+                                                            cx="12"
+                                                            cy="12"
+                                                            r="2.5"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="1.3"
+                                                        />
+                                                    </svg>
+
+                                                </button>
+
                                             </div>
 
-                                            <button
-                                                type="button"
-                                                className="catalog-quick-add"
-                                                onClick={() => handleAddToBag(product)}
-                                            >
-                                                {purchasable ? <BagCheckIcon /> : null}
-                                                {purchasable ? "ADD TO BAG" : "VIEW PRODUCT"}
-                                            </button>
                                         </div>
-                                    </div>
-                                </article>
-                            );
-                        })}
+
+
+                                        <div className="catalog-info">
+
+                                            <div className="catalog-meta">
+
+                                                <span>
+                                                    {
+                                                        product?.categoryName ||
+                                                        "COLLECTION"
+                                                    }
+                                                </span>
+
+                                                {!purchasable && (
+                                                    <span>
+                                                        OUT OF STOCK
+                                                    </span>
+                                                )}
+
+                                            </div>
+
+
+                                            <h3>
+
+                                                <Link
+                                                    to={`/product/${encodeURIComponent(
+                                                        id
+                                                    )}`}
+                                                >
+                                                    {
+                                                        product?.name
+                                                    }
+                                                </Link>
+
+                                            </h3>
+
+
+                                            <div className="catalog-bottom">
+
+                                                <div className="catalog-price-area">
+
+                                                    <strong className="catalog-price">
+
+                                                        {
+                                                            price ===
+                                                                null ||
+                                                                price ===
+                                                                undefined
+                                                                ? "PRICE ON REQUEST"
+                                                                : `FROM ${formatPrice(
+                                                                    price,
+                                                                    product?.currency ||
+                                                                    "INR"
+                                                                )}`
+                                                        }
+
+                                                    </strong>
+
+                                                </div>
+
+
+                                                <button
+                                                    type="button"
+                                                    className="catalog-quick-add"
+                                                    onClick={() =>
+                                                        handleAddToBag(
+                                                            product
+                                                        )
+                                                    }
+                                                >
+
+                                                    {
+                                                        purchasable && (
+                                                            <BagCheckIcon />
+                                                        )
+                                                    }
+
+                                                    {
+                                                        purchasable
+                                                            ? "ADD TO BAG"
+                                                            : "VIEW PRODUCT"
+                                                    }
+
+                                                </button>
+
+                                            </div>
+
+                                        </div>
+
+                                    </article>
+                                );
+                            }
+                        )}
+
                     </div>
+
                 )}
 
+
+                {/* =================================================
+                    FOOTER
+                ================================================= */}
+
                 <footer className="catalog-footer">
+
                     <div className="catalog-footer-left">
-                        <span>{visibleProducts.length} SHOWN</span>
-                        <p>More products are available in the full shop.</p>
+
+                        <span>
+                            {visibleProducts.length} SHOWN
+                        </span>
+
+                        <p>
+                            More products are available
+                            in the full Geeka shop.
+                        </p>
+
                     </div>
+
+
                     <div className="catalog-footer-center">
+
                         <div className="catalog-footer-line" />
-                        <span>NEWEST FIRST</span>
+
+                        <span>
+                            NEWEST FIRST
+                        </span>
+
                         <div className="catalog-footer-line" />
+
                     </div>
-                    <Link to="/shop" className="catalog-footer-button">
-                        VIEW SHOP <ArrowIcon />
+
+
+                    <Link
+                        to="/shop"
+                        className="catalog-footer-button"
+                    >
+                        VIEW SHOP
+
+                        <ArrowIcon />
                     </Link>
+
                 </footer>
+
             </div>
 
+
+            {/* =================================================
+                BAG TOAST
+            ================================================= */}
+
             {toast && (
-                <div className="catalog-bag-toast" role="status">
-                    <div className="catalog-bag-toast-icon"><BagCheckIcon /></div>
-                    <div className="catalog-bag-toast-content">
-                        <strong>GEEKA BAG</strong>
-                        <span>{toast}</span>
+
+                <div
+                    className="catalog-bag-toast"
+                    role="status"
+                    aria-live="polite"
+                >
+
+                    <div className="catalog-bag-toast-icon">
+                        <BagCheckIcon />
                     </div>
+
+
+                    <div className="catalog-bag-toast-content">
+
+                        <strong>
+                            GEEKA BAG
+                        </strong>
+
+                        <span>
+                            {toast}
+                        </span>
+
+                    </div>
+
+
                     <button
                         type="button"
                         className="catalog-bag-toast-close"
-                        onClick={() => setToast("")}
+                        onClick={() =>
+                            setToast("")
+                        }
                         aria-label="Close notification"
                     >
                         <CloseIcon />
                     </button>
+
                 </div>
+
             )}
 
+
+            {/* =================================================
+                QUICK VIEW
+            ================================================= */}
+
             {quickView && (
-                <div className="catalog-quick-overlay" role="dialog" aria-modal="true">
-                    <div className="catalog-quick-modal">
+
+                <div
+                    className="catalog-quick-overlay"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={`Quick view for ${quickView?.name ||
+                        "product"
+                        }`}
+                    onMouseDown={(
+                        event
+                    ) => {
+
+                        if (
+                            event.target ===
+                            event.currentTarget
+                        ) {
+                            setQuickView(
+                                null
+                            );
+                        }
+
+                    }}
+                >
+
+                    <div
+                        className="catalog-quick-modal"
+                        onMouseDown={(event) =>
+                            event.stopPropagation()
+                        }
+                    >
+
+                        <button
+                            type="button"
+                            className="catalog-quick-close"
+                            onClick={() =>
+                                setQuickView(
+                                    null
+                                )
+                            }
+                            aria-label="Close quick view"
+                        >
+                            <CloseIcon />
+                        </button>
+
+
                         <div className="catalog-quick-image">
-                            {quickView.displayImage ? (
-                                <img src={quickView.displayImage} alt={quickView.name} />
+
+                            {quickView?.displayImage ? (
+
+                                <div className="catalog-quick-image-frame">
+                                    <img
+                                        src={
+                                            quickView.displayImage
+                                        }
+                                        alt={
+                                            quickView.name ||
+                                            "Geeka product"
+                                        }
+                                        className="catalog-quick-product-image"
+                                    />
+                                </div>
+
                             ) : (
-                                <div className="catalog-image-placeholder"><span>GEEKA</span></div>
+
+                                <div className="catalog-image-placeholder">
+                                    <span>
+                                        GEEKA
+                                    </span>
+                                </div>
+
                             )}
-                            <button
-                                type="button"
-                                className="catalog-quick-close"
-                                onClick={() => setQuickView(null)}
-                                aria-label="Close quick view"
-                            >
-                                <CloseIcon />
-                            </button>
+
                         </div>
+
+
                         <div className="catalog-quick-content">
+
                             <span className="catalog-quick-category">
-                                {quickView.categoryName || "COLLECTION"}
+                                {
+                                    quickView?.categoryName ||
+                                    "COLLECTION"
+                                }
                             </span>
-                            <h3>{quickView.name}</h3>
+
+
+                            <h3>
+                                {
+                                    quickView?.name ||
+                                    "Geeka Product"
+                                }
+                            </h3>
+
+
                             <div className="catalog-quick-price">
-                                {quickView.price === null
-                                    ? "PRICE ON REQUEST"
-                                    : `FROM ${formatPrice(quickView.price, quickView.currency || "INR")}`}
+                                {
+                                    quickView?.price ===
+                                        null ||
+                                        quickView?.price ===
+                                        undefined
+                                        ? "PRICE ON REQUEST"
+                                        : `FROM ${formatPrice(
+                                            quickView.price,
+                                            quickView.currency ||
+                                            "INR"
+                                        )}`
+                                }
                             </div>
+
+
                             <p>
-                                {quickView.detail?.description ||
-                                    "Product details are available on the product page."}
+                                {
+                                    quickView?.detail
+                                        ?.description ||
+                                    "Product details are available on the product page."
+                                }
                             </p>
+
+
                             <div className="catalog-quick-actions">
+
                                 <button
                                     type="button"
                                     className="catalog-quick-add"
-                                    onClick={() => handleAddToBag(quickView)}
+                                    onClick={() =>
+                                        handleAddToBag(
+                                            quickView
+                                        )
+                                    }
                                 >
-                                    {quickView.isPurchasable ? "ADD TO BAG" : "VIEW PRODUCT"}
+                                    {
+                                        quickView?.isPurchasable
+                                            ? "ADD TO BAG"
+                                            : "VIEW PRODUCT"
+                                    }
                                 </button>
+
+
                                 <button
                                     type="button"
                                     className="catalog-quick-shop"
-                                    onClick={() => navigate(`/product/${encodeURIComponent(getProductId(quickView))}`)}
+                                    onClick={() =>
+                                        openProduct(
+                                            quickView
+                                        )
+                                    }
                                 >
-                                    SHOP PRODUCT <ArrowIcon />
+                                    SHOP PRODUCT
+
+                                    <ArrowIcon />
                                 </button>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
             )}
+
         </section>
     );
 }
