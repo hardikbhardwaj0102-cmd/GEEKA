@@ -104,6 +104,7 @@ function ArrowIcon() {
                 strokeWidth="1.4"
                 strokeLinecap="round"
             />
+
             <path
                 d="m13 6 6 6-6 6"
                 stroke="currentColor"
@@ -144,12 +145,254 @@ function PlusIcon() {
 }
 
 /* =========================================================
+   PRODUCT GALLERY HOVER SLIDESHOW
+========================================================= */
+
+const GALLERY_SLIDE_INTERVAL = 1600;
+const GALLERY_TRANSITION_DURATION = 520;
+
+function getProductGalleryImages(product) {
+    const detailImages = Array.isArray(product?.detail?.images)
+        ? [...product.detail.images]
+            .filter((image) => image && image.is_active !== false)
+            .sort(
+                (a, b) =>
+                    Number(a?.display_order ?? 0) -
+                    Number(b?.display_order ?? 0)
+            )
+        : [];
+
+    const imageSources = [
+        product?.displayImage,
+        ...detailImages,
+        ...(Array.isArray(product?.images) ? product.images : []),
+        ...(Array.isArray(product?.gallery) ? product.gallery : []),
+    ]
+        .map((image) => {
+            if (typeof image === "string") {
+                return image.trim();
+            }
+
+            return String(
+                image?.image_url ??
+                image?.url ??
+                image?.imageUrl ??
+                image?.src ??
+                ""
+            ).trim();
+        })
+        .filter(Boolean);
+
+    // Keep the primary image first and avoid duplicate images.
+    return [...new Set(imageSources)];
+}
+
+function NewArrivalProductImage({
+    product,
+    id,
+    wishlisted,
+    onToggleWishlist,
+}) {
+    const galleryImages = getProductGalleryImages(product);
+    const productName = product?.name || "Geeka product";
+
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [transitionEnabled, setTransitionEnabled] = useState(true);
+
+    const intervalRef = useRef(null);
+    const resetTimeoutRef = useRef(null);
+
+    const clearSlideshowTimers = () => {
+        if (intervalRef.current !== null) {
+            window.clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+
+        if (resetTimeoutRef.current !== null) {
+            window.clearTimeout(resetTimeoutRef.current);
+            resetTimeoutRef.current = null;
+        }
+    };
+
+    useEffect(() => {
+        return () => {
+            if (intervalRef.current !== null) {
+                window.clearInterval(intervalRef.current);
+            }
+
+            if (resetTimeoutRef.current !== null) {
+                window.clearTimeout(resetTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    /*
+       When the slideshow reaches the duplicated first image,
+       jump back to the beginning without a visible reverse slide.
+    */
+
+    useEffect(() => {
+        if (
+            galleryImages.length < 2 ||
+            activeIndex !== galleryImages.length
+        ) {
+            return undefined;
+        }
+
+        resetTimeoutRef.current = window.setTimeout(() => {
+            setTransitionEnabled(false);
+            setActiveIndex(0);
+
+            window.requestAnimationFrame(() => {
+                window.requestAnimationFrame(() => {
+                    setTransitionEnabled(true);
+                });
+            });
+        }, GALLERY_TRANSITION_DURATION + 30);
+
+        return () => {
+            if (resetTimeoutRef.current !== null) {
+                window.clearTimeout(resetTimeoutRef.current);
+                resetTimeoutRef.current = null;
+            }
+        };
+    }, [activeIndex, galleryImages.length]);
+
+    const handleMouseEnter = () => {
+        if (
+            galleryImages.length < 2 ||
+            intervalRef.current !== null
+        ) {
+            return;
+        }
+
+        // Preload gallery images to make the transition smoother.
+        galleryImages.slice(1).forEach((src) => {
+            const preloadImage = new window.Image();
+            preloadImage.src = src;
+        });
+
+        intervalRef.current = window.setInterval(() => {
+            setActiveIndex((current) =>
+                current >= galleryImages.length - 1
+                    ? galleryImages.length
+                    : current + 1
+            );
+        }, GALLERY_SLIDE_INTERVAL);
+    };
+
+    const handleMouseLeave = () => {
+        clearSlideshowTimers();
+
+        setTransitionEnabled(true);
+        setActiveIndex(0);
+    };
+
+    /*
+       Duplicate the first image to create a continuous loop.
+    */
+
+    const slides =
+        galleryImages.length > 1
+            ? [...galleryImages, galleryImages[0]]
+            : galleryImages;
+
+    return (
+        <div
+            className="new-arrival-image"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            style={{ overflow: "hidden" }}
+        >
+            <Link
+                className="new-arrival-gallery-link"
+                to={`/product/${encodeURIComponent(id)}`}
+                aria-label={`View ${productName}`}
+                style={{
+                    display: "block",
+                    width: "100%",
+                    height: "100%",
+                    overflow: "hidden",
+                }}
+            >
+                {slides.length > 0 ? (
+                    <div
+                        className="new-arrival-gallery-track"
+                        style={{
+                            display: "flex",
+                            width: "100%",
+                            height: "100%",
+                            transform: `translateX(-${activeIndex * 100}%)`,
+                            transition: transitionEnabled
+                                ? `transform ${GALLERY_TRANSITION_DURATION}ms cubic-bezier(0.22, 0.61, 0.36, 1)`
+                                : "none",
+                            willChange:
+                                galleryImages.length > 1
+                                    ? "transform"
+                                    : "auto",
+                        }}
+                    >
+                        {slides.map((src, index) => (
+                            <img
+                                className="new-arrival-gallery-image"
+                                key={`${src}-${index}`}
+                                src={src}
+                                alt={productName}
+                                loading={index === 0 ? "eager" : "lazy"}
+                                draggable={false}
+                                style={{
+                                    display: "block",
+                                    width: "100%",
+                                    height: "100%",
+                                    flex: "0 0 100%",
+                                    minWidth: 0,
+                                    objectFit: "cover",
+                                }}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="new-arrival-image-placeholder">
+                        GEEKA
+                    </div>
+                )}
+            </Link>
+
+            {/* IMAGE LABEL AND WISHLIST */}
+
+            <div className="new-arrival-image-top">
+                <span className="new-arrival-label">NEW</span>
+
+                <button
+                    type="button"
+                    className="new-arrival-heart"
+                    onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        onToggleWishlist();
+                    }}
+                    aria-label={
+                        wishlisted
+                            ? "Remove from wishlist"
+                            : "Add to wishlist"
+                    }
+                    aria-pressed={wishlisted}
+                >
+                    <HeartIcon filled={wishlisted} />
+                </button>
+            </div>
+        </div>
+    );
+}
+
+/* =========================================================
    NEW ARRIVALS
 ========================================================= */
 
 export default function NewArrivals() {
     const navigate = useNavigate();
     const { addItem } = useCart();
+
     const toastTimerRef = useRef(null);
 
     const [products, setProducts] = useState([]);
@@ -274,7 +517,6 @@ export default function NewArrivals() {
 
         try {
             await addItem(product, variant, 1);
-
             showToast("ITEM ADDED TO BAG");
         } catch (requestError) {
             showToast(
@@ -298,7 +540,6 @@ export default function NewArrivals() {
                         </span>
 
                         <h2>New Arrivals</h2>
-
                         <p>{error}</p>
                     </div>
                 </div>
@@ -308,7 +549,10 @@ export default function NewArrivals() {
                         We could not load the latest products right now.
                     </p>
 
-                    <button type="button" onClick={loadPage}>
+                    <button
+                        type="button"
+                        onClick={loadPage}
+                    >
                         TRY AGAIN <ArrowIcon />
                     </button>
                 </div>
@@ -381,7 +625,6 @@ export default function NewArrivals() {
                                 "COLLECTION";
 
                             const wishlisted = wishlist.includes(id);
-                            const image = product?.displayImage || "";
                             const price = product?.price;
                             const currency = product?.currency || "INR";
                             const detail = product?.detail;
@@ -403,49 +646,16 @@ export default function NewArrivals() {
                                     className="new-arrival-card"
                                     key={id}
                                 >
-                                    {/* PRODUCT IMAGE */}
+                                    {/* PRODUCT IMAGE WITH HOVER SLIDESHOW */}
 
-                                    <div className="new-arrival-image">
-                                        <Link
-                                            to={`/product/${encodeURIComponent(id)}`}
-                                        >
-                                            {image ? (
-                                                <img
-                                                    src={image}
-                                                    alt={product.name}
-                                                    loading="lazy"
-                                                />
-                                            ) : (
-                                                <div className="new-arrival-image-placeholder">
-                                                    GEEKA
-                                                </div>
-                                            )}
-                                        </Link>
-
-                                        <div className="new-arrival-image-top">
-                                            <span className="new-arrival-label">
-                                                NEW
-                                            </span>
-
-                                            <button
-                                                type="button"
-                                                className="new-arrival-heart"
-                                                onClick={() =>
-                                                    toggleWishlist(id)
-                                                }
-                                                aria-label={
-                                                    wishlisted
-                                                        ? "Remove from wishlist"
-                                                        : "Add to wishlist"
-                                                }
-                                                aria-pressed={wishlisted}
-                                            >
-                                                <HeartIcon
-                                                    filled={wishlisted}
-                                                />
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <NewArrivalProductImage
+                                        product={product}
+                                        id={id}
+                                        wishlisted={wishlisted}
+                                        onToggleWishlist={() =>
+                                            toggleWishlist(id)
+                                        }
+                                    />
 
                                     {/* PRODUCT DETAILS */}
 
