@@ -1,5 +1,7 @@
+
 import React from "react";
 import Header from "./Header";
+import Footer from "./Footer";
 import "../style/About.css";
 
 import aboutHeroBackground from "../assets/about-hero-bg.png";
@@ -60,8 +62,6 @@ const About = () => {
 
                 <div className="about-story-inner">
 
-                    {/* TEXT */}
-
                     <div className="about-story-content">
 
                         <span className="section-label">
@@ -92,7 +92,6 @@ const About = () => {
                             something is made. It's about the time, creativity,
                             patience, and feeling behind it.
                         </p>
-
 
                         {/* SIGNATURE */}
 
@@ -157,7 +156,6 @@ const About = () => {
                         We want every piece you discover at Geeka to feel
                         thoughtful, personal and beautifully yours.
                     </p>
-
 
                     <div className="values-grid">
 
@@ -380,6 +378,13 @@ const About = () => {
                 </div>
 
             </section>
+
+
+            {/* =====================================================
+                FOOTER
+            ===================================================== */}
+
+            <Footer />
 
         </div>
     );

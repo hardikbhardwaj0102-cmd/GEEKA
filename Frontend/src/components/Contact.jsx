@@ -1,7 +1,8 @@
+
 import React, { useState } from "react";
 import Header from "./Header";
+import Footer from "./Footer";
 import "../style/Contact.css";
-
 import heroBackground from "../assets/contact-hero-bg.png";
 import mainBackground from "../assets/contact-main-bg.png";
 
@@ -309,6 +310,9 @@ const Contact = () => {
                     </div>
                 </div>
             </section>
+
+            {/* ================= FOOTER ================= */}
+            <Footer />
         </div>
     );
 };

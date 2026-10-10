@@ -15,7 +15,7 @@ import {
 import "../style/Shop.css";
 
 import Header from "./Header";
-
+import Footer from "./Footer";
 import shopBanner from "../assets/top-banner.jpg";
 
 import {
@@ -1834,7 +1834,8 @@ export default function Shop() {
                     {cartMessage}
                 </div>
             )}
-
+            {/* Shop Footer */}
+            <Footer />
         </>
     );
 }
