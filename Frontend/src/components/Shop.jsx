@@ -328,7 +328,7 @@ function ProductImageSlideshow({ product }) {
         [product]
     );
 
-    const SLIDE_INTERVAL = 1600;
+    const SLIDE_INTERVAL = 2200;
     const TRANSITION_DURATION = 520;
 
     useEffect(() => {
