@@ -13,6 +13,8 @@ import { addCartItem } from "../services/cartService";
 
 const WISHLIST_KEY = "geeka-wishlist";
 const PRODUCTS_TO_SHOW = 8;
+const SLIDE_INTERVAL = 2200;
+const SLIDE_TRANSITION = "520ms ease";
 
 /* =========================================================
    WISHLIST
@@ -24,9 +26,7 @@ function readWishlist() {
             localStorage.getItem(WISHLIST_KEY) || "[]"
         );
 
-        if (!Array.isArray(parsed)) {
-            return [];
-        }
+        if (!Array.isArray(parsed)) return [];
 
         return [
             ...new Set(
@@ -91,17 +91,98 @@ function getProductId(product) {
     return String(product?.id ?? "").trim();
 }
 
+function getImageUrl(image) {
+    if (typeof image === "string") {
+        return image.trim();
+    }
+
+    if (!image || typeof image !== "object") {
+        return "";
+    }
+
+    return String(
+        image.image_url ??
+        image.imageUrl ??
+        image.url ??
+        image.src ??
+        image.image ??
+        image.file ??
+        image.image_file ??
+        ""
+    ).trim();
+}
+
+/*
+ * Collect the product's primary image and gallery images.
+ * Supports the common image fields used by Geeka's catalogue.
+ */
+function getProductImages(product) {
+    const detail = product?.detail ?? {};
+
+    const detailImages = Array.isArray(detail.images)
+        ? detail.images
+        : [];
+
+    const productImages = Array.isArray(product?.images)
+        ? product.images
+        : [];
+
+    const galleryImages = Array.isArray(product?.gallery)
+        ? product.gallery
+        : [];
+
+    const sortedDetailImages = [...detailImages]
+        .filter((image) => {
+            if (!image || typeof image !== "object") {
+                return true;
+            }
+
+            return (
+                image.is_active !== false &&
+                image.active !== false &&
+                image.is_deleted !== true
+            );
+        })
+        .sort((a, b) => {
+            const orderA = Number(
+                a?.sort_order ?? a?.position ?? a?.order ?? 0
+            );
+            const orderB = Number(
+                b?.sort_order ?? b?.position ?? b?.order ?? 0
+            );
+
+            return orderA - orderB;
+        });
+
+    const candidates = [
+        product?.displayImage,
+        ...sortedDetailImages,
+        ...productImages,
+        ...galleryImages,
+    ];
+
+    const uniqueImages = [];
+    const seen = new Set();
+
+    for (const candidate of candidates) {
+        const url = getImageUrl(candidate);
+
+        if (url && !seen.has(url)) {
+            seen.add(url);
+            uniqueImages.push(url);
+        }
+    }
+
+    return uniqueImages;
+}
+
 /* =========================================================
    ICONS
 ========================================================= */
 
 function ArrowIcon() {
     return (
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            fill="none"
-        >
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
             <path
                 d="M5 12h13"
                 stroke="currentColor"
@@ -121,11 +202,7 @@ function ArrowIcon() {
 
 function CloseIcon() {
     return (
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            fill="none"
-        >
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
             <path
                 d="M6 6 18 18"
                 stroke="currentColor"
@@ -144,11 +221,7 @@ function CloseIcon() {
 
 function HeartIcon({ filled = false }) {
     return (
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            fill="none"
-        >
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
             <path
                 d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.7Z"
                 fill={filled ? "currentColor" : "none"}
@@ -163,11 +236,7 @@ function HeartIcon({ filled = false }) {
 
 function BagCheckIcon() {
     return (
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            fill="none"
-        >
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none">
             <path
                 d="M6.5 8.5h11l1 11h-13l1-11Z"
                 stroke="currentColor"
@@ -208,6 +277,10 @@ export default function ProductCatalog({
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
+    // Hover slideshow state
+    const [hoveredProductId, setHoveredProductId] = useState(null);
+    const [slideIndex, setSlideIndex] = useState(0);
+
     /* =====================================================
        LOAD PRODUCTS
     ===================================================== */
@@ -237,18 +310,13 @@ export default function ProductCatalog({
 
                 const cards = await getProductCards(baseProducts);
 
-                if (!active) {
-                    return;
-                }
+                if (!active) return;
 
                 setProducts(Array.isArray(cards) ? cards : []);
             } catch (requestError) {
-                if (!active) {
-                    return;
-                }
+                if (!active) return;
 
                 setProducts([]);
-
                 setError(
                     requestError?.message ||
                     "Unable to load the product catalogue."
@@ -270,6 +338,56 @@ export default function ProductCatalog({
             }
         };
     }, [productsProp]);
+
+    /* =====================================================
+       PRELOAD GALLERY IMAGES
+    ===================================================== */
+
+    useEffect(() => {
+        products.forEach((product) => {
+            getProductImages(product).forEach((url) => {
+                const image = new Image();
+                image.src = url;
+            });
+        });
+    }, [products]);
+
+    /* =====================================================
+       HOVER SLIDESHOW
+    ===================================================== */
+
+    useEffect(() => {
+        if (!hoveredProductId) return undefined;
+
+        const product = products.find(
+            (item) => getProductId(item) === hoveredProductId
+        );
+
+        const images = getProductImages(product);
+
+        if (images.length <= 1) return undefined;
+
+        const interval = setInterval(() => {
+            setSlideIndex((current) => (current + 1) % images.length);
+        }, SLIDE_INTERVAL);
+
+        return () => clearInterval(interval);
+    }, [hoveredProductId, products]);
+
+    const startSlideshow = (product) => {
+        const id = getProductId(product);
+        const images = getProductImages(product);
+
+        if (!id || images.length <= 1) return;
+
+        setHoveredProductId(id);
+        setSlideIndex(0);
+    };
+
+    const stopSlideshow = () => {
+        setHoveredProductId(null);
+        setSlideIndex(0);
+    };
 
     /* =====================================================
        CATEGORIES
@@ -296,9 +414,7 @@ export default function ProductCatalog({
     ===================================================== */
 
     const visibleProducts = useMemo(() => {
-        if (activeCategory === "ALL") {
-            return products;
-        }
+        if (activeCategory === "ALL") return products;
 
         return products.filter(
             (product) =>
@@ -328,9 +444,7 @@ export default function ProductCatalog({
     ===================================================== */
 
     const toggleWishlist = (id) => {
-        if (!id) {
-            return;
-        }
+        if (!id) return;
 
         setWishlist((current) => {
             const next = current.includes(id)
@@ -352,9 +466,7 @@ export default function ProductCatalog({
     ===================================================== */
 
     const handleAddToBag = async (product) => {
-        if (!product) {
-            return;
-        }
+        if (!product) return;
 
         const variant = getDefaultPurchasableVariant(
             product?.detail
@@ -366,17 +478,13 @@ export default function ProductCatalog({
             Number(variant?.stock) < 1
         ) {
             navigate(
-                `/product/${encodeURIComponent(
-                    getProductId(product)
-                )}`
+                `/product/${encodeURIComponent(getProductId(product))}`
             );
-
             return;
         }
 
         try {
             await addCartItem(variant.id, 1);
-
             showToast(`${product.name} ADDED TO BAG`);
         } catch (requestError) {
             showToast(
@@ -498,16 +606,12 @@ export default function ProductCatalog({
                 ) : error ? (
                     <div className="catalog-empty">
                         <span>ERROR</span>
-
                         <h3>Catalogue unavailable.</h3>
-
                         <p>{error}</p>
 
                         <button
                             type="button"
-                            onClick={() =>
-                                window.location.reload()
-                            }
+                            onClick={() => window.location.reload()}
                         >
                             TRY AGAIN
                             <ArrowIcon />
@@ -516,7 +620,6 @@ export default function ProductCatalog({
                 ) : visibleProducts.length === 0 ? (
                     <div className="catalog-empty">
                         <span>EMPTY</span>
-
                         <h3>No products in this category.</h3>
 
                         <p>
@@ -526,9 +629,7 @@ export default function ProductCatalog({
 
                         <button
                             type="button"
-                            onClick={() =>
-                                setActiveCategory("ALL")
-                            }
+                            onClick={() => setActiveCategory("ALL")}
                         >
                             VIEW ALL
                             <ArrowIcon />
@@ -539,24 +640,35 @@ export default function ProductCatalog({
                         {visibleProducts.map((product, index) => {
                             const id = getProductId(product);
                             const wishlisted = wishlist.includes(id);
-                            const image = product?.displayImage || "";
+                            const images = getProductImages(product);
                             const price = product?.price;
                             const purchasable = Boolean(
                                 product?.isPurchasable
                             );
+
+                            const isHovered = hoveredProductId === id;
+                            const currentSlide = isHovered
+                                ? slideIndex % Math.max(images.length, 1)
+                                : 0;
 
                             return (
                                 <article
                                     className="catalog-card"
                                     key={id}
                                 >
-                                    {/* PRODUCT IMAGE */}
+                                    {/* PRODUCT IMAGE + SLIDESHOW */}
 
                                     <div
                                         className="catalog-image-wrap"
-                                        onClick={() =>
-                                            openProduct(product)
+                                        onClick={() => openProduct(product)}
+                                        onMouseEnter={() =>
+                                            startSlideshow(product)
                                         }
+                                        onMouseLeave={stopSlideshow}
+                                        onFocus={() =>
+                                            startSlideshow(product)
+                                        }
+                                        onBlur={stopSlideshow}
                                         role="link"
                                         tabIndex={0}
                                         onKeyDown={(event) => {
@@ -568,21 +680,56 @@ export default function ProductCatalog({
                                                 openProduct(product);
                                             }
                                         }}
+                                        style={{
+                                            position: "relative",
+                                            overflow: "hidden",
+                                        }}
                                     >
-                                        {image ? (
-                                            <img
-                                                className="catalog-image"
-                                                src={image}
-                                                alt={
-                                                    product?.name ||
-                                                    "Geeka product"
-                                                }
-                                                loading={
-                                                    index < 4
-                                                        ? "eager"
-                                                        : "lazy"
-                                                }
-                                            />
+                                        {images.length > 0 ? (
+                                            images.map((image, imageIndex) => (
+                                                <img
+                                                    key={`${image}-${imageIndex}`}
+                                                    className="catalog-image"
+                                                    src={image}
+                                                    alt={
+                                                        product?.name
+                                                            ? `${product.name} - image ${imageIndex + 1}`
+                                                            : "Geeka product"
+                                                    }
+                                                    loading={
+                                                        index < 4
+                                                            ? "eager"
+                                                            : "lazy"
+                                                    }
+                                                    draggable="false"
+                                                    style={{
+                                                        position:
+                                                            images.length > 1
+                                                                ? "absolute"
+                                                                : "relative",
+                                                        inset:
+                                                            images.length > 1
+                                                                ? 0
+                                                                : "auto",
+                                                        width: "100%",
+                                                        height:
+                                                            images.length > 1
+                                                                ? "100%"
+                                                                : "auto",
+                                                        objectFit: "cover",
+                                                        opacity:
+                                                            imageIndex === currentSlide
+                                                                ? 1
+                                                                : 0,
+                                                        transition: `opacity ${SLIDE_TRANSITION}`,
+                                                        pointerEvents: "none",
+                                                        zIndex:
+                                                            imageIndex === currentSlide
+                                                                ? 1
+                                                                : 0,
+                                                    }}
+                                                />
+                                            ))
                                         ) : (
                                             <div className="catalog-image-placeholder">
                                                 <span>GEEKA</span>
@@ -590,10 +737,7 @@ export default function ProductCatalog({
                                         )}
 
                                         <span className="catalog-product-number">
-                                            {String(index + 1).padStart(
-                                                2,
-                                                "0"
-                                            )}
+                                            {String(index + 1).padStart(2, "0")}
                                         </span>
 
                                         <span className="catalog-product-badge">
@@ -620,11 +764,51 @@ export default function ProductCatalog({
                                             }
                                             aria-pressed={wishlisted}
                                         >
-                                            <HeartIcon
-                                                filled={wishlisted}
-                                            />
+                                            <HeartIcon filled={wishlisted} />
                                         </button>
 
+                                        {/* SLIDE INDICATORS */}
+
+                                        {images.length > 1 && isHovered && (
+                                            <div
+                                                className="catalog-slide-indicators"
+                                                aria-hidden="true"
+                                                style={{
+                                                    position: "absolute",
+                                                    left: "50%",
+                                                    bottom: "12px",
+                                                    transform: "translateX(-50%)",
+                                                    zIndex: 3,
+                                                    display: "flex",
+                                                    gap: "5px",
+                                                    alignItems: "center",
+                                                    pointerEvents: "none",
+                                                }}
+                                            >
+                                                {images.map((_, dotIndex) => (
+                                                    <span
+                                                        key={dotIndex}
+                                                        style={{
+                                                            display: "block",
+                                                            width:
+                                                                dotIndex === currentSlide
+                                                                    ? "17px"
+                                                                    : "5px",
+                                                            height: "4px",
+                                                            borderRadius: "10px",
+                                                            background:
+                                                                dotIndex === currentSlide
+                                                                    ? "#ffffff"
+                                                                    : "rgba(255,255,255,0.55)",
+                                                            transition:
+                                                                "width 220ms ease",
+                                                            boxShadow:
+                                                                "0 1px 4px rgba(0,0,0,0.15)",
+                                                        }}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* PRODUCT DETAILS */}
@@ -637,17 +821,13 @@ export default function ProductCatalog({
                                             </span>
 
                                             {!purchasable && (
-                                                <span>
-                                                    OUT OF STOCK
-                                                </span>
+                                                <span>OUT OF STOCK</span>
                                             )}
                                         </div>
 
                                         <h3>
                                             <Link
-                                                to={`/product/${encodeURIComponent(
-                                                    id
-                                                )}`}
+                                                to={`/product/${encodeURIComponent(id)}`}
                                             >
                                                 {product?.name}
                                             </Link>
@@ -676,9 +856,7 @@ export default function ProductCatalog({
                                                     handleAddToBag(product)
                                                 }
                                             >
-                                                {purchasable && (
-                                                    <BagCheckIcon />
-                                                )}
+                                                {purchasable && <BagCheckIcon />}
 
                                                 {purchasable
                                                     ? "ADD TO BAG"
@@ -696,9 +874,7 @@ export default function ProductCatalog({
 
                 <footer className="catalog-footer">
                     <div className="catalog-footer-left">
-                        <span>
-                            {visibleProducts.length} SHOWN
-                        </span>
+                        <span>{visibleProducts.length} SHOWN</span>
 
                         <p>
                             More products are available
@@ -708,16 +884,11 @@ export default function ProductCatalog({
 
                     <div className="catalog-footer-center">
                         <div className="catalog-footer-line" />
-
                         <span>NEWEST FIRST</span>
-
                         <div className="catalog-footer-line" />
                     </div>
 
-                    <Link
-                        to="/shop"
-                        className="catalog-footer-button"
-                    >
+                    <Link to="/shop" className="catalog-footer-button">
                         VIEW SHOP
                         <ArrowIcon />
                     </Link>

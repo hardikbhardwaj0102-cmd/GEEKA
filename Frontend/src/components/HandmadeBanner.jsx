@@ -1,11 +1,15 @@
+
 import React from "react";
 import "../style/HandmadeBanner.css";
+import handmadeBanner from "../assets/geeka-handmade-banner.png";
 
 const HandmadeBanner = () => {
     return (
         <section className="handmade-banner">
+            {/* Background texture */}
             <div className="handmade-banner__texture"></div>
 
+            {/* Left content */}
             <div className="handmade-banner__content">
                 <span className="handmade-banner__eyebrow">
                     THE ART OF HANDMADE
@@ -28,45 +32,13 @@ const HandmadeBanner = () => {
                 </div>
             </div>
 
+            {/* Right image */}
             <div className="handmade-banner__visual">
-                {/* Replace this area with your handmade banner image */}
-                <div className="handmade-banner__image-placeholder">
-                    <div className="placeholder-card">
-                        <span>YOUR IMAGE</span>
-                        <strong>HANDMADE COLLECTION</strong>
-                    </div>
-                </div>
-
-                <div className="thread thread--one"></div>
-                <div className="thread thread--two"></div>
-
-                <div className="flower flower--one">
-                    <i></i>
-                    <i></i>
-                    <i></i>
-                    <i></i>
-                    <b></b>
-                </div>
-
-                <div className="flower flower--two">
-                    <i></i>
-                    <i></i>
-                    <i></i>
-                    <i></i>
-                    <b></b>
-                </div>
-
-                <div className="yarn-ball">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
-
-            <div className="handmade-banner__corner">
-                <span>01</span>
-                <div></div>
-                <span>CRAFTED WITH CARE</span>
+                <img
+                    src={handmadeBanner}
+                    alt="Geeka handmade fashion, jewellery and crochet collection"
+                    className="handmade-banner__image"
+                />
             </div>
         </section>
     );

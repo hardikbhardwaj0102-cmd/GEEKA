@@ -148,7 +148,7 @@ function PlusIcon() {
    PRODUCT GALLERY HOVER SLIDESHOW
 ========================================================= */
 
-const GALLERY_SLIDE_INTERVAL = 1600;
+const GALLERY_SLIDE_INTERVAL = 2200;
 const GALLERY_TRANSITION_DURATION = 520;
 
 function getProductGalleryImages(product) {
