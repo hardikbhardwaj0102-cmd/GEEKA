@@ -1048,6 +1048,14 @@ export default function Shop() {
 
                 <div className="shop-container">
 
+                    <div className="shop-catalog-heading">
+                        <div>
+                            <span className="shop-catalog-eyebrow">THE GEEKA EDIT</span>
+                            <h2>Find something you’ll love.</h2>
+                            <p>Thoughtfully chosen pieces for your everyday style and special moments.</p>
+                        </div>
+                    </div>
+
                     <div className="shop-toolbar">
 
                         <div className="shop-toolbar-right">
