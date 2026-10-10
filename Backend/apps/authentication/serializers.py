@@ -74,6 +74,36 @@ class VerifyEmailSerializer(serializers.Serializer):
 
 
 
+class RequestEmailChangeSerializer(serializers.Serializer):
+    new_email = serializers.EmailField()
+
+    def validate_new_email(self, value):
+        value = value.lower().strip()
+        user = self.context["request"].user
+
+        if value == user.email.lower().strip():
+            raise serializers.ValidationError(
+                "This is already your current email address."
+            )
+
+        if User.objects.filter(email=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError(
+                "An account with this email already exists."
+            )
+
+        return value
+
+
+
+class VerifyEmailChangeSerializer(serializers.Serializer):
+    new_email = serializers.EmailField()
+    otp = serializers.CharField(min_length=6, max_length=6)
+
+    def validate_new_email(self, value):
+        return value.lower().strip()
+
+
+
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()

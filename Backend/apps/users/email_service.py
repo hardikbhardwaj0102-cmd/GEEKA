@@ -49,6 +49,47 @@ def send_verification_email(email, otp):
 
 
 
+def send_email_change_otp(email, otp):
+    client = Brevo(api_key=settings.BREVO_API_KEY)
+
+    client.transactional_emails.send_transac_email(
+        subject="Confirm your GEEKA email change",
+        html_content=f"""
+        <html>
+            <body>
+                <h2>Confirm your GEEKA email change</h2>
+
+                <p>Use the verification code below to confirm
+                your new email address:</p>
+
+                <h1>{otp}</h1>
+
+                <p>This code will expire in 10 minutes.</p>
+
+                <p>
+                    If you did not request this change,
+                    you can safely ignore this email.
+                    Your current email address will remain unchanged
+                    unless the code is verified.
+                </p>
+
+                <p>Regards,<br>GEEKA</p>
+            </body>
+        </html>
+        """,
+        sender=SendTransacEmailRequestSender(
+            name=SENDER_NAME,
+            email=SENDER_EMAIL,
+        ),
+        to=[
+            SendTransacEmailRequestToItem(
+                email=email,
+            )
+        ],
+    )
+
+
+
 
 def send_password_reset_email(email, otp):
     client = Brevo(api_key=settings.BREVO_API_KEY)

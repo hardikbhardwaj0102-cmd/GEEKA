@@ -226,7 +226,140 @@ Returns information about the currently authenticated customer.
 ### Unauthenticated Response — `401 Unauthorized`
 The endpoint requires an authenticated Django session.
 
-## 1.6 Logout
+## 1.6 Email Change
+
+Allows an authenticated customer to change their registered email address after verifying an OTP sent to the new email address.
+
+The email change process consists of two endpoints:
+
+- Request an OTP for the new email address.
+- Verify the OTP and update the customer's email address.
+
+### 1.6.1 Request Email Change OTP
+
+Requests an email verification code for the new email address. The existing email address remains unchanged until OTP verification succeeds.
+
+- **Method:** `POST`
+- **Endpoint:** `/api/v1/auth/email-change/request/`
+- **Authentication:** Required
+- **CSRF:** Required
+- **Content-Type:** `application/json`
+
+**Request body**
+
+```json
+{
+  "new_email": "new.customer@example.com"
+}
+```
+
+**Success response — `200 OK`**
+
+```json
+{
+  "message": "Verification code sent to your new email address."
+}
+```
+
+**Error response — `400 Bad Request`**
+
+Returned when the email address is invalid, matches the current email address, or is already registered to another account.
+
+```json
+{
+  "errors": {
+    "new_email": [
+      "An account with this email already exists."
+    ]
+  }
+}
+```
+
+Other possible validation errors include:
+
+- This is already your current email address.
+- Invalid email address.
+
+**Error response — `503 Service Unavailable`**
+
+Returned when the verification email cannot be sent.
+
+```json
+{
+  "error": "Unable to send the verification email. Please try again."
+}
+```
+
+**OTP rules**
+
+- The OTP is sent to the requested new email address.
+- The OTP expires after 10 minutes.
+- Only a hashed OTP is stored in the database.
+- Requesting another OTP invalidates previous unused email-change verification codes.
+- The existing email address is not changed by this endpoint.
+
+### 1.6.2 Verify Email Change OTP
+
+Verifies the OTP sent to the new email address. On successful verification, the customer's registered email address is updated and marked as verified.
+
+- **Method:** `POST`
+- **Endpoint:** `/api/v1/auth/email-change/verify/`
+- **Authentication:** Required
+- **CSRF:** Required
+- **Content-Type:** `application/json`
+
+**Request body**
+
+```json
+{
+  "new_email": "new.customer@example.com",
+  "otp": "123456"
+}
+```
+
+**Success response — `200 OK`**
+
+```json
+{
+  "message": "Email address updated successfully.",
+  "user": {
+    "id": "user-uuid",
+    "email": "new.customer@example.com",
+    "full_name": "Aditya Vips",
+    "email_verified": true
+  }
+}
+```
+
+**Error response — `400 Bad Request`**
+
+Invalid OTP:
+
+```json
+{
+  "error": "Invalid verification code."
+}
+```
+
+Other possible errors include:
+
+- No active verification code found for this email.
+- Verification code has expired.
+- Maximum verification attempts exceeded.
+- This verification code has already been used or is no longer active.
+- This email address is already associated with another account.
+
+**OTP verification rules**
+
+- The OTP must match the code issued for the authenticated customer and requested new email address.
+- The OTP expires after 10 minutes.
+- A maximum of 5 verification attempts is allowed per OTP.
+- A successfully used OTP cannot be reused.
+- If verification fails, the customer's existing email address remains unchanged.
+- The new email address is marked as verified only after successful OTP verification.
+- Email addresses already associated with another account cannot be used.
+
+## 1.7 Logout
 
 Logs out the currently authenticated customer and destroys the Django session.
 
@@ -257,7 +390,7 @@ Behavior
 3. Return a successful logout response.
 
 
-## 1.7 Password Reset Request
+## 1.8 Password Reset Request
 
 Requests a password reset code for a customer account.
 
@@ -312,7 +445,7 @@ The same response is returned whether or not an account exists with the provided
 
 ---
 
-## 1.8 Password Reset OTP Verification
+## 1.9 Password Reset OTP Verification
 
 Verifies that the password reset code is valid before allowing the customer to reset their password.
 
@@ -381,7 +514,7 @@ After the maximum number of attempts is reached:
 
 ---
 
-## 1.9 Password Reset Confirmation
+## 1.10 Password Reset Confirmation
 
 Sets a new password after validating the password reset code.
 
@@ -461,7 +594,7 @@ or:
 - Password reset must not reveal whether an email address is registered.
 
 
-## 1.10 Google Login
+## 1.11 Google Login
 
 ### Endpoint
 
@@ -521,7 +654,7 @@ After successful authentication, Google redirects the browser to:
 
 ---
 
-## 1.11 Google OAuth Callback
+## 1.12 Google OAuth Callback
 
 ### Endpoint
 
