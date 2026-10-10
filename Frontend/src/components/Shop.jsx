@@ -1,3 +1,4 @@
+
 import {
     useEffect,
     useLayoutEffect,
@@ -50,8 +51,7 @@ function readWishlist() {
             ...new Set(
                 parsed
                     .map((item) =>
-                        typeof item ===
-                            "object" &&
+                        typeof item === "object" &&
                             item !== null
                             ? item?.id ??
                             item?.productId ??
@@ -60,9 +60,7 @@ function readWishlist() {
                             : item
                     )
                     .map((id) =>
-                        String(
-                            id ?? ""
-                        ).trim()
+                        String(id ?? "").trim()
                     )
                     .filter(Boolean)
             ),
@@ -81,9 +79,7 @@ function writeWishlist(items) {
                 ...new Set(
                     items
                         .map((id) =>
-                            String(
-                                id
-                            ).trim()
+                            String(id).trim()
                         )
                         .filter(Boolean)
                 ),
@@ -105,8 +101,7 @@ function formatPrice(
     value,
     currency = "INR"
 ) {
-    const amount =
-        Number(value);
+    const amount = Number(value);
 
     if (!Number.isFinite(amount)) {
         return "PRICE ON REQUEST";
@@ -122,9 +117,7 @@ function formatPrice(
             }
         ).format(amount);
     } catch {
-        return `₹${amount.toLocaleString(
-            "en-IN"
-        )}`;
+        return `₹${amount.toLocaleString("en-IN")}`;
     }
 }
 
@@ -170,74 +163,34 @@ function collectionMatches(
         return true;
     }
 
-    const name =
-        categoryName(
-            product
-        ).toLowerCase();
+    const name = categoryName(product).toLowerCase();
+    const slug = categorySlug(product);
+    const collectionKey = collection.toLowerCase();
 
-    const slug =
-        categorySlug(product);
-
-    const collectionKey =
-        collection.toLowerCase();
-
-    if (
-        collectionKey ===
-        "ethnic"
-    ) {
+    if (collectionKey === "ethnic") {
         return (
-            name.includes(
-                "ethnic"
-            ) ||
-            slug.includes(
-                "ethnic"
-            )
+            name.includes("ethnic") ||
+            slug.includes("ethnic")
         );
     }
 
-    if (
-        collectionKey ===
-        "jewellery"
-    ) {
+    if (collectionKey === "jewellery") {
         return (
-            name.includes(
-                "jewel"
-            ) ||
-            name.includes(
-                "jewelry"
-            ) ||
-            slug.includes(
-                "jewel"
-            ) ||
-            slug.includes(
-                "jewelry"
-            )
+            name.includes("jewel") ||
+            name.includes("jewelry") ||
+            slug.includes("jewel") ||
+            slug.includes("jewelry")
         );
     }
 
-    if (
-        collectionKey ===
-        "creative"
-    ) {
+    if (collectionKey === "creative") {
         return (
-            name.includes(
-                "creative"
-            ) ||
-            name.includes(
-                "handmade"
-            ) ||
-            name.includes(
-                "crochet"
-            ) ||
-            slug.includes(
-                "creative"
-            ) ||
-            slug.includes(
-                "handmade"
-            ) ||
-            slug.includes(
-                "crochet"
-            )
+            name.includes("creative") ||
+            name.includes("handmade") ||
+            name.includes("crochet") ||
+            slug.includes("creative") ||
+            slug.includes("handmade") ||
+            slug.includes("crochet")
         );
     }
 
@@ -251,25 +204,17 @@ function collectionMatches(
 |--------------------------------------------------------------------------
 */
 
-function hasAvailableStock(
-    product
-) {
+function hasAvailableStock(product) {
     const variants =
-        Array.isArray(
-            product?.detail?.variants
-        )
+        Array.isArray(product?.detail?.variants)
             ? product.detail.variants
             : [];
 
     return variants.some(
         (variant) =>
-            variant?.is_active ===
-            true &&
-            variant?.in_stock ===
-            true &&
-            Number(
-                variant?.stock
-            ) > 0
+            variant?.is_active === true &&
+            variant?.in_stock === true &&
+            Number(variant?.stock) > 0
     );
 }
 
@@ -280,27 +225,221 @@ function hasAvailableStock(
 |--------------------------------------------------------------------------
 */
 
-function getPurchasableVariant(
-    product
-) {
+function getPurchasableVariant(product) {
     const variants =
-        Array.isArray(
-            product?.detail?.variants
-        )
+        Array.isArray(product?.detail?.variants)
             ? product.detail.variants
             : [];
 
     return (
         variants.find(
             (variant) =>
-                variant?.is_active ===
-                true &&
-                variant?.in_stock ===
-                true &&
-                Number(
-                    variant?.stock
-                ) > 0
+                variant?.is_active === true &&
+                variant?.in_stock === true &&
+                Number(variant?.stock) > 0
         ) || null
+    );
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| PRODUCT IMAGE GALLERY SLIDESHOW
+|--------------------------------------------------------------------------
+*/
+
+function getProductGalleryImages(product) {
+    const images = [];
+
+    const addImage = (value) => {
+        if (
+            typeof value === "string" &&
+            value.trim()
+        ) {
+            images.push(value.trim());
+            return;
+        }
+
+        if (
+            !value ||
+            typeof value !== "object"
+        ) {
+            return;
+        }
+
+        if (value.is_active === false) {
+            return;
+        }
+
+        const imageUrl =
+            value.image_url ||
+            value.imageUrl ||
+            value.image ||
+            value.url ||
+            value.src ||
+            value.file ||
+            value.image_file;
+
+        if (
+            typeof imageUrl === "string" &&
+            imageUrl.trim()
+        ) {
+            images.push(imageUrl.trim());
+        }
+    };
+
+    // Main product image.
+    addImage(product?.displayImage);
+
+    // Detailed product images, sorted by display order.
+    const detailImages =
+        Array.isArray(product?.detail?.images)
+            ? [...product.detail.images]
+            : [];
+
+    detailImages.sort(
+        (a, b) =>
+            Number(a?.display_order ?? 0) -
+            Number(b?.display_order ?? 0)
+    );
+
+    detailImages.forEach(addImage);
+
+    // Other possible product gallery formats.
+    if (Array.isArray(product?.images)) {
+        product.images.forEach(addImage);
+    }
+
+    if (Array.isArray(product?.gallery)) {
+        product.gallery.forEach(addImage);
+    }
+
+    // Remove duplicate image URLs.
+    return [...new Set(images)];
+}
+
+
+function ProductImageSlideshow({ product }) {
+    const [isHovered, setIsHovered] = useState(false);
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    const images = useMemo(
+        () => getProductGalleryImages(product),
+        [product]
+    );
+
+    const SLIDE_INTERVAL = 1600;
+    const TRANSITION_DURATION = 520;
+
+    useEffect(() => {
+        // Preload the images for smoother transitions.
+        images.forEach((src) => {
+            const image = new Image();
+            image.src = src;
+        });
+    }, [images]);
+
+    useEffect(() => {
+        if (!isHovered || images.length < 2) {
+            return undefined;
+        }
+
+        const interval = window.setInterval(() => {
+            setCurrentIndex((index) => index + 1);
+        }, SLIDE_INTERVAL);
+
+        return () => {
+            window.clearInterval(interval);
+        };
+    }, [isHovered, images.length]);
+
+    useEffect(() => {
+        // The final slide duplicates the first image.
+        // Reset after the transition to create a seamless loop.
+        if (
+            currentIndex !== images.length ||
+            images.length < 2
+        ) {
+            return undefined;
+        }
+
+        const timeout = window.setTimeout(() => {
+            setCurrentIndex(0);
+        }, TRANSITION_DURATION);
+
+        return () => {
+            window.clearTimeout(timeout);
+        };
+    }, [currentIndex, images.length]);
+
+    const handleMouseEnter = () => {
+        if (images.length > 1) {
+            setIsHovered(true);
+        }
+    };
+
+    const handleMouseLeave = () => {
+        setIsHovered(false);
+        setCurrentIndex(0);
+    };
+
+    if (images.length === 0) {
+        return (
+            <div className="shop-empty-image-placeholder">
+                GEEKA
+            </div>
+        );
+    }
+
+    if (images.length === 1) {
+        return (
+            <div className="shop-product-slideshow">
+                <img
+                    src={images[0]}
+                    alt={product?.name || "Geeka product"}
+                    loading="lazy"
+                />
+            </div>
+        );
+    }
+
+    const displayedImages = [
+        ...images,
+        images[0],
+    ];
+
+    const atLoopBoundary =
+        currentIndex === images.length;
+
+    return (
+        <div
+            className="shop-product-slideshow"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+        >
+            <div
+                className="shop-product-slideshow-track"
+                style={{
+                    transform: `translateX(-${currentIndex * 100}%)`,
+                    transition: atLoopBoundary
+                        ? `transform ${TRANSITION_DURATION}ms ease`
+                        : `transform ${TRANSITION_DURATION}ms ease`,
+                }}
+            >
+                {displayedImages.map((src, index) => (
+                    <div
+                        className="shop-product-slideshow-slide"
+                        key={`${src}-${index}`}
+                    >
+                        <img
+                            src={src}
+                            alt={product?.name || "Geeka product"}
+                            loading={index === 0 ? "lazy" : "eager"}
+                        />
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 }
 
@@ -398,9 +537,7 @@ function PlusIcon() {
 }
 
 
-function HeartIcon({
-    filled = false,
-}) {
+function HeartIcon({ filled = false }) {
     return (
         <svg
             viewBox="0 0 24 24"
@@ -409,11 +546,7 @@ function HeartIcon({
         >
             <path
                 d="M20.8 8.8c0 5.2-8.8 10.2-8.8 10.2S3.2 14 3.2 8.8A4.7 4.7 0 0 1 12 6.1a4.7 4.7 0 0 1 8.8 2.7Z"
-                fill={
-                    filled
-                        ? "currentColor"
-                        : "none"
-                }
+                fill={filled ? "currentColor" : "none"}
                 stroke="currentColor"
                 strokeWidth="1.35"
             />
@@ -429,15 +562,10 @@ function HeartIcon({
 */
 
 export default function Shop() {
-    const location =
-        useLocation();
+    const location = useLocation();
+    const navigate = useNavigate();
 
-    const navigate =
-        useNavigate();
-
-    const {
-        addItem,
-    } = useCart();
+    const { addItem } = useCart();
 
 
     /*
@@ -462,37 +590,25 @@ export default function Shop() {
     */
 
     const params = useMemo(
-        () =>
-            new URLSearchParams(
-                location.search
-            ),
+        () => new URLSearchParams(location.search),
         [location.search]
     );
 
-    const search =
-        (
-            params.get(
-                "search"
-            ) || ""
-        ).trim();
+    const search = (
+        params.get("search") || ""
+    ).trim();
 
-    const requestedCategory =
-        (
-            params.get(
-                "category"
-            ) || ""
-        )
-            .trim()
-            .toLowerCase();
+    const requestedCategory = (
+        params.get("category") || ""
+    )
+        .trim()
+        .toLowerCase();
 
-    const collection =
-        (
-            params.get(
-                "collection"
-            ) || ""
-        )
-            .trim()
-            .toLowerCase();
+    const collection = (
+        params.get("collection") || ""
+    )
+        .trim()
+        .toLowerCase();
 
 
     /*
@@ -501,66 +617,17 @@ export default function Shop() {
     |--------------------------------------------------------------------------
     */
 
-    const [
-        products,
-        setProducts,
-    ] = useState([]);
-
-    const [
-        loading,
-        setLoading,
-    ] = useState(true);
-
-    const [
-        error,
-        setError,
-    ] = useState("");
-
-    const [
-        wishlist,
-        setWishlist,
-    ] = useState(
-        readWishlist
-    );
-
-    const [
-        sortBy,
-        setSortBy,
-    ] = useState(
-        "featured"
-    );
-
-    const [
-        minPrice,
-        setMinPrice,
-    ] = useState(0);
-
-    const [
-        maxPrice,
-        setMaxPrice,
-    ] = useState(
-        100000
-    );
-
-    const [
-        stockOnly,
-        setStockOnly,
-    ] = useState(false);
-
-    const [
-        quickView,
-        setQuickView,
-    ] = useState(null);
-
-    const [
-        cartMessage,
-        setCartMessage,
-    ] = useState("");
-
-    const [
-        mobileFilters,
-        setMobileFilters,
-    ] = useState(false);
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [wishlist, setWishlist] = useState(readWishlist);
+    const [sortBy, setSortBy] = useState("featured");
+    const [minPrice, setMinPrice] = useState(0);
+    const [maxPrice, setMaxPrice] = useState(100000);
+    const [stockOnly, setStockOnly] = useState(false);
+    const [quickView, setQuickView] = useState(null);
+    const [cartMessage, setCartMessage] = useState("");
+    const [mobileFilters, setMobileFilters] = useState(false);
 
 
     /*
@@ -577,40 +644,22 @@ export default function Shop() {
             setError("");
 
             try {
-                /*
-                |--------------------------------------------------------------------------
-                | Backend catalog
-                |--------------------------------------------------------------------------
-                |
-                | getAllProducts() follows backend pagination and collects the
-                | complete published catalogue.
-                |--------------------------------------------------------------------------
-                */
+                const baseProducts = await getAllProducts();
 
-                const baseProducts =
-                    await getAllProducts();
-
-                const cards =
-                    await getProductCards(
-                        baseProducts
-                    );
+                const cards = await getProductCards(
+                    baseProducts
+                );
 
                 if (active) {
                     setProducts(
-                        Array.isArray(
-                            cards
-                        )
+                        Array.isArray(cards)
                             ? cards
                             : []
                     );
                 }
-            } catch (
-            requestError
-            ) {
+            } catch (requestError) {
                 if (active) {
-                    setProducts(
-                        []
-                    );
+                    setProducts([]);
 
                     setError(
                         requestError?.message ||
@@ -619,9 +668,7 @@ export default function Shop() {
                 }
             } finally {
                 if (active) {
-                    setLoading(
-                        false
-                    );
+                    setLoading(false);
                 }
             }
         }
@@ -640,47 +687,25 @@ export default function Shop() {
     |--------------------------------------------------------------------------
     */
 
-    const categoryOptions =
-        useMemo(() => {
-            const map =
-                new Map();
+    const categoryOptions = useMemo(() => {
+        const map = new Map();
 
-            products.forEach(
-                (product) => {
-                    const name =
-                        categoryName(
-                            product
-                        );
+        products.forEach((product) => {
+            const name = categoryName(product);
+            const slug = categorySlug(product);
 
-                    const slug =
-                        categorySlug(
-                            product
-                        );
+            if (name && slug) {
+                map.set(slug, name);
+            }
+        });
 
-                    if (
-                        name &&
-                        slug
-                    ) {
-                        map.set(
-                            slug,
-                            name
-                        );
-                    }
-                }
-            );
-
-            return Array.from(
-                map.entries()
-            ).map(
-                ([
-                    slug,
-                    name,
-                ]) => ({
-                    slug,
-                    name,
-                })
-            );
-        }, [products]);
+        return Array.from(map.entries()).map(
+            ([slug, name]) => ({
+                slug,
+                name,
+            })
+        );
+    }, [products]);
 
 
     /*
@@ -689,68 +714,36 @@ export default function Shop() {
     |--------------------------------------------------------------------------
     */
 
-    const prices =
-        useMemo(
-            () =>
-                products
-                    .map(
-                        (
-                            product
-                        ) =>
-                            Number(
-                                product.price
-                            )
-                    )
-                    .filter(
-                        (value) =>
-                            Number.isFinite(
-                                value
-                            )
-                    ),
-            [products]
-        );
+    const prices = useMemo(
+        () =>
+            products
+                .map((product) => Number(product.price))
+                .filter((value) => Number.isFinite(value)),
+        [products]
+    );
 
-    const priceBounds =
-        useMemo(() => {
-            if (
-                !prices.length
-            ) {
-                return {
-                    min: 0,
-                    max: 0,
-                };
-            }
-
+    const priceBounds = useMemo(() => {
+        if (!prices.length) {
             return {
-                min: Math.floor(
-                    Math.min(
-                        ...prices
-                    )
-                ),
-
-                max: Math.ceil(
-                    Math.max(
-                        ...prices
-                    )
-                ),
+                min: 0,
+                max: 0,
             };
-        }, [prices]);
+        }
+
+        return {
+            min: Math.floor(Math.min(...prices)),
+            max: Math.ceil(Math.max(...prices)),
+        };
+    }, [prices]);
 
 
     useEffect(() => {
-        if (
-            !prices.length
-        ) {
+        if (!prices.length) {
             return;
         }
 
-        setMinPrice(
-            priceBounds.min
-        );
-
-        setMaxPrice(
-            priceBounds.max
-        );
+        setMinPrice(priceBounds.min);
+        setMaxPrice(priceBounds.max);
     }, [
         priceBounds.min,
         priceBounds.max,
@@ -764,9 +757,7 @@ export default function Shop() {
     |--------------------------------------------------------------------------
     */
 
-    const selectedCategory =
-        requestedCategory ||
-        "all";
+    const selectedCategory = requestedCategory || "all";
 
 
     /*
@@ -775,190 +766,86 @@ export default function Shop() {
     |--------------------------------------------------------------------------
     */
 
-    const filteredProducts =
-        useMemo(() => {
-            const normalizedSearch =
-                search.toLowerCase();
+    const filteredProducts = useMemo(() => {
+        const normalizedSearch = search.toLowerCase();
 
-            const result =
-                products.filter(
-                    (product) => {
-                        /*
-                        |--------------------------------------------------------------------------
-                        | CATEGORY
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (
-                            selectedCategory !==
-                            "all" &&
-                            categorySlug(
-                                product
-                            ) !==
-                            selectedCategory
-                        ) {
-                            return false;
-                        }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | COLLECTION
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (
-                            !collectionMatches(
-                                product,
-                                collection
-                            )
-                        ) {
-                            return false;
-                        }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | SEARCH
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (
-                            normalizedSearch
-                        ) {
-                            const haystack =
-                                [
-                                    product.name,
-                                    categoryName(
-                                        product
-                                    ),
-                                    categorySlug(
-                                        product
-                                    ),
-                                ]
-                                    .join(
-                                        " "
-                                    )
-                                    .toLowerCase();
-
-                            if (
-                                !haystack.includes(
-                                    normalizedSearch
-                                )
-                            ) {
-                                return false;
-                            }
-                        }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | PRICE
-                        |--------------------------------------------------------------------------
-                        */
-
-                        const price =
-                            Number(
-                                product.price
-                            );
-
-                        if (
-                            Number.isFinite(
-                                price
-                            )
-                        ) {
-                            if (
-                                price <
-                                minPrice ||
-                                price >
-                                maxPrice
-                            ) {
-                                return false;
-                            }
-                        }
-
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | STOCK
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (
-                            stockOnly &&
-                            !hasAvailableStock(
-                                product
-                            )
-                        ) {
-                            return false;
-                        }
-
-                        return true;
-                    }
-                );
-
-
-            /*
-            |--------------------------------------------------------------------------
-            | FRONTEND-SAFE SORTING
-            |--------------------------------------------------------------------------
-            */
-
+        const result = products.filter((product) => {
+            // CATEGORY
             if (
-                sortBy ===
-                "price-low"
+                selectedCategory !== "all" &&
+                categorySlug(product) !== selectedCategory
             ) {
-                result.sort(
-                    (a, b) =>
-                        (a.price ??
-                            Infinity) -
-                        (b.price ??
-                            Infinity)
-                );
-            } else if (
-                sortBy ===
-                "price-high"
-            ) {
-                result.sort(
-                    (a, b) =>
-                        (b.price ??
-                            -Infinity) -
-                        (a.price ??
-                            -Infinity)
-                );
-            } else if (
-                sortBy === "name"
-            ) {
-                result.sort(
-                    (a, b) =>
-                        a.name.localeCompare(
-                            b.name
-                        )
-                );
+                return false;
             }
 
-            /*
-            |--------------------------------------------------------------------------
-            | "featured"
-            |--------------------------------------------------------------------------
-            |
-            | The documented public product response does not expose a
-            | frontend "featured" field. Therefore we intentionally keep
-            | backend ordering here.
-            |--------------------------------------------------------------------------
-            */
+            // COLLECTION
+            if (!collectionMatches(product, collection)) {
+                return false;
+            }
 
-            return result;
-        }, [
-            collection,
-            maxPrice,
-            minPrice,
-            products,
-            search,
-            selectedCategory,
-            sortBy,
-            stockOnly,
-        ]);
+            // SEARCH
+            if (normalizedSearch) {
+                const haystack = [
+                    product.name,
+                    categoryName(product),
+                    categorySlug(product),
+                ]
+                    .join(" ")
+                    .toLowerCase();
+
+                if (!haystack.includes(normalizedSearch)) {
+                    return false;
+                }
+            }
+
+            // PRICE
+            const price = Number(product.price);
+
+            if (Number.isFinite(price)) {
+                if (price < minPrice || price > maxPrice) {
+                    return false;
+                }
+            }
+
+            // STOCK
+            if (stockOnly && !hasAvailableStock(product)) {
+                return false;
+            }
+
+            return true;
+        });
+
+        // SORTING
+        if (sortBy === "price-low") {
+            result.sort(
+                (a, b) =>
+                    (a.price ?? Infinity) -
+                    (b.price ?? Infinity)
+            );
+        } else if (sortBy === "price-high") {
+            result.sort(
+                (a, b) =>
+                    (b.price ?? -Infinity) -
+                    (a.price ?? -Infinity)
+            );
+        } else if (sortBy === "name") {
+            result.sort(
+                (a, b) =>
+                    a.name.localeCompare(b.name)
+            );
+        }
+
+        return result;
+    }, [
+        collection,
+        maxPrice,
+        minPrice,
+        products,
+        search,
+        selectedCategory,
+        sortBy,
+        stockOnly,
+    ]);
 
 
     /*
@@ -967,35 +854,21 @@ export default function Shop() {
     |--------------------------------------------------------------------------
     */
 
-    const updateQuery = (
-        key,
-        value
-    ) => {
-        const next =
-            new URLSearchParams(
-                location.search
-            );
+    const updateQuery = (key, value) => {
+        const next = new URLSearchParams(location.search);
 
         if (value) {
-            next.set(
-                key,
-                value
-            );
+            next.set(key, value);
         } else {
-            next.delete(
-                key
-            );
+            next.delete(key);
         }
 
         navigate(
             {
-                pathname:
-                    "/shop",
-
-                search:
-                    next.toString()
-                        ? `?${next.toString()}`
-                        : "",
+                pathname: "/shop",
+                search: next.toString()
+                    ? `?${next.toString()}`
+                    : "",
             },
             {
                 replace: true,
@@ -1011,21 +884,10 @@ export default function Shop() {
     */
 
     const resetFilters = () => {
-        setMinPrice(
-            priceBounds.min
-        );
-
-        setMaxPrice(
-            priceBounds.max
-        );
-
-        setStockOnly(
-            false
-        );
-
-        setSortBy(
-            "featured"
-        );
+        setMinPrice(priceBounds.min);
+        setMaxPrice(priceBounds.max);
+        setStockOnly(false);
+        setSortBy("featured");
 
         navigate(
             "/shop",
@@ -1042,44 +904,24 @@ export default function Shop() {
     |--------------------------------------------------------------------------
     */
 
-    const toggleWishlist = (
-        id
-    ) => {
+    const toggleWishlist = (id) => {
         if (!id) {
             return;
         }
 
-        setWishlist(
-            (current) => {
-                const next =
-                    current.includes(
-                        id
-                    )
-                        ? current.filter(
-                            (
-                                item
-                            ) =>
-                                item !==
-                                id
-                        )
-                        : [
-                            ...current,
-                            id,
-                        ];
+        setWishlist((current) => {
+            const next = current.includes(id)
+                ? current.filter((item) => item !== id)
+                : [...current, id];
 
-                writeWishlist(
-                    next
-                );
+            writeWishlist(next);
 
-                window.dispatchEvent(
-                    new CustomEvent(
-                        "geeka-wishlist-updated"
-                    )
-                );
+            window.dispatchEvent(
+                new CustomEvent("geeka-wishlist-updated")
+            );
 
-                return next;
-            }
-        );
+            return next;
+        });
     };
 
 
@@ -1087,36 +929,15 @@ export default function Shop() {
     |--------------------------------------------------------------------------
     | ADD TO CART
     |--------------------------------------------------------------------------
-    |
-    | IMPORTANT:
-    | Shop now uses the same useCart() store as Cart.jsx/Header.jsx.
-    |
-    | The store then calls Django:
-    |
-    | POST /api/v1/cart/items/
-    |--------------------------------------------------------------------------
     */
 
-    const addToCart = async (
-        product
-    ) => {
-        const variant =
-            getPurchasableVariant(
-                product
-            );
-
-        /*
-        |--------------------------------------------------------------------------
-        | No purchasable variant
-        |--------------------------------------------------------------------------
-        */
+    const addToCart = async (product) => {
+        const variant = getPurchasableVariant(product);
 
         if (!variant) {
             navigate(
                 `/product/${encodeURIComponent(
-                    productId(
-                        product
-                    )
+                    productId(product)
                 )}`
             );
 
@@ -1135,25 +956,17 @@ export default function Shop() {
             );
 
             window.setTimeout(
-                () =>
-                    setCartMessage(
-                        ""
-                    ),
+                () => setCartMessage(""),
                 2600
             );
-        } catch (
-        requestError
-        ) {
+        } catch (requestError) {
             setCartMessage(
                 requestError?.message ||
                 "Unable to add this item to bag."
             );
 
             window.setTimeout(
-                () =>
-                    setCartMessage(
-                        ""
-                    ),
+                () => setCartMessage(""),
                 3200
             );
         }
@@ -1167,16 +980,10 @@ export default function Shop() {
     */
 
     const activeFilterLabels = [
-        selectedCategory !==
-            "all"
+        selectedCategory !== "all"
             ? categoryOptions.find(
-                (
-                    item
-                ) =>
-                    item.slug ===
-                    selectedCategory
-            )?.name ||
-            selectedCategory
+                (item) => item.slug === selectedCategory
+            )?.name || selectedCategory
             : "",
 
         collection
@@ -1205,9 +1012,7 @@ export default function Shop() {
 
             <main className="shop-page">
 
-                {/* =====================================================
-                    BANNER
-                   ===================================================== */}
+                {/* BANNER */}
 
                 <section className="shop-banner">
 
@@ -1239,9 +1044,7 @@ export default function Shop() {
                 </section>
 
 
-                {/* =====================================================
-                    SHOP CONTAINER
-                   ===================================================== */}
+                {/* SHOP CONTAINER */}
 
                 <div className="shop-container">
 
@@ -1251,15 +1054,10 @@ export default function Shop() {
 
                             <span className="showing-count">
                                 SHOWING{" "}
-                                {
-                                    filteredProducts.length
-                                }{" "}
+                                {filteredProducts.length}{" "}
                                 OF{" "}
-                                {
-                                    products.length
-                                }
+                                {products.length}
                             </span>
-
 
                             <div className="sort-box">
 
@@ -1269,16 +1067,10 @@ export default function Shop() {
 
                                 <select
                                     id="shop-sort"
-                                    value={
-                                        sortBy
-                                    }
-                                    onChange={(
-                                        event
-                                    ) =>
+                                    value={sortBy}
+                                    onChange={(event) =>
                                         setSortBy(
-                                            event
-                                                .target
-                                                .value
+                                            event.target.value
                                         )
                                     }
                                 >
@@ -1301,14 +1093,11 @@ export default function Shop() {
 
                             </div>
 
-
                             <button
                                 type="button"
                                 className="mobile-filter-btn"
                                 onClick={() =>
-                                    setMobileFilters(
-                                        true
-                                    )
+                                    setMobileFilters(true)
                                 }
                             >
                                 FILTERS
@@ -1319,92 +1108,52 @@ export default function Shop() {
                     </div>
 
 
-                    {/* =====================================================
-                        ACTIVE FILTERS
-                       ===================================================== */}
+                    {/* ACTIVE FILTERS */}
 
-                    {activeFilterLabels.length >
-                        0 && (
-                            <div className="active-filter-row">
+                    {activeFilterLabels.length > 0 && (
+                        <div className="active-filter-row">
 
-                                <span>
-                                    ACTIVE FILTERS
-                                </span>
+                            <span>
+                                ACTIVE FILTERS
+                            </span>
 
-                                {activeFilterLabels.map(
-                                    (
-                                        label
-                                    ) => (
-                                        <button
-                                            type="button"
-                                            key={
-                                                label
-                                            }
-                                            onClick={() => {
-                                                if (
-                                                    label.startsWith(
-                                                        "SEARCH:"
-                                                    )
-                                                ) {
-                                                    updateQuery(
-                                                        "search",
-                                                        ""
-                                                    );
-                                                } else if (
-                                                    label ===
-                                                    "IN STOCK"
-                                                ) {
-                                                    setStockOnly(
-                                                        false
-                                                    );
-                                                } else if (
-                                                    selectedCategory !==
-                                                    "all" &&
-                                                    label.toLowerCase() ===
-                                                    String(
-                                                        categoryOptions.find(
-                                                            (
-                                                                item
-                                                            ) =>
-                                                                item.slug ===
-                                                                selectedCategory
-                                                        )
-                                                            ?.name ||
-                                                        selectedCategory
-                                                    ).toLowerCase()
-                                                ) {
-                                                    updateQuery(
-                                                        "category",
-                                                        ""
-                                                    );
-                                                } else if (
-                                                    collection
-                                                ) {
-                                                    updateQuery(
-                                                        "collection",
-                                                        ""
-                                                    );
-                                                }
-                                            }}
-                                        >
-                                            {
-                                                label
-                                            }
+                            {activeFilterLabels.map((label) => (
+                                <button
+                                    type="button"
+                                    key={label}
+                                    onClick={() => {
+                                        if (label.startsWith("SEARCH:")) {
+                                            updateQuery("search", "");
+                                        } else if (label === "IN STOCK") {
+                                            setStockOnly(false);
+                                        } else if (
+                                            selectedCategory !== "all" &&
+                                            label.toLowerCase() ===
+                                            String(
+                                                categoryOptions.find(
+                                                    (item) =>
+                                                        item.slug === selectedCategory
+                                                )?.name || selectedCategory
+                                            ).toLowerCase()
+                                        ) {
+                                            updateQuery("category", "");
+                                        } else if (collection) {
+                                            updateQuery("collection", "");
+                                        }
+                                    }}
+                                >
+                                    {label}
+                                    <CloseIcon />
+                                </button>
+                            ))}
 
-                                            <CloseIcon />
-                                        </button>
-                                    )
-                                )}
-
-                            </div>
-                        )}
+                        </div>
+                    )}
 
 
                     <div className="shop-main-layout">
 
-                        {/* =================================================
-                            DESKTOP FILTERS
-                           ================================================= */}
+                        {/* DESKTOP FILTERS */}
 
                         <aside className="shop-filters">
 
@@ -1419,16 +1168,12 @@ export default function Shop() {
                                     <button
                                         type="button"
                                         className={
-                                            selectedCategory ===
-                                                "all"
+                                            selectedCategory === "all"
                                                 ? "active"
                                                 : ""
                                         }
                                         onClick={() =>
-                                            updateQuery(
-                                                "category",
-                                                ""
-                                            )
+                                            updateQuery("category", "")
                                         }
                                     >
                                         <span>
@@ -1436,71 +1181,49 @@ export default function Shop() {
                                         </span>
 
                                         <span>
-                                            {
-                                                products.length
-                                            }
+                                            {products.length}
                                         </span>
                                     </button>
 
+                                    {categoryOptions.map((category) => {
+                                        const count = products.filter(
+                                            (product) =>
+                                                categorySlug(product) === category.slug
+                                        ).length;
 
-                                    {categoryOptions.map(
-                                        (
-                                            category
-                                        ) => {
-                                            const count =
-                                                products.filter(
-                                                    (
-                                                        product
-                                                    ) =>
-                                                        categorySlug(
-                                                            product
-                                                        ) ===
+                                        return (
+                                            <button
+                                                key={category.slug}
+                                                type="button"
+                                                className={
+                                                    selectedCategory === category.slug
+                                                        ? "active"
+                                                        : ""
+                                                }
+                                                onClick={() =>
+                                                    updateQuery(
+                                                        "category",
                                                         category.slug
-                                                ).length;
+                                                    )
+                                                }
+                                            >
+                                                <span>
+                                                    {category.name}
+                                                </span>
 
-                                            return (
-                                                <button
-                                                    key={
-                                                        category.slug
-                                                    }
-                                                    type="button"
-                                                    className={
-                                                        selectedCategory ===
-                                                            category.slug
-                                                            ? "active"
-                                                            : ""
-                                                    }
-                                                    onClick={() =>
-                                                        updateQuery(
-                                                            "category",
-                                                            category.slug
-                                                        )
-                                                    }
-                                                >
-                                                    <span>
-                                                        {
-                                                            category.name
-                                                        }
-                                                    </span>
-
-                                                    <span>
-                                                        {
-                                                            count
-                                                        }
-                                                    </span>
-                                                </button>
-                                            );
-                                        }
-                                    )}
+                                                <span>
+                                                    {count}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
 
                                 </div>
 
                             </div>
 
 
-                            {/* =================================================
-                                PRICE FILTER
-                               ================================================= */}
+                            {/* PRICE FILTER */}
 
                             <div className="filter-block">
 
@@ -1512,9 +1235,7 @@ export default function Shop() {
 
                                     <input
                                         type="range"
-                                        min={
-                                            priceBounds.min
-                                        }
+                                        min={priceBounds.min}
                                         max={Math.max(
                                             priceBounds.max,
                                             priceBounds.min
@@ -1523,16 +1244,10 @@ export default function Shop() {
                                             minPrice,
                                             priceBounds.max
                                         )}
-                                        onChange={(
-                                            event
-                                        ) =>
+                                        onChange={(event) =>
                                             setMinPrice(
                                                 Math.min(
-                                                    Number(
-                                                        event
-                                                            .target
-                                                            .value
-                                                    ),
+                                                    Number(event.target.value),
                                                     maxPrice
                                                 )
                                             )
@@ -1541,9 +1256,7 @@ export default function Shop() {
 
                                     <input
                                         type="range"
-                                        min={
-                                            priceBounds.min
-                                        }
+                                        min={priceBounds.min}
                                         max={Math.max(
                                             priceBounds.max,
                                             priceBounds.min
@@ -1552,16 +1265,10 @@ export default function Shop() {
                                             maxPrice,
                                             priceBounds.min
                                         )}
-                                        onChange={(
-                                            event
-                                        ) =>
+                                        onChange={(event) =>
                                             setMaxPrice(
                                                 Math.max(
-                                                    Number(
-                                                        event
-                                                            .target
-                                                            .value
-                                                    ),
+                                                    Number(event.target.value),
                                                     minPrice
                                                 )
                                             )
@@ -1570,19 +1277,14 @@ export default function Shop() {
 
                                 </div>
 
-
                                 <div className="price-values">
 
                                     <span>
-                                        {formatPrice(
-                                            minPrice
-                                        )}
+                                        {formatPrice(minPrice)}
                                     </span>
 
                                     <span>
-                                        {formatPrice(
-                                            maxPrice
-                                        )}
+                                        {formatPrice(maxPrice)}
                                     </span>
 
                                 </div>
@@ -1590,9 +1292,7 @@ export default function Shop() {
                             </div>
 
 
-                            {/* =================================================
-                                AVAILABILITY
-                               ================================================= */}
+                            {/* AVAILABILITY */}
 
                             <div className="filter-block">
 
@@ -1604,16 +1304,10 @@ export default function Shop() {
 
                                     <input
                                         type="checkbox"
-                                        checked={
-                                            stockOnly
-                                        }
-                                        onChange={(
-                                            event
-                                        ) =>
+                                        checked={stockOnly}
+                                        onChange={(event) =>
                                             setStockOnly(
-                                                event
-                                                    .target
-                                                    .checked
+                                                event.target.checked
                                             )
                                         }
                                     />
@@ -1628,13 +1322,10 @@ export default function Shop() {
 
                             </div>
 
-
                             <button
                                 type="button"
                                 className="reset-filters"
-                                onClick={
-                                    resetFilters
-                                }
+                                onClick={resetFilters}
                             >
                                 RESET FILTERS
                             </button>
@@ -1642,9 +1333,7 @@ export default function Shop() {
                         </aside>
 
 
-                        {/* =================================================
-                            PRODUCTS
-                           ================================================= */}
+                        {/* PRODUCTS */}
 
                         <section
                             className="shop-products-area"
@@ -1682,9 +1371,7 @@ export default function Shop() {
                                     </h2>
 
                                     <p>
-                                        {
-                                            error
-                                        }
+                                        {error}
                                     </p>
 
                                     <button
@@ -1698,8 +1385,7 @@ export default function Shop() {
                                     </button>
 
                                 </div>
-                            ) : filteredProducts.length ===
-                                0 ? (
+                            ) : filteredProducts.length === 0 ? (
                                 <div className="shop-empty">
 
                                     <div className="empty-search-icon">
@@ -1718,9 +1404,7 @@ export default function Shop() {
 
                                     <button
                                         type="button"
-                                        onClick={
-                                            resetFilters
-                                        }
+                                        onClick={resetFilters}
                                     >
                                         CLEAR FILTERS{" "}
                                         <ArrowIcon />
@@ -1730,211 +1414,142 @@ export default function Shop() {
                             ) : (
                                 <div className="shop-product-grid">
 
-                                    {filteredProducts.map(
-                                        (
-                                            product
-                                        ) => {
-                                            const id =
-                                                productId(
-                                                    product
-                                                );
+                                    {filteredProducts.map((product) => {
+                                        const id = productId(product);
 
-                                            const wishlisted =
-                                                wishlist.includes(
-                                                    id
-                                                );
+                                        const wishlisted =
+                                            wishlist.includes(id);
 
-                                            const detail =
-                                                product?.detail;
+                                        const detail = product?.detail;
 
-                                            const purchasable =
-                                                detail?.is_purchasable ===
-                                                true;
+                                        const purchasable =
+                                            detail?.is_purchasable === true;
 
-                                            const available =
-                                                hasAvailableStock(
-                                                    product
-                                                );
+                                        const available =
+                                            hasAvailableStock(product);
 
-                                            return (
-                                                <article
-                                                    className="shop-product-card"
-                                                    key={
-                                                        id
-                                                    }
-                                                >
+                                        return (
+                                            <article
+                                                className="shop-product-card"
+                                                key={id}
+                                            >
 
-                                                    {/* =====================================
-                                                        IMAGE
-                                                       ===================================== */}
+                                                {/* IMAGE */}
 
-                                                    <div className="shop-product-image">
+                                                <div className="shop-product-image">
 
+                                                    <Link
+                                                        to={`/product/${encodeURIComponent(
+                                                            id
+                                                        )}`}
+                                                    >
+                                                        <ProductImageSlideshow
+                                                            product={product}
+                                                        />
+                                                    </Link>
+
+                                                    {available && (
+                                                        <span className="shop-product-new">
+                                                            AVAILABLE
+                                                        </span>
+                                                    )}
+
+                                                    <button
+                                                        type="button"
+                                                        className={`shop-product-heart ${wishlisted ? "active" : ""
+                                                            }`}
+                                                        onClick={(event) => {
+                                                            event.preventDefault();
+                                                            event.stopPropagation();
+
+                                                            toggleWishlist(id);
+                                                        }}
+                                                        aria-label={
+                                                            wishlisted
+                                                                ? "Remove from wishlist"
+                                                                : "Add to wishlist"
+                                                        }
+                                                        aria-pressed={wishlisted}
+                                                    >
+                                                        <HeartIcon
+                                                            filled={wishlisted}
+                                                        />
+                                                    </button>
+
+                                                    <div className="shop-image-actions">
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={(event) => {
+                                                                event.preventDefault();
+                                                                event.stopPropagation();
+
+                                                                setQuickView(product);
+                                                            }}
+                                                        >
+                                                            QUICK VIEW
+                                                        </button>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                {/* PRODUCT INFO */}
+
+                                                <div className="shop-product-info">
+
+                                                    <span className="shop-product-category">
+                                                        {categoryName(product) ||
+                                                            "COLLECTION"}
+                                                    </span>
+
+                                                    <h3>
                                                         <Link
                                                             to={`/product/${encodeURIComponent(
                                                                 id
                                                             )}`}
+                                                            className="shop-product-name-link"
                                                         >
-
-                                                            {product.displayImage ? (
-                                                                <img
-                                                                    src={
-                                                                        product.displayImage
-                                                                    }
-                                                                    alt={
-                                                                        product.name
-                                                                    }
-                                                                    loading="lazy"
-                                                                />
-                                                            ) : (
-                                                                <div className="shop-empty-image-placeholder">
-                                                                    GEEKA
-                                                                </div>
-                                                            )}
-
+                                                            {product.name}
                                                         </Link>
+                                                    </h3>
 
+                                                    <div className="shop-product-price">
 
-                                                        {available && (
-                                                            <span className="shop-product-new">
-                                                                AVAILABLE
-                                                            </span>
-                                                        )}
-
-
-                                                        <button
-                                                            type="button"
-                                                            className={`shop-product-heart ${wishlisted
-                                                                    ? "active"
-                                                                    : ""
-                                                                }`}
-                                                            onClick={(
-                                                                event
-                                                            ) => {
-                                                                event.preventDefault();
-                                                                event.stopPropagation();
-
-                                                                toggleWishlist(
-                                                                    id
-                                                                );
-                                                            }}
-                                                            aria-label={
-                                                                wishlisted
-                                                                    ? "Remove from wishlist"
-                                                                    : "Add to wishlist"
-                                                            }
-                                                            aria-pressed={
-                                                                wishlisted
-                                                            }
-                                                        >
-                                                            <HeartIcon
-                                                                filled={
-                                                                    wishlisted
-                                                                }
-                                                            />
-                                                        </button>
-
-
-                                                        <div className="shop-image-actions">
-
-                                                            <button
-                                                                type="button"
-                                                                onClick={(
-                                                                    event
-                                                                ) => {
-                                                                    event.preventDefault();
-                                                                    event.stopPropagation();
-
-                                                                    setQuickView(
-                                                                        product
-                                                                    );
-                                                                }}
-                                                            >
-                                                                QUICK VIEW
-                                                            </button>
-
-                                                        </div>
-
-                                                    </div>
-
-
-                                                    {/* =====================================
-                                                        PRODUCT INFO
-                                                       ===================================== */}
-
-                                                    <div className="shop-product-info">
-
-                                                        <span className="shop-product-category">
-                                                            {
-                                                                categoryName(
-                                                                    product
-                                                                ) ||
-                                                                "COLLECTION"
-                                                            }
-                                                        </span>
-
-
-                                                        <h3>
-
-                                                            <Link
-                                                                to={`/product/${encodeURIComponent(
-                                                                    id
+                                                        <strong>
+                                                            {product.price === null
+                                                                ? "PRICE ON REQUEST"
+                                                                : `FROM ${formatPrice(
+                                                                    product.price,
+                                                                    product.currency || "INR"
                                                                 )}`}
-                                                                className="shop-product-name-link"
-                                                            >
-                                                                {
-                                                                    product.name
-                                                                }
-                                                            </Link>
-
-                                                        </h3>
-
-
-                                                        <div className="shop-product-price">
-
-                                                            <strong>
-                                                                {product.price ===
-                                                                    null
-                                                                    ? "PRICE ON REQUEST"
-                                                                    : `FROM ${formatPrice(
-                                                                        product.price,
-                                                                        product.currency ||
-                                                                        "INR"
-                                                                    )}`}
-                                                            </strong>
-
-                                                        </div>
-
-
-                                                        <button
-                                                            type="button"
-                                                            className="shop-add-cart"
-                                                            disabled={
-                                                                !detail
-                                                            }
-                                                            onClick={() =>
-                                                                addToCart(
-                                                                    product
-                                                                )
-                                                            }
-                                                        >
-                                                            {purchasable &&
-                                                                available
-                                                                ? "ADD TO CART"
-                                                                : "VIEW PRODUCT"}
-
-                                                            {purchasable &&
-                                                                available && (
-                                                                    <PlusIcon />
-                                                                )}
-                                                        </button>
+                                                        </strong>
 
                                                     </div>
 
-                                                </article>
-                                            );
-                                        }
-                                    )}
+                                                    <button
+                                                        type="button"
+                                                        className="shop-add-cart"
+                                                        disabled={!detail}
+                                                        onClick={() =>
+                                                            addToCart(product)
+                                                        }
+                                                    >
+                                                        {purchasable && available
+                                                            ? "ADD TO CART"
+                                                            : "VIEW PRODUCT"}
+
+                                                        {purchasable && available && (
+                                                            <PlusIcon />
+                                                        )}
+                                                    </button>
+
+                                                </div>
+
+                                            </article>
+                                        );
+                                    })}
 
                                 </div>
                             )}
@@ -1948,9 +1563,7 @@ export default function Shop() {
             </main>
 
 
-            {/* =====================================================
-                MOBILE FILTERS
-               ===================================================== */}
+            {/* MOBILE FILTERS */}
 
             {mobileFilters && (
                 <div
@@ -1970,9 +1583,7 @@ export default function Shop() {
                             <button
                                 type="button"
                                 onClick={() =>
-                                    setMobileFilters(
-                                        false
-                                    )
+                                    setMobileFilters(false)
                                 }
                                 aria-label="Close filters"
                             >
@@ -1980,7 +1591,6 @@ export default function Shop() {
                             </button>
 
                         </div>
-
 
                         <div className="mobile-filter-body">
 
@@ -1995,16 +1605,12 @@ export default function Shop() {
                                     <button
                                         type="button"
                                         className={
-                                            selectedCategory ===
-                                                "all"
+                                            selectedCategory === "all"
                                                 ? "active"
                                                 : ""
                                         }
                                         onClick={() =>
-                                            updateQuery(
-                                                "category",
-                                                ""
-                                            )
+                                            updateQuery("category", "")
                                         }
                                     >
                                         <span>
@@ -2012,62 +1618,43 @@ export default function Shop() {
                                         </span>
 
                                         <span>
-                                            {
-                                                products.length
-                                            }
+                                            {products.length}
                                         </span>
                                     </button>
 
-
-                                    {categoryOptions.map(
-                                        (
-                                            category
-                                        ) => (
-                                            <button
-                                                key={
+                                    {categoryOptions.map((category) => (
+                                        <button
+                                            key={category.slug}
+                                            type="button"
+                                            className={
+                                                selectedCategory === category.slug
+                                                    ? "active"
+                                                    : ""
+                                            }
+                                            onClick={() =>
+                                                updateQuery(
+                                                    "category",
                                                     category.slug
-                                                }
-                                                type="button"
-                                                className={
-                                                    selectedCategory ===
-                                                        category.slug
-                                                        ? "active"
-                                                        : ""
-                                                }
-                                                onClick={() =>
-                                                    updateQuery(
-                                                        "category",
-                                                        category.slug
-                                                    )
-                                                }
-                                            >
-                                                <span>
-                                                    {
-                                                        category.name
-                                                    }
-                                                </span>
+                                                )
+                                            }
+                                        >
+                                            <span>
+                                                {category.name}
+                                            </span>
 
-                                                <span>
-                                                    {
-                                                        products.filter(
-                                                            (
-                                                                item
-                                                            ) =>
-                                                                categorySlug(
-                                                                    item
-                                                                ) ===
-                                                                category.slug
-                                                        ).length
-                                                    }
-                                                </span>
-                                            </button>
-                                        )
-                                    )}
+                                            <span>
+                                                {products.filter(
+                                                    (item) =>
+                                                        categorySlug(item) ===
+                                                        category.slug
+                                                ).length}
+                                            </span>
+                                        </button>
+                                    ))}
 
                                 </div>
 
                             </div>
-
 
                             <div className="filter-block">
 
@@ -2079,16 +1666,10 @@ export default function Shop() {
 
                                     <input
                                         type="checkbox"
-                                        checked={
-                                            stockOnly
-                                        }
-                                        onChange={(
-                                            event
-                                        ) =>
+                                        checked={stockOnly}
+                                        onChange={(event) =>
                                             setStockOnly(
-                                                event
-                                                    .target
-                                                    .checked
+                                                event.target.checked
                                             )
                                         }
                                     />
@@ -2105,15 +1686,12 @@ export default function Shop() {
 
                         </div>
 
-
                         <div className="mobile-filter-footer">
 
                             <button
                                 type="button"
                                 className="reset-filters"
-                                onClick={
-                                    resetFilters
-                                }
+                                onClick={resetFilters}
                             >
                                 RESET
                             </button>
@@ -2122,9 +1700,7 @@ export default function Shop() {
                                 type="button"
                                 className="apply-mobile-filter"
                                 onClick={() =>
-                                    setMobileFilters(
-                                        false
-                                    )
+                                    setMobileFilters(false)
                                 }
                             >
                                 APPLY FILTERS{" "}
@@ -2139,9 +1715,7 @@ export default function Shop() {
             )}
 
 
-            {/* =====================================================
-                QUICK VIEW
-               ===================================================== */}
+            {/* QUICK VIEW */}
 
             {quickView && (
                 <div
@@ -2156,26 +1730,19 @@ export default function Shop() {
                             type="button"
                             className="quick-view-close"
                             onClick={() =>
-                                setQuickView(
-                                    null
-                                )
+                                setQuickView(null)
                             }
                             aria-label="Close quick view"
                         >
                             <CloseIcon />
                         </button>
 
-
                         <div className="quick-view-image">
 
                             {quickView.displayImage ? (
                                 <img
-                                    src={
-                                        quickView.displayImage
-                                    }
-                                    alt={
-                                        quickView.name
-                                    }
+                                    src={quickView.displayImage}
+                                    alt={quickView.name}
                                 />
                             ) : (
                                 <div className="shop-empty-image-placeholder">
@@ -2185,47 +1752,30 @@ export default function Shop() {
 
                         </div>
 
-
                         <div className="quick-view-content">
 
                             <span>
-                                {
-                                    categoryName(
-                                        quickView
-                                    ) ||
-                                    "COLLECTION"
-                                }
+                                {categoryName(quickView) ||
+                                    "COLLECTION"}
                             </span>
 
                             <h2>
-                                {
-                                    quickView.name
-                                }
+                                {quickView.name}
                             </h2>
 
-
                             <div className="quick-view-price">
-
-                                {quickView.price ===
-                                    null
+                                {quickView.price === null
                                     ? "PRICE ON REQUEST"
                                     : `FROM ${formatPrice(
                                         quickView.price,
-                                        quickView.currency ||
-                                        "INR"
+                                        quickView.currency || "INR"
                                     )}`}
-
                             </div>
 
-
                             <p>
-                                {
-                                    quickView.detail
-                                        ?.description ||
-                                    "Product details are available on the product page."
-                                }
+                                {quickView.detail?.description ||
+                                    "Product details are available on the product page."}
                             </p>
-
 
                             <div className="quick-view-actions">
 
@@ -2233,30 +1783,21 @@ export default function Shop() {
                                     type="button"
                                     className="quick-view-add"
                                     onClick={() =>
-                                        addToCart(
-                                            quickView
-                                        )
+                                        addToCart(quickView)
                                     }
                                 >
-                                    {quickView.detail
-                                        ?.is_purchasable ===
-                                        true &&
-                                        hasAvailableStock(
-                                            quickView
-                                        )
+                                    {quickView.detail?.is_purchasable === true &&
+                                        hasAvailableStock(quickView)
                                         ? "ADD TO CART"
                                         : "VIEW PRODUCT"}
                                 </button>
-
 
                                 <button
                                     type="button"
                                     onClick={() =>
                                         navigate(
                                             `/product/${encodeURIComponent(
-                                                productId(
-                                                    quickView
-                                                )
+                                                productId(quickView)
                                             )}`
                                         )
                                     }
@@ -2275,18 +1816,14 @@ export default function Shop() {
             )}
 
 
-            {/* =====================================================
-                CART MESSAGE
-               ===================================================== */}
+            {/* CART MESSAGE */}
 
             {cartMessage && (
                 <div
                     className="cart-message"
                     role="status"
                 >
-                    {
-                        cartMessage
-                    }
+                    {cartMessage}
                 </div>
             )}
 
