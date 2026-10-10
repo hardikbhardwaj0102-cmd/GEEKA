@@ -13,8 +13,7 @@ import { addCartItem } from "../services/cartService";
 
 const WISHLIST_KEY = "geeka-wishlist";
 const PRODUCTS_TO_SHOW = 8;
-const SLIDE_INTERVAL = 2200;
-const SLIDE_TRANSITION = "520ms ease";
+const SLIDE_INTERVAL = 1800;
 
 /* =========================================================
    WISHLIST
@@ -112,10 +111,6 @@ function getImageUrl(image) {
     ).trim();
 }
 
-/*
- * Collect the product's primary image and gallery images.
- * Supports the common image fields used by Geeka's catalogue.
- */
 function getProductImages(product) {
     const detail = product?.detail ?? {};
 
@@ -147,6 +142,7 @@ function getProductImages(product) {
             const orderA = Number(
                 a?.sort_order ?? a?.position ?? a?.order ?? 0
             );
+
             const orderB = Number(
                 b?.sort_order ?? b?.position ?? b?.order ?? 0
             );
@@ -261,6 +257,152 @@ function BagCheckIcon() {
 }
 
 /* =========================================================
+   PRODUCT IMAGE SLIDESHOW
+========================================================= */
+
+function CatalogCardSlideshow({
+    images,
+    productName,
+    loading = "lazy",
+    onOpen,
+    onWishlist,
+    wishlisted,
+    productNumber,
+    purchasable,
+}) {
+    const [hovered, setHovered] = useState(false);
+    const [slideIndex, setSlideIndex] = useState(0);
+
+    useEffect(() => {
+        if (!hovered || images.length <= 1) {
+            return undefined;
+        }
+
+        const interval = window.setInterval(() => {
+            setSlideIndex((current) => (current + 1) % images.length);
+        }, SLIDE_INTERVAL);
+
+        return () => window.clearInterval(interval);
+    }, [hovered, images.length]);
+
+    const startSlideshow = () => {
+        setHovered(true);
+    };
+
+    const stopSlideshow = () => {
+        setHovered(false);
+        setSlideIndex(0);
+    };
+
+    return (
+        <div
+            className="catalog-image-wrap"
+            onClick={onOpen}
+            onMouseEnter={startSlideshow}
+            onMouseLeave={stopSlideshow}
+            onFocus={startSlideshow}
+            onBlur={(event) => {
+                if (
+                    !event.currentTarget.contains(event.relatedTarget)
+                ) {
+                    stopSlideshow();
+                }
+            }}
+            role="link"
+            tabIndex={0}
+            aria-label={`View ${productName || "product"}`}
+            onKeyDown={(event) => {
+                if (
+                    event.key === "Enter" ||
+                    event.key === " "
+                ) {
+                    event.preventDefault();
+                    onOpen();
+                }
+            }}
+        >
+            {images.length > 0 ? (
+                <div
+                    className="catalog-image-track"
+                    style={{
+                        transform: `translateX(-${slideIndex * 100}%)`,
+                    }}
+                >
+                    {images.map((image, imageIndex) => (
+                        <div
+                            className="catalog-image-slide"
+                            key={`${image}-${imageIndex}`}
+                        >
+                            <img
+                                className="catalog-image"
+                                src={image}
+                                alt={
+                                    productName
+                                        ? `${productName} - image ${imageIndex + 1}`
+                                        : "Geeka product"
+                                }
+                                loading={
+                                    imageIndex === 0 ? loading : "lazy"
+                                }
+                                draggable="false"
+                            />
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="catalog-image-placeholder">
+                    <span>GEEKA</span>
+                </div>
+            )}
+
+            <span className="catalog-product-number">
+                {String(productNumber).padStart(2, "0")}
+            </span>
+
+            <span className="catalog-product-badge">
+                {purchasable ? "AVAILABLE" : "SOLD OUT"}
+            </span>
+
+            <button
+                type="button"
+                className={`catalog-wishlist ${wishlisted ? "active" : ""}`}
+                onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onWishlist();
+                }}
+                aria-label={
+                    wishlisted
+                        ? "Remove from wishlist"
+                        : "Add to wishlist"
+                }
+                aria-pressed={wishlisted}
+            >
+                <HeartIcon filled={wishlisted} />
+            </button>
+
+            {images.length > 1 && hovered && (
+                <div
+                    className="catalog-slide-indicators"
+                    aria-hidden="true"
+                >
+                    {images.map((_, dotIndex) => (
+                        <span
+                            key={dotIndex}
+                            className={
+                                dotIndex === slideIndex
+                                    ? "active"
+                                    : ""
+                            }
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+/* =========================================================
    PRODUCT CATALOG
 ========================================================= */
 
@@ -277,13 +419,7 @@ export default function ProductCatalog({
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    // Hover slideshow state
-    const [hoveredProductId, setHoveredProductId] = useState(null);
-    const [slideIndex, setSlideIndex] = useState(0);
-
-    /* =====================================================
-       LOAD PRODUCTS
-    ===================================================== */
+    /* LOAD PRODUCTS */
 
     useEffect(() => {
         let active = true;
@@ -339,9 +475,7 @@ export default function ProductCatalog({
         };
     }, [productsProp]);
 
-    /* =====================================================
-       PRELOAD GALLERY IMAGES
-    ===================================================== */
+    /* PRELOAD GALLERY IMAGES */
 
     useEffect(() => {
         products.forEach((product) => {
@@ -352,46 +486,7 @@ export default function ProductCatalog({
         });
     }, [products]);
 
-    /* =====================================================
-       HOVER SLIDESHOW
-    ===================================================== */
-
-    useEffect(() => {
-        if (!hoveredProductId) return undefined;
-
-        const product = products.find(
-            (item) => getProductId(item) === hoveredProductId
-        );
-
-        const images = getProductImages(product);
-
-        if (images.length <= 1) return undefined;
-
-        const interval = setInterval(() => {
-            setSlideIndex((current) => (current + 1) % images.length);
-        }, SLIDE_INTERVAL);
-
-        return () => clearInterval(interval);
-    }, [hoveredProductId, products]);
-
-    const startSlideshow = (product) => {
-        const id = getProductId(product);
-        const images = getProductImages(product);
-
-        if (!id || images.length <= 1) return;
-
-        setHoveredProductId(id);
-        setSlideIndex(0);
-    };
-
-    const stopSlideshow = () => {
-        setHoveredProductId(null);
-        setSlideIndex(0);
-    };
-
-    /* =====================================================
-       CATEGORIES
-    ===================================================== */
+    /* CATEGORIES */
 
     const categories = useMemo(() => {
         const values = products
@@ -409,9 +504,7 @@ export default function ProductCatalog({
         ];
     }, [products]);
 
-    /* =====================================================
-       FILTERED PRODUCTS
-    ===================================================== */
+    /* FILTERED PRODUCTS */
 
     const visibleProducts = useMemo(() => {
         if (activeCategory === "ALL") return products;
@@ -423,9 +516,7 @@ export default function ProductCatalog({
         );
     }, [activeCategory, products]);
 
-    /* =====================================================
-       TOAST
-    ===================================================== */
+    /* TOAST */
 
     const showToast = (message) => {
         setToast(message);
@@ -439,9 +530,7 @@ export default function ProductCatalog({
         }, 2600);
     };
 
-    /* =====================================================
-       WISHLIST
-    ===================================================== */
+    /* WISHLIST */
 
     const toggleWishlist = (id) => {
         if (!id) return;
@@ -461,9 +550,7 @@ export default function ProductCatalog({
         });
     };
 
-    /* =====================================================
-       ADD TO BAG
-    ===================================================== */
+    /* ADD TO BAG */
 
     const handleAddToBag = async (product) => {
         if (!product) return;
@@ -494,9 +581,7 @@ export default function ProductCatalog({
         }
     };
 
-    /* =====================================================
-       PRODUCT NAVIGATION
-    ===================================================== */
+    /* PRODUCT NAVIGATION */
 
     const openProduct = (product) => {
         const id = getProductId(product);
@@ -509,16 +594,11 @@ export default function ProductCatalog({
         navigate(`/product/${encodeURIComponent(id)}`);
     };
 
-    /* =====================================================
-       RENDER
-    ===================================================== */
+    /* RENDER */
 
     return (
         <section className="catalog-section">
             <div className="catalog-container">
-
-                {/* HEADER */}
-
                 <header className="catalog-header">
                     <div className="catalog-header-main">
                         <div className="catalog-eyebrow">
@@ -550,8 +630,6 @@ export default function ProductCatalog({
                     </div>
                 </header>
 
-                {/* CATEGORY NAVIGATION */}
-
                 <nav
                     className="catalog-navigation"
                     aria-label="Product categories"
@@ -581,8 +659,6 @@ export default function ProductCatalog({
                         GEEKA CATALOGUE
                     </span>
                 </nav>
-
-                {/* PRODUCT CONTENT */}
 
                 {loading ? (
                     <div className="catalog-grid">
@@ -646,172 +722,23 @@ export default function ProductCatalog({
                                 product?.isPurchasable
                             );
 
-                            const isHovered = hoveredProductId === id;
-                            const currentSlide = isHovered
-                                ? slideIndex % Math.max(images.length, 1)
-                                : 0;
-
                             return (
                                 <article
                                     className="catalog-card"
-                                    key={id}
+                                    key={id || `product-${index}`}
                                 >
-                                    {/* PRODUCT IMAGE + SLIDESHOW */}
-
-                                    <div
-                                        className="catalog-image-wrap"
-                                        onClick={() => openProduct(product)}
-                                        onMouseEnter={() =>
-                                            startSlideshow(product)
+                                    <CatalogCardSlideshow
+                                        images={images}
+                                        productName={product?.name}
+                                        loading={index < 4 ? "eager" : "lazy"}
+                                        onOpen={() => openProduct(product)}
+                                        onWishlist={() =>
+                                            toggleWishlist(id)
                                         }
-                                        onMouseLeave={stopSlideshow}
-                                        onFocus={() =>
-                                            startSlideshow(product)
-                                        }
-                                        onBlur={stopSlideshow}
-                                        role="link"
-                                        tabIndex={0}
-                                        onKeyDown={(event) => {
-                                            if (
-                                                event.key === "Enter" ||
-                                                event.key === " "
-                                            ) {
-                                                event.preventDefault();
-                                                openProduct(product);
-                                            }
-                                        }}
-                                        style={{
-                                            position: "relative",
-                                            overflow: "hidden",
-                                        }}
-                                    >
-                                        {images.length > 0 ? (
-                                            images.map((image, imageIndex) => (
-                                                <img
-                                                    key={`${image}-${imageIndex}`}
-                                                    className="catalog-image"
-                                                    src={image}
-                                                    alt={
-                                                        product?.name
-                                                            ? `${product.name} - image ${imageIndex + 1}`
-                                                            : "Geeka product"
-                                                    }
-                                                    loading={
-                                                        index < 4
-                                                            ? "eager"
-                                                            : "lazy"
-                                                    }
-                                                    draggable="false"
-                                                    style={{
-                                                        position:
-                                                            images.length > 1
-                                                                ? "absolute"
-                                                                : "relative",
-                                                        inset:
-                                                            images.length > 1
-                                                                ? 0
-                                                                : "auto",
-                                                        width: "100%",
-                                                        height:
-                                                            images.length > 1
-                                                                ? "100%"
-                                                                : "auto",
-                                                        objectFit: "cover",
-                                                        opacity:
-                                                            imageIndex === currentSlide
-                                                                ? 1
-                                                                : 0,
-                                                        transition: `opacity ${SLIDE_TRANSITION}`,
-                                                        pointerEvents: "none",
-                                                        zIndex:
-                                                            imageIndex === currentSlide
-                                                                ? 1
-                                                                : 0,
-                                                    }}
-                                                />
-                                            ))
-                                        ) : (
-                                            <div className="catalog-image-placeholder">
-                                                <span>GEEKA</span>
-                                            </div>
-                                        )}
-
-                                        <span className="catalog-product-number">
-                                            {String(index + 1).padStart(2, "0")}
-                                        </span>
-
-                                        <span className="catalog-product-badge">
-                                            {purchasable
-                                                ? "AVAILABLE"
-                                                : "SOLD OUT"}
-                                        </span>
-
-                                        {/* WISHLIST BUTTON */}
-
-                                        <button
-                                            type="button"
-                                            className={`catalog-wishlist ${wishlisted ? "active" : ""
-                                                }`}
-                                            onClick={(event) => {
-                                                event.preventDefault();
-                                                event.stopPropagation();
-                                                toggleWishlist(id);
-                                            }}
-                                            aria-label={
-                                                wishlisted
-                                                    ? "Remove from wishlist"
-                                                    : "Add to wishlist"
-                                            }
-                                            aria-pressed={wishlisted}
-                                        >
-                                            <HeartIcon filled={wishlisted} />
-                                        </button>
-
-                                        {/* SLIDE INDICATORS */}
-
-                                        {images.length > 1 && isHovered && (
-                                            <div
-                                                className="catalog-slide-indicators"
-                                                aria-hidden="true"
-                                                style={{
-                                                    position: "absolute",
-                                                    left: "50%",
-                                                    bottom: "12px",
-                                                    transform: "translateX(-50%)",
-                                                    zIndex: 3,
-                                                    display: "flex",
-                                                    gap: "5px",
-                                                    alignItems: "center",
-                                                    pointerEvents: "none",
-                                                }}
-                                            >
-                                                {images.map((_, dotIndex) => (
-                                                    <span
-                                                        key={dotIndex}
-                                                        style={{
-                                                            display: "block",
-                                                            width:
-                                                                dotIndex === currentSlide
-                                                                    ? "17px"
-                                                                    : "5px",
-                                                            height: "4px",
-                                                            borderRadius: "10px",
-                                                            background:
-                                                                dotIndex === currentSlide
-                                                                    ? "#ffffff"
-                                                                    : "rgba(255,255,255,0.55)",
-                                                            transition:
-                                                                "width 220ms ease",
-                                                            boxShadow:
-                                                                "0 1px 4px rgba(0,0,0,0.15)",
-                                                        }}
-                                                    />
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* PRODUCT DETAILS */}
+                                        wishlisted={wishlisted}
+                                        productNumber={index + 1}
+                                        purchasable={purchasable}
+                                    />
 
                                     <div className="catalog-info">
                                         <div className="catalog-meta">
@@ -847,8 +774,6 @@ export default function ProductCatalog({
                                                 </strong>
                                             </div>
 
-                                            {/* ADD TO BAG */}
-
                                             <button
                                                 type="button"
                                                 className="catalog-quick-add"
@@ -856,7 +781,9 @@ export default function ProductCatalog({
                                                     handleAddToBag(product)
                                                 }
                                             >
-                                                {purchasable && <BagCheckIcon />}
+                                                {purchasable && (
+                                                    <BagCheckIcon />
+                                                )}
 
                                                 {purchasable
                                                     ? "ADD TO BAG"
@@ -869,8 +796,6 @@ export default function ProductCatalog({
                         })}
                     </div>
                 )}
-
-                {/* CATALOGUE FOOTER */}
 
                 <footer className="catalog-footer">
                     <div className="catalog-footer-left">
@@ -894,8 +819,6 @@ export default function ProductCatalog({
                     </Link>
                 </footer>
             </div>
-
-            {/* BAG NOTIFICATION */}
 
             {toast && (
                 <div

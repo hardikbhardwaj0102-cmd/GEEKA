@@ -1925,3 +1925,170 @@
         width: 100%;
     }
 }
+
+/* =========================================================
+   IMAGE — SMOOTH HORIZONTAL HOVER SLIDESHOW
+========================================================= */
+
+.catalog-image-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 0.84;
+    overflow: hidden;
+
+    background:
+        linear-gradient(145deg,
+            #f4e2e5 0%,
+            #eed3d8 50%,
+            #fff0f0 100%);
+
+    cursor: pointer;
+    isolation: isolate;
+}
+
+.catalog-image-wrap::before {
+    content: "";
+    position: absolute;
+
+    top: 50%;
+    left: 50%;
+
+    width: 78%;
+    height: 84%;
+
+    border: 1px solid rgba(255, 255, 255, 0.50);
+    border-radius: 45% 45% 13px 13px;
+
+    background: rgba(255, 255, 255, 0.17);
+
+    transform: translate(-50%, -50%) rotate(-2deg);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Horizontal track moved by the JSX slideshow component */
+.catalog-image-track {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+
+    display: flex;
+    width: 100%;
+    height: 100%;
+
+    will-change: transform;
+    transition: transform 520ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.catalog-image-slide {
+    position: relative;
+
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.catalog-image {
+    position: relative;
+
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+    object-position: center;
+
+    transition: transform 650ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.catalog-card:hover .catalog-image {
+    transform: scale(1.035);
+}
+
+/* Small slide indicators */
+.catalog-slide-indicators {
+    position: absolute;
+
+    left: 50%;
+    bottom: 12px;
+
+    z-index: 4;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    max-width: calc(100% - 30px);
+
+    padding: 6px 8px;
+
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 999px;
+
+    background: rgba(255, 250, 249, 0.72);
+
+    transform: translateX(-50%);
+
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.catalog-slide-indicators span {
+    display: block;
+
+    width: 5px;
+    height: 5px;
+    flex: 0 0 5px;
+
+    border-radius: 50%;
+    background: rgba(143, 79, 89, 0.30);
+
+    transition:
+        width 220ms ease,
+        background 220ms ease,
+        border-radius 220ms ease;
+}
+
+.catalog-slide-indicators span.active {
+    width: 15px;
+    flex-basis: 15px;
+
+    border-radius: 999px;
+    background: var(--catalog-rose-dark);
+}
+
+/* Fallback when a product has no usable image */
+.catalog-image-placeholder {
+    position: relative;
+
+    z-index: 1;
+
+    width: 100%;
+    height: 100%;
+
+    display: grid;
+    place-items: center;
+
+    background:
+        linear-gradient(145deg, #f2e4e0, #ecd5d9);
+
+    color: rgba(60, 42, 39, 0.30);
+
+    font-family: "Cormorant Garamond", Georgia, serif;
+    font-size: 30px;
+    letter-spacing: 0.14em;
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+
+    .catalog-image-track,
+    .catalog-image,
+    .catalog-slide-indicators span {
+        transition: none !important;
+    }
+}
