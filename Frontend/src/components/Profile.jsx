@@ -1017,6 +1017,33 @@ export default function Profile() {
     });
 
 
+    /* Keep add/edit forms in a viewport-fixed modal instead of below page content. */
+    useEffect(() => {
+        const modalOpen = addressFormOpen || paymentFormOpen;
+
+        if (!modalOpen) {
+            return undefined;
+        }
+
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        function handleModalKeyDown(event) {
+            if (event.key === "Escape") {
+                if (addressFormOpen) closeAddressForm();
+                if (paymentFormOpen) closePaymentForm();
+            }
+        }
+
+        window.addEventListener("keydown", handleModalKeyDown);
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            window.removeEventListener("keydown", handleModalKeyDown);
+        };
+    }, [addressFormOpen, paymentFormOpen]);
+
+
     /*
     |--------------------------------------------------------------------------
     | SETTINGS
@@ -3538,8 +3565,8 @@ export default function Profile() {
                                                     address.id
                                                 }
                                                 className={`account-address-card ${address.isDefault
-                                                        ? "default"
-                                                        : ""
+                                                    ? "default"
+                                                    : ""
                                                     }`}
                                             >
 
@@ -3679,296 +3706,311 @@ export default function Profile() {
 
                             {addressFormOpen && (
 
-                                <div className="account-form-card">
-
-                                    <div className="account-form-heading">
-
-                                        <div>
-
-                                            <span>
-                                                DELIVERY
-                                            </span>
-
-
-                                            <h3>
-                                                {editingAddressId
-                                                    ? "Edit Address"
-                                                    : "Add Address"}
-                                            </h3>
-
-                                        </div>
-
-
-                                        <button
-                                            type="button"
-                                            className="account-icon-button"
-                                            onClick={
-                                                closeAddressForm
-                                            }
-                                            aria-label="Close address form"
-                                        >
-                                            <CloseIcon />
-                                        </button>
-
-                                    </div>
-
-
-                                    <form
-                                        className="account-form"
-                                        onSubmit={
-                                            saveAddress
+                                <div
+                                    className="account-modal-backdrop"
+                                    role="presentation"
+                                    onMouseDown={(event) => {
+                                        if (event.target === event.currentTarget) {
+                                            closeAddressForm();
                                         }
+                                    }}
+                                >
+                                    <section
+                                        className="account-form-card account-modal"
+                                        role="dialog"
+                                        aria-modal="true"
+                                        aria-labelledby="account-address-modal-title"
                                     >
 
-                                        <div className="account-form-grid">
+                                        <div className="account-form-heading">
 
-                                            <div className="account-form-field">
+                                            <div>
 
-                                                <label>
-                                                    Address Label
-                                                </label>
-
-
-                                                <select
-                                                    name="label"
-                                                    value={
-                                                        addressDraft.label
-                                                    }
-                                                    onChange={
-                                                        handleAddressChange
-                                                    }
-                                                >
-
-                                                    <option value="Home">
-                                                        Home
-                                                    </option>
+                                                <span>
+                                                    DELIVERY
+                                                </span>
 
 
-                                                    <option value="Work">
-                                                        Work
-                                                    </option>
-
-
-                                                    <option value="Other">
-                                                        Other
-                                                    </option>
-
-                                                </select>
+                                                <h3 id="account-address-modal-title">
+                                                    {editingAddressId
+                                                        ? "Edit Address"
+                                                        : "Add Address"}
+                                                </h3>
 
                                             </div>
 
-
-                                            <div className="account-form-field">
-
-                                                <label>
-                                                    Full Name
-                                                </label>
-
-
-                                                <input
-                                                    type="text"
-                                                    name="fullName"
-                                                    value={
-                                                        addressDraft.fullName
-                                                    }
-                                                    onChange={
-                                                        handleAddressChange
-                                                    }
-                                                    placeholder="Enter full name"
-                                                    required
-                                                />
-
-                                            </div>
-
-
-                                            <div className="account-form-field">
-
-                                                <label>
-                                                    Phone Number
-                                                </label>
-
-
-                                                <input
-                                                    type="tel"
-                                                    name="phone"
-                                                    value={
-                                                        addressDraft.phone
-                                                    }
-                                                    onChange={
-                                                        handleAddressChange
-                                                    }
-                                                    placeholder="Enter phone number"
-                                                    required
-                                                />
-
-                                            </div>
-
-
-                                            <div className="account-form-field account-form-field-full">
-
-                                                <label>
-                                                    Address Line 1
-                                                </label>
-
-
-                                                <input
-                                                    type="text"
-                                                    name="line1"
-                                                    value={
-                                                        addressDraft.line1
-                                                    }
-                                                    onChange={
-                                                        handleAddressChange
-                                                    }
-                                                    placeholder="House number, street, locality"
-                                                    required
-                                                />
-
-                                            </div>
-
-
-                                            <div className="account-form-field account-form-field-full">
-
-                                                <label>
-                                                    Address Line 2
-                                                </label>
-
-
-                                                <input
-                                                    type="text"
-                                                    name="line2"
-                                                    value={
-                                                        addressDraft.line2
-                                                    }
-                                                    onChange={
-                                                        handleAddressChange
-                                                    }
-                                                    placeholder="Apartment, landmark, etc."
-                                                />
-
-                                            </div>
-
-
-                                            <div className="account-form-field">
-
-                                                <label>
-                                                    City
-                                                </label>
-
-
-                                                <input
-                                                    type="text"
-                                                    name="city"
-                                                    value={
-                                                        addressDraft.city
-                                                    }
-                                                    onChange={
-                                                        handleAddressChange
-                                                    }
-                                                    placeholder="City"
-                                                    required
-                                                />
-
-                                            </div>
-
-
-                                            <div className="account-form-field">
-
-                                                <label>
-                                                    State
-                                                </label>
-
-
-                                                <input
-                                                    type="text"
-                                                    name="state"
-                                                    value={
-                                                        addressDraft.state
-                                                    }
-                                                    onChange={
-                                                        handleAddressChange
-                                                    }
-                                                    placeholder="State"
-                                                    required
-                                                />
-
-                                            </div>
-
-
-                                            <div className="account-form-field">
-
-                                                <label>
-                                                    Postal Code
-                                                </label>
-
-
-                                                <input
-                                                    type="text"
-                                                    name="postalCode"
-                                                    value={
-                                                        addressDraft.postalCode
-                                                    }
-                                                    onChange={
-                                                        handleAddressChange
-                                                    }
-                                                    placeholder="Postal code"
-                                                    required
-                                                />
-
-                                            </div>
-
-                                        </div>
-
-
-                                        <label className="account-checkbox-row">
-
-                                            <input
-                                                type="checkbox"
-                                                name="isDefault"
-                                                checked={
-                                                    addressDraft.isDefault
-                                                }
-                                                onChange={
-                                                    handleAddressChange
-                                                }
-                                            />
-
-
-                                            <span>
-                                                Set as default address
-                                            </span>
-
-                                        </label>
-
-
-                                        <div className="account-form-actions">
 
                                             <button
                                                 type="button"
-                                                className="account-secondary-button"
+                                                className="account-icon-button"
                                                 onClick={
                                                     closeAddressForm
                                                 }
+                                                aria-label="Close address form"
                                             >
-                                                CANCEL
-                                            </button>
-
-
-                                            <button
-                                                type="submit"
-                                                className="account-primary-button"
-                                            >
-                                                {editingAddressId
-                                                    ? "SAVE ADDRESS"
-                                                    : "ADD ADDRESS"}
-
-                                                <CheckIcon />
+                                                <CloseIcon />
                                             </button>
 
                                         </div>
 
-                                    </form>
 
+                                        <form
+                                            className="account-form"
+                                            onSubmit={
+                                                saveAddress
+                                            }
+                                        >
+
+                                            <div className="account-form-grid">
+
+                                                <div className="account-form-field">
+
+                                                    <label>
+                                                        Address Label
+                                                    </label>
+
+
+                                                    <select
+                                                        name="label"
+                                                        value={
+                                                            addressDraft.label
+                                                        }
+                                                        onChange={
+                                                            handleAddressChange
+                                                        }
+                                                    >
+
+                                                        <option value="Home">
+                                                            Home
+                                                        </option>
+
+
+                                                        <option value="Work">
+                                                            Work
+                                                        </option>
+
+
+                                                        <option value="Other">
+                                                            Other
+                                                        </option>
+
+                                                    </select>
+
+                                                </div>
+
+
+                                                <div className="account-form-field">
+
+                                                    <label>
+                                                        Full Name
+                                                    </label>
+
+
+                                                    <input
+                                                        type="text"
+                                                        name="fullName"
+                                                        value={
+                                                            addressDraft.fullName
+                                                        }
+                                                        onChange={
+                                                            handleAddressChange
+                                                        }
+                                                        placeholder="Enter full name"
+                                                        required
+                                                    />
+
+                                                </div>
+
+
+                                                <div className="account-form-field">
+
+                                                    <label>
+                                                        Phone Number
+                                                    </label>
+
+
+                                                    <input
+                                                        type="tel"
+                                                        name="phone"
+                                                        value={
+                                                            addressDraft.phone
+                                                        }
+                                                        onChange={
+                                                            handleAddressChange
+                                                        }
+                                                        placeholder="Enter phone number"
+                                                        required
+                                                    />
+
+                                                </div>
+
+
+                                                <div className="account-form-field account-form-field-full">
+
+                                                    <label>
+                                                        Address Line 1
+                                                    </label>
+
+
+                                                    <input
+                                                        type="text"
+                                                        name="line1"
+                                                        value={
+                                                            addressDraft.line1
+                                                        }
+                                                        onChange={
+                                                            handleAddressChange
+                                                        }
+                                                        placeholder="House number, street, locality"
+                                                        required
+                                                    />
+
+                                                </div>
+
+
+                                                <div className="account-form-field account-form-field-full">
+
+                                                    <label>
+                                                        Address Line 2
+                                                    </label>
+
+
+                                                    <input
+                                                        type="text"
+                                                        name="line2"
+                                                        value={
+                                                            addressDraft.line2
+                                                        }
+                                                        onChange={
+                                                            handleAddressChange
+                                                        }
+                                                        placeholder="Apartment, landmark, etc."
+                                                    />
+
+                                                </div>
+
+
+                                                <div className="account-form-field">
+
+                                                    <label>
+                                                        City
+                                                    </label>
+
+
+                                                    <input
+                                                        type="text"
+                                                        name="city"
+                                                        value={
+                                                            addressDraft.city
+                                                        }
+                                                        onChange={
+                                                            handleAddressChange
+                                                        }
+                                                        placeholder="City"
+                                                        required
+                                                    />
+
+                                                </div>
+
+
+                                                <div className="account-form-field">
+
+                                                    <label>
+                                                        State
+                                                    </label>
+
+
+                                                    <input
+                                                        type="text"
+                                                        name="state"
+                                                        value={
+                                                            addressDraft.state
+                                                        }
+                                                        onChange={
+                                                            handleAddressChange
+                                                        }
+                                                        placeholder="State"
+                                                        required
+                                                    />
+
+                                                </div>
+
+
+                                                <div className="account-form-field">
+
+                                                    <label>
+                                                        Postal Code
+                                                    </label>
+
+
+                                                    <input
+                                                        type="text"
+                                                        name="postalCode"
+                                                        value={
+                                                            addressDraft.postalCode
+                                                        }
+                                                        onChange={
+                                                            handleAddressChange
+                                                        }
+                                                        placeholder="Postal code"
+                                                        required
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+
+                                            <label className="account-checkbox-row">
+
+                                                <input
+                                                    type="checkbox"
+                                                    name="isDefault"
+                                                    checked={
+                                                        addressDraft.isDefault
+                                                    }
+                                                    onChange={
+                                                        handleAddressChange
+                                                    }
+                                                />
+
+
+                                                <span>
+                                                    Set as default address
+                                                </span>
+
+                                            </label>
+
+
+                                            <div className="account-form-actions">
+
+                                                <button
+                                                    type="button"
+                                                    className="account-secondary-button"
+                                                    onClick={
+                                                        closeAddressForm
+                                                    }
+                                                >
+                                                    CANCEL
+                                                </button>
+
+
+                                                <button
+                                                    type="submit"
+                                                    className="account-primary-button"
+                                                >
+                                                    {editingAddressId
+                                                        ? "SAVE ADDRESS"
+                                                        : "ADD ADDRESS"}
+
+                                                    <CheckIcon />
+                                                </button>
+
+                                            </div>
+
+                                        </form>
+
+                                    </section>
                                 </div>
 
                             )}
@@ -4125,133 +4167,148 @@ export default function Profile() {
 
                             {paymentFormOpen && (
 
-                                <div className="account-form-card">
-
-                                    <div className="account-form-heading">
-
-                                        <div>
-
-                                            <span>
-                                                CHECKOUT
-                                            </span>
-
-
-                                            <h3>
-                                                Add Payment Preference
-                                            </h3>
-
-                                        </div>
-
-
-                                        <button
-                                            type="button"
-                                            className="account-icon-button"
-                                            onClick={
-                                                closePaymentForm
-                                            }
-                                            aria-label="Close payment form"
-                                        >
-                                            <CloseIcon />
-                                        </button>
-
-                                    </div>
-
-
-                                    <form
-                                        className="account-form"
-                                        onSubmit={
-                                            savePaymentMethod
+                                <div
+                                    className="account-modal-backdrop"
+                                    role="presentation"
+                                    onMouseDown={(event) => {
+                                        if (event.target === event.currentTarget) {
+                                            closePaymentForm();
                                         }
+                                    }}
+                                >
+                                    <section
+                                        className="account-form-card account-modal"
+                                        role="dialog"
+                                        aria-modal="true"
+                                        aria-labelledby="account-payment-modal-title"
                                     >
 
-                                        <div className="account-form-grid">
+                                        <div className="account-form-heading">
 
-                                            <div className="account-form-field">
+                                            <div>
 
-                                                <label>
-                                                    Payment Type
-                                                </label>
-
-
-                                                <select
-                                                    name="type"
-                                                    value={
-                                                        paymentDraft.type
-                                                    }
-                                                    onChange={
-                                                        handlePaymentChange
-                                                    }
-                                                >
-
-                                                    <option value="UPI">
-                                                        UPI
-                                                    </option>
+                                                <span>
+                                                    CHECKOUT
+                                                </span>
 
 
-                                                    <option value="Card">
-                                                        Card
-                                                    </option>
-
-
-                                                    <option value="COD">
-                                                        Cash on Delivery
-                                                    </option>
-
-                                                </select>
+                                                <h3 id="account-payment-modal-title">
+                                                    Add Payment Preference
+                                                </h3>
 
                                             </div>
 
-
-                                            <div className="account-form-field">
-
-                                                <label>
-                                                    Display Label
-                                                </label>
-
-
-                                                <input
-                                                    type="text"
-                                                    name="label"
-                                                    value={
-                                                        paymentDraft.label
-                                                    }
-                                                    onChange={
-                                                        handlePaymentChange
-                                                    }
-                                                    placeholder="Example: My UPI"
-                                                    required
-                                                />
-
-                                            </div>
-
-                                        </div>
-
-
-                                        <div className="account-form-actions">
 
                                             <button
                                                 type="button"
-                                                className="account-secondary-button"
+                                                className="account-icon-button"
                                                 onClick={
                                                     closePaymentForm
                                                 }
+                                                aria-label="Close payment form"
                                             >
-                                                CANCEL
-                                            </button>
-
-
-                                            <button
-                                                type="submit"
-                                                className="account-primary-button"
-                                            >
-                                                SAVE METHOD
-                                                <CheckIcon />
+                                                <CloseIcon />
                                             </button>
 
                                         </div>
 
-                                    </form>
 
+                                        <form
+                                            className="account-form"
+                                            onSubmit={
+                                                savePaymentMethod
+                                            }
+                                        >
+
+                                            <div className="account-form-grid">
+
+                                                <div className="account-form-field">
+
+                                                    <label>
+                                                        Payment Type
+                                                    </label>
+
+
+                                                    <select
+                                                        name="type"
+                                                        value={
+                                                            paymentDraft.type
+                                                        }
+                                                        onChange={
+                                                            handlePaymentChange
+                                                        }
+                                                    >
+
+                                                        <option value="UPI">
+                                                            UPI
+                                                        </option>
+
+
+                                                        <option value="Card">
+                                                            Card
+                                                        </option>
+
+
+                                                        <option value="COD">
+                                                            Cash on Delivery
+                                                        </option>
+
+                                                    </select>
+
+                                                </div>
+
+
+                                                <div className="account-form-field">
+
+                                                    <label>
+                                                        Display Label
+                                                    </label>
+
+
+                                                    <input
+                                                        type="text"
+                                                        name="label"
+                                                        value={
+                                                            paymentDraft.label
+                                                        }
+                                                        onChange={
+                                                            handlePaymentChange
+                                                        }
+                                                        placeholder="Example: My UPI"
+                                                        required
+                                                    />
+
+                                                </div>
+
+                                            </div>
+
+
+                                            <div className="account-form-actions">
+
+                                                <button
+                                                    type="button"
+                                                    className="account-secondary-button"
+                                                    onClick={
+                                                        closePaymentForm
+                                                    }
+                                                >
+                                                    CANCEL
+                                                </button>
+
+
+                                                <button
+                                                    type="submit"
+                                                    className="account-primary-button"
+                                                >
+                                                    SAVE METHOD
+                                                    <CheckIcon />
+                                                </button>
+
+                                            </div>
+
+                                        </form>
+
+                                    </section>
                                 </div>
 
                             )}
@@ -4410,8 +4467,8 @@ export default function Profile() {
                                 <button
                                     type="button"
                                     className={`account-toggle ${settings.orderUpdates
-                                            ? "active"
-                                            : ""
+                                        ? "active"
+                                        : ""
                                         }`}
                                     onClick={() =>
                                         toggleSetting(
@@ -4453,8 +4510,8 @@ export default function Profile() {
                                 <button
                                     type="button"
                                     className={`account-toggle ${settings.promotionalEmails
-                                            ? "active"
-                                            : ""
+                                        ? "active"
+                                        : ""
                                         }`}
                                     onClick={() =>
                                         toggleSetting(
@@ -4496,8 +4553,8 @@ export default function Profile() {
                                 <button
                                     type="button"
                                     className={`account-toggle ${settings.productRecommendations
-                                            ? "active"
-                                            : ""
+                                        ? "active"
+                                        : ""
                                         }`}
                                     onClick={() =>
                                         toggleSetting(
@@ -4674,9 +4731,9 @@ export default function Profile() {
 
                                         <div
                                             className={`account-success-message ${profileMessageType ===
-                                                    "error"
-                                                    ? "error"
-                                                    : ""
+                                                "error"
+                                                ? "error"
+                                                : ""
                                                 }`}
                                         >
                                             {
@@ -4997,9 +5054,9 @@ export default function Profile() {
 
                                         <div
                                             className={`account-form-error ${profileMessageType ===
-                                                    "success"
-                                                    ? "success"
-                                                    : ""
+                                                "success"
+                                                ? "success"
+                                                : ""
                                                 }`}
                                         >
                                             {
@@ -5067,7 +5124,15 @@ export default function Profile() {
 
             <header className="account-page-header">
 
-                <span>
+                <Link to="/" className="account-home-link" aria-label="Back to home page">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M19 12H5" />
+                        <path d="m12 19-7-7 7-7" />
+                    </svg>
+                    <span>Back to Home</span>
+                </Link>
+
+                <span className="account-eyebrow">
                     ACCOUNT
                 </span>
 

@@ -1,2147 +1,1549 @@
-/* =========================================================
-   GEEKA PROFILE / ACCOUNT PAGE
-========================================================= */
-
-.account-page,
-.account-page *,
-.account-page *::before,
-.account-page *::after {
-    box-sizing: border-box;
-}
-
-
-/* =========================================================
-   MAIN PAGE
-========================================================= */
+/* Geeka account page — clean, responsive redesign.
+   Loaded after Profile.css so existing account functionality and component styles remain intact. */
 
 .account-page {
+    --geeka-ink: #432b2b;
+    --geeka-muted: #806d69;
+    --geeka-line: #eadfd8;
+    --geeka-paper: #fffdfb;
+    --geeka-rose: #7b3f46;
+    --geeka-rose-dark: #613038;
     position: relative;
-
-    width: 100%;
-    height: 100vh;
-    height: 100dvh;
-
-    min-height: 0;
-
-    padding: 42px 5% 34px;
-
-    display: flex;
-    flex-direction: column;
-
-    overflow: hidden;
-
-    color: var(--brown);
+    min-height: 100vh;
+    padding: 36px clamp(18px, 4vw, 64px) 56px;
+    background: #f8f4ef !important;
+    color: var(--geeka-ink);
+    isolation: isolate;
 }
 
-
-/* =========================================================
-   BACKGROUND IMAGE
-========================================================= */
-
-.account-background-image {
-    position: absolute;
-    inset: 0;
-
-    z-index: 0;
-
-    background-image: var(--profile-background);
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-
-    transform: scale(1.01);
-
-    pointer-events: none;
-}
-
-
-/* =========================================================
-   BACKGROUND OVERLAY
-========================================================= */
-
+.account-background-image,
 .account-background-overlay {
-    position: absolute;
-    inset: 0;
-
-    z-index: 1;
-
-    background:
-        linear-gradient(90deg,
-            rgba(248, 241, 235, 0.38) 0%,
-            rgba(248, 241, 235, 0.27) 45%,
-            rgba(248, 241, 235, 0.20) 100%);
-
-    pointer-events: none;
+    display: none !important;
 }
 
-
-/* =========================================================
-   CONTENT ABOVE BACKGROUND
-========================================================= */
-
-.account-page>*:not(.account-background-image,
-    .account-background-overlay) {
-    position: relative;
-    z-index: 2;
+.account-page-header,
+.account-layout {
+    width: min(1320px, 100%);
+    margin-inline: auto;
 }
-
-
-/* =========================================================
-   PAGE HEADER
-========================================================= */
 
 .account-page-header {
-    width: 100%;
-    max-width: 1380px;
-
-    flex-shrink: 0;
-
-    margin: 0 auto 20px;
+    position: relative;
+    padding: 0 0 28px;
 }
 
-.account-page-header>span {
+.account-home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0 0 28px;
+    color: var(--geeka-ink);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    transition: color .2s ease, transform .2s ease;
+}
+
+.account-home-link svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.account-home-link:hover {
+    color: var(--geeka-rose);
+    transform: translateX(-2px);
+}
+
+.account-page-header>span,
+.account-page-header .account-eyebrow {
     display: block;
-
-    margin-bottom: 7px;
-
-    font-family: "DM Sans", sans-serif;
+    margin-bottom: 8px;
+    color: var(--geeka-rose);
     font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.25em;
-
-    color: var(--brown-muted);
+    letter-spacing: .2em;
 }
 
 .account-page-header h1 {
     margin: 0;
-
-    font-family: "Cormorant Garamond", serif;
-    font-size: clamp(56px, 5vw, 76px);
-    font-weight: 500;
-
-    line-height: 0.9;
-
-    color: var(--brown);
+    color: var(--geeka-ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(36px, 4.3vw, 58px);
+    font-weight: 400;
+    line-height: 1.08;
+    letter-spacing: -.035em;
 }
 
 .account-page-header p {
-    margin: 11px 0 0;
-
-    font-family: "DM Sans", sans-serif;
+    margin: 10px 0 0;
+    color: var(--geeka-muted);
     font-size: 14px;
-    line-height: 1.55;
-
-    color: var(--brown-muted);
+    line-height: 1.6;
 }
-
-
-/* =========================================================
-   MAIN LAYOUT
-========================================================= */
 
 .account-layout {
-    width: 100%;
-    max-width: 1380px;
-
-    flex: 1;
-    min-height: 0;
-
-    margin: 0 auto;
-
-    display: grid;
-
-    grid-template-columns:
-        240px minmax(0, 1fr);
-
-    gap: 19px;
+    display: grid !important;
+    grid-template-columns: 235px minmax(0, 1fr);
+    align-items: stretch;
+    gap: 20px;
 }
 
-
-/* =========================================================
-   SIDEBAR
-========================================================= */
+.account-sidebar,
+.account-welcome,
+.account-content-panel {
+    min-width: 0;
+    border: 1px solid var(--geeka-line) !important;
+    border-radius: 16px !important;
+    background: var(--geeka-paper) !important;
+    box-shadow: 0 8px 28px rgba(67, 43, 43, .045) !important;
+}
 
 .account-sidebar {
-    min-width: 0;
-    min-height: 0;
-
-    height: 100%;
-
-    padding: 25px 21px;
-
+    position: relative;
     display: flex;
     flex-direction: column;
-
-    overflow: hidden;
-
-    background:
-        linear-gradient(135deg,
-            rgba(255, 249, 244, 0.90) 0%,
-            rgba(236, 218, 211, 0.86) 100%);
-
-    border:
-        1px solid rgba(255, 255, 255, 0.88);
-
-    border-radius: 17px;
-
-    box-shadow:
-        0 22px 50px rgba(55, 35, 30, 0.18),
-        0 5px 15px rgba(55, 35, 30, 0.08),
-        inset 0 1px 0 rgba(255, 255, 255, 0.95),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.30);
-
-    backdrop-filter:
-        blur(24px) saturate(110%);
-
-    -webkit-backdrop-filter:
-        blur(24px) saturate(110%);
+    padding: 24px 16px 18px !important;
 }
-
-
-/* =========================================================
-   SIDEBAR BRAND
-========================================================= */
 
 .account-sidebar-title {
-    flex-shrink: 0;
-
-    padding-bottom: 20px;
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.18);
+    padding: 0 7px 20px;
+    border-bottom: 1px solid var(--geeka-line);
 }
 
-.account-sidebar-title span {
+.account-sidebar-title>span {
     display: block;
-
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 29px;
-    font-weight: 500;
-
-    letter-spacing: 0.08em;
-
-    color: var(--brown);
+    color: var(--geeka-ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 25px;
+    letter-spacing: .08em;
 }
 
 .account-sidebar-title small {
     display: block;
-
-    margin-top: 3px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
+    margin-top: 5px;
+    color: var(--geeka-muted);
     font-size: 9px;
-    letter-spacing: 0.21em;
-
-    color: var(--brown-muted);
+    font-weight: 700;
+    letter-spacing: .18em;
 }
 
-
-/* =========================================================
-   SIDEBAR NAVIGATION
-========================================================= */
-
 .account-navigation {
-    margin-top: 15px;
-
-    display: flex;
-    flex-direction: column;
-
-    overflow: hidden;
+    display: grid;
+    gap: 4px;
+    padding-top: 15px;
 }
 
 .account-navigation button {
-    width: 100%;
-
-    min-height: 47px;
-
-    padding: 10px 2px;
-
     display: flex;
+    width: 100%;
+    min-height: 44px;
     align-items: center;
     justify-content: space-between;
-
-    border: none;
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.13);
-
-    background: transparent;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 11px;
-    font-weight: 500;
-
-    letter-spacing: 0.06em;
-
+    gap: 10px;
+    padding: 10px 11px !important;
+    border: 1px solid transparent !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+    color: #76635f !important;
     text-align: left;
-
-    color: var(--brown-muted);
-
-    cursor: pointer;
-
-    transition:
-        color 0.2s ease,
-        background 0.2s ease,
-        padding 0.2s ease;
+    font-size: 13px;
+    transition: background .2s ease, color .2s ease, border-color .2s ease;
 }
 
 .account-navigation button strong {
     opacity: 0;
-
-    font-size: 16px;
+    color: var(--geeka-rose);
+    font-size: 18px;
     font-weight: 400;
-
-    transform: translateX(-3px);
-
-    transition:
-        opacity 0.2s ease,
-        transform 0.2s ease;
+    transition: opacity .2s ease;
 }
 
 .account-navigation button:hover,
 .account-navigation button.active {
-    padding-left: 8px;
-
-    color: var(--brown);
-
-    background:
-        rgba(255, 255, 255, 0.48);
+    border-color: #efe2df !important;
+    background: #f8efed !important;
+    color: var(--geeka-rose-dark) !important;
 }
 
 .account-navigation button:hover strong,
 .account-navigation button.active strong {
     opacity: 1;
-
-    transform: translateX(0);
 }
 
-
-/* =========================================================
-   LOGOUT
-========================================================= */
-
 .account-logout {
+    width: 100%;
     margin-top: auto;
-
-    align-self: flex-start;
-
-    padding: 0 0 7px;
-
-    border: none;
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.35);
-
-    background: transparent;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 9px;
+    padding: 18px 8px 4px !important;
+    border: 0 !important;
+    border-top: 1px solid var(--geeka-line) !important;
+    background: transparent !important;
+    color: #8a5558 !important;
+    text-align: left;
+    font-size: 10px;
     font-weight: 700;
-
-    letter-spacing: 0.16em;
-
-    color: var(--brown-muted);
-
+    letter-spacing: .14em;
     cursor: pointer;
-
-    transition:
-        color 0.2s ease,
-        border-color 0.2s ease;
 }
 
 .account-logout:hover {
-    color: var(--brown);
-
-    border-color: var(--brown);
+    color: #5d252b !important;
 }
 
-
-/* =========================================================
-   MAIN CONTENT
-========================================================= */
+.account-logout:disabled {
+    cursor: wait;
+    opacity: .6;
+}
 
 .account-main {
-    min-width: 0;
-    min-height: 0;
-
-    height: 100%;
-
     display: flex;
+    min-width: 0;
     flex-direction: column;
-
-    overflow: hidden;
+    gap: 16px;
 }
-
-
-/* =========================================================
-   WELCOME
-========================================================= */
 
 .account-welcome {
-    width: 100%;
-
-    min-height: 94px;
-
-    flex-shrink: 0;
-
-    padding: 17px 24px;
-
     display: flex;
+    min-height: 98px;
     align-items: center;
-
-    gap: 18px;
-
-    overflow: hidden;
-
-    background:
-        linear-gradient(135deg,
-            rgba(255, 249, 244, 0.92) 0%,
-            rgba(235, 216, 208, 0.87) 100%);
-
-    border:
-        1px solid rgba(255, 255, 255, 0.92);
-
-    border-radius: 17px;
-
-    box-shadow:
-        0 20px 44px rgba(55, 35, 30, 0.17),
-        0 5px 14px rgba(55, 35, 30, 0.07),
-        inset 0 1px 0 rgba(255, 255, 255, 0.96),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.25);
-
-    backdrop-filter:
-        blur(25px) saturate(110%);
-
-    -webkit-backdrop-filter:
-        blur(25px) saturate(110%);
+    gap: 16px;
+    padding: 20px 25px !important;
 }
-
-
-/* =========================================================
-   AVATAR
-========================================================= */
 
 .account-avatar {
-    width: 59px;
-    height: 59px;
-
-    flex-shrink: 0;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
+    display: grid;
+    width: 54px;
+    height: 54px;
+    flex: 0 0 54px;
+    place-items: center;
+    border: 1px solid #eee0db;
     border-radius: 50%;
-
-    background:
-        rgba(255, 255, 255, 0.58);
-
-    border:
-        1px solid rgba(255, 255, 255, 0.88);
-
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.95),
-        0 5px 15px rgba(55, 35, 30, 0.09);
-
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 23px;
-
-    color: var(--brown);
-}
-
-.account-welcome-content {
-    min-width: 0;
+    background: #f8efeb !important;
+    color: var(--geeka-rose);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 21px;
 }
 
 .account-welcome-content>span {
     display: block;
-
     margin-bottom: 4px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
+    color: var(--geeka-muted);
     font-size: 9px;
-
-    font-weight: 600;
-
-    letter-spacing: 0.17em;
-
-    color: var(--brown-muted);
+    font-weight: 700;
+    letter-spacing: .18em;
 }
 
-.account-welcome h2 {
-    margin: 0;
-
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 32px;
-
-    font-weight: 500;
-
-    line-height: 1;
-
-    color: var(--brown);
-
+.account-welcome-content h2 {
     overflow-wrap: anywhere;
+    margin: 0;
+    color: var(--geeka-ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(22px, 2.3vw, 30px);
+    font-weight: 400;
+    line-height: 1.2;
 }
-
-
-/* =========================================================
-   CONTENT PANEL
-========================================================= */
 
 .account-content-panel {
-    width: 100%;
-
     flex: 1;
-
-    min-height: 0;
-
-    margin-top: 14px;
-
-    padding: 27px;
-
-    overflow-x: hidden;
-    overflow-y: auto;
-
-    background:
-        linear-gradient(135deg,
-            rgba(255, 249, 244, 0.94) 0%,
-            rgba(232, 213, 205, 0.89) 100%);
-
-    border:
-        1px solid rgba(255, 255, 255, 0.94);
-
-    border-radius: 17px;
-
-    box-shadow:
-        0 24px 55px rgba(55, 35, 30, 0.18),
-        0 6px 18px rgba(55, 35, 30, 0.07),
-        inset 0 1px 0 rgba(255, 255, 255, 0.98),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.25);
-
-    backdrop-filter:
-        blur(27px) saturate(110%);
-
-    -webkit-backdrop-filter:
-        blur(27px) saturate(110%);
-
-    scrollbar-width: thin;
-
-    scrollbar-color:
-        rgba(93, 62, 53, 0.25) transparent;
+    padding: clamp(20px, 3vw, 32px) !important;
 }
-
-.account-content-panel::-webkit-scrollbar {
-    width: 5px;
-}
-
-.account-content-panel::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.account-content-panel::-webkit-scrollbar-thumb {
-    background:
-        rgba(93, 62, 53, 0.22);
-
-    border-radius: 20px;
-}
-
-
-/* =========================================================
-   CONTENT HEADER
-========================================================= */
 
 .account-content-header {
-    min-height: 52px;
-
     display: flex;
-    align-items: flex-end;
-
+    align-items: center;
     justify-content: space-between;
-
     gap: 18px;
-
-    padding-bottom: 17px;
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.15);
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--geeka-line);
 }
 
-.account-content-header>div {
-    min-width: 0;
-}
-
-.account-content-header>div span {
+.account-content-header>div>span,
+.account-order-top>div>span,
+.account-order-meta>div>span,
+.account-address-top>div>span {
     display: block;
-
     margin-bottom: 6px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
+    color: var(--geeka-muted);
     font-size: 9px;
-
-    font-weight: 600;
-
-    letter-spacing: 0.18em;
-
-    color: var(--brown-muted);
+    font-weight: 700;
+    letter-spacing: .15em;
 }
 
 .account-content-header h2 {
     margin: 0;
-
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 36px;
-
-    font-weight: 500;
-
-    line-height: 1;
-
-    color: var(--brown);
+    color: var(--geeka-ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(25px, 2.5vw, 32px);
+    font-weight: 400;
+    line-height: 1.2;
 }
 
+.account-content-panel p {
+    color: var(--geeka-muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
 
-/* =========================================================
-   HEADER BUTTONS
-========================================================= */
-
-.account-outline-button,
-.account-content-header>button:not(.account-outline-button) {
+.account-primary-button,
+.account-secondary-button,
+.account-outline-button {
     display: inline-flex;
-
+    min-height: 42px;
     align-items: center;
     justify-content: center;
-
     gap: 9px;
-
-    flex-shrink: 0;
-
-    padding: 0 0 7px;
-
-    border: none;
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.38);
-
-    background: transparent;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 9px;
-
+    padding: 11px 15px !important;
+    border: 1px solid var(--geeka-rose) !important;
+    border-radius: 7px !important;
+    font-size: 10px;
     font-weight: 700;
-
-    letter-spacing: 0.12em;
-
-    color: var(--brown);
-
+    letter-spacing: .055em;
     text-decoration: none;
-
     cursor: pointer;
+    transition: background .2s ease, color .2s ease, border-color .2s ease;
 }
-
-.account-outline-button svg,
-.account-content-header>button svg {
-    width: 16px;
-    height: 16px;
-
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.4;
-
-    transition:
-        transform 0.2s ease;
-}
-
-.account-outline-button:hover svg,
-.account-content-header>button:hover svg {
-    transform: translateX(3px);
-}
-
-
-/* =========================================================
-   PRIMARY BUTTON
-========================================================= */
 
 .account-primary-button {
-    min-height: 42px;
-
-    padding: 0 18px;
-
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    gap: 10px;
-
-    border:
-        1px solid var(--brown);
-
-    border-radius: 5px;
-
-    background:
-        var(--brown);
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 9px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.12em;
-
-    color: #fff9f4;
-
-    text-decoration: none;
-
-    cursor: pointer;
-
-    transition:
-        background 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
+    background: var(--geeka-rose) !important;
+    color: #fff !important;
 }
 
 .account-primary-button:hover {
-    background:
-        #4f352d;
-
-    transform:
-        translateY(-1px);
-
-    box-shadow:
-        0 8px 20px rgba(55, 35, 30, 0.13);
+    border-color: var(--geeka-rose-dark) !important;
+    background: var(--geeka-rose-dark) !important;
 }
 
-.account-primary-button:disabled {
-    opacity: 0.55;
-
-    cursor: not-allowed;
-
-    transform: none;
-
-    box-shadow: none;
+.account-secondary-button,
+.account-outline-button {
+    background: transparent !important;
+    color: var(--geeka-rose) !important;
 }
 
-.account-primary-button svg {
+.account-secondary-button:hover,
+.account-outline-button:hover {
+    background: #f8efed !important;
+}
+
+.account-primary-button svg,
+.account-outline-button svg,
+.account-text-button svg,
+.account-icon-button svg,
+.account-address-actions svg {
     width: 16px;
     height: 16px;
-
     fill: none;
-
     stroke: currentColor;
-
-    stroke-width: 1.4;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
-
-
-/* =========================================================
-   SECONDARY BUTTON
-========================================================= */
-
-.account-secondary-button {
-    min-height: 42px;
-
-    padding: 0 18px;
-
-    display: inline-flex;
-
-    align-items: center;
-    justify-content: center;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.26);
-
-    border-radius: 5px;
-
-    background:
-        rgba(255, 255, 255, 0.30);
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 9px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.12em;
-
-    color: var(--brown);
-
-    cursor: pointer;
-}
-
-
-/* =========================================================
-   TEXT BUTTON
-========================================================= */
 
 .account-text-button {
     display: inline-flex;
-
     align-items: center;
-
-    gap: 8px;
-
-    padding: 0 0 5px;
-
-    border: none;
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.35);
-
-    background: transparent;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 8.5px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.11em;
-
-    color: var(--brown);
-
+    gap: 7px;
+    margin-top: 12px;
+    color: var(--geeka-rose);
     text-decoration: none;
-
-    cursor: pointer;
-}
-
-.account-text-button svg {
-    width: 15px;
-    height: 15px;
-
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.4;
-
-    transition:
-        transform 0.2s ease;
-}
-
-.account-text-button:hover svg {
-    transform: translateX(3px);
-}
-
-
-/* =========================================================
-   PROFILE DETAILS
-========================================================= */
-
-.profile-details {
-    width: 100%;
-
-    margin-top: 25px;
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(3, 1fr);
-}
-
-.profile-detail {
-    min-width: 0;
-
-    min-height: 92px;
-
-    padding-right: 25px;
-
-    border-right:
-        1px solid rgba(93, 62, 53, 0.13);
-}
-
-.profile-detail:not(:first-child) {
-    padding-left: 25px;
-}
-
-.profile-detail:last-child {
-    border-right: none;
-}
-
-.profile-detail>span {
-    display: block;
-
-    margin-bottom: 9px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 9px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.15em;
-
-    color: var(--brown-muted);
-}
-
-.profile-detail p {
-    margin: 0;
-
-    min-height: 27px;
-
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 25px;
-
-    font-weight: 500;
-
-    line-height: 1.15;
-
-    color: var(--brown);
-
-    overflow-wrap: anywhere;
-}
-
-
-/* =========================================================
-   PHONE DISPLAY
-========================================================= */
-
-.profile-phone-value {
-    display: flex;
-
-    align-items: center;
-
-    flex-wrap: wrap;
-
-    gap: 9px;
-}
-
-.profile-phone-value p {
-    margin: 0;
-}
-
-.phone-verified-badge {
-    display: inline-flex;
-
-    align-items: center;
-
-    gap: 5px;
-
-    padding: 5px 8px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.18);
-
-    border-radius: 20px;
-
-    background:
-        rgba(255, 255, 255, 0.34);
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 6.5px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.10em;
-
-    color: var(--brown);
-}
-
-.phone-verified-badge svg {
-    width: 12px;
-    height: 12px;
-
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.5;
-}
-
-
-/* =========================================================
-   ACCOUNT NOTE
-========================================================= */
-
-.profile-account-note {
-    margin-top: 25px;
-
-    padding-top: 19px;
-
-    border-top:
-        1px solid rgba(93, 62, 53, 0.13);
-}
-
-.profile-account-note span {
-    display: block;
-
-    margin-bottom: 7px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 8px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.17em;
-
-    color: var(--brown-muted);
-}
-
-.profile-account-note p {
-    max-width: 680px;
-
-    margin: 0;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 12px;
-
-    line-height: 1.7;
-
-    color: var(--brown-muted);
-}
-
-
-/* =========================================================
-   SUCCESS / ERROR MESSAGE
-========================================================= */
-
-.account-success-message,
-.account-form-error {
-    margin-top: 17px;
-
-    padding: 11px 13px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.16);
-
-    border-radius: 6px;
-
-    background:
-        rgba(255, 255, 255, 0.30);
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
     font-size: 10px;
-
-    line-height: 1.5;
-
-    color: var(--brown);
-}
-
-.account-success-message.error,
-.account-form-error:not(.success) {
-    color: var(--brown);
-}
-
-
-/* =========================================================
-   FORMS
-========================================================= */
-
-.account-form {
-    width: 100%;
-
-    margin-top: 23px;
-}
-
-.account-form-grid {
-    width: 100%;
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-    gap: 18px;
-}
-
-.account-form-field {
-    min-width: 0;
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 8px;
-}
-
-.account-form-field-full {
-    grid-column: 1 / -1;
-}
-
-.account-form-field label {
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 9px;
-
     font-weight: 700;
-
-    letter-spacing: 0.14em;
-
-    color: var(--brown-muted);
+    letter-spacing: .06em;
 }
-
-.account-form-field input,
-.account-form-field select {
-    width: 100%;
-
-    height: 46px;
-
-    padding: 0 13px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.16);
-
-    border-radius: 6px;
-
-    outline: none;
-
-    background:
-        rgba(255, 255, 255, 0.38);
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 12px;
-
-    color: var(--brown);
-
-    transition:
-        border-color 0.2s ease,
-        background 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.account-form-field input::placeholder {
-    color:
-        rgba(93, 62, 53, 0.42);
-}
-
-.account-form-field input:focus,
-.account-form-field select:focus {
-    border-color:
-        rgba(93, 62, 53, 0.42);
-
-    background:
-        rgba(255, 255, 255, 0.54);
-
-    box-shadow:
-        0 0 0 3px rgba(93, 62, 53, 0.05);
-}
-
-.account-form-field select {
-    cursor: pointer;
-}
-
-.account-form-actions {
-    margin-top: 23px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: flex-end;
-
-    gap: 10px;
-}
-
-
-/* =========================================================
-   FORM CARD
-========================================================= */
-
-.account-form-card {
-    margin-top: 23px;
-
-    padding: 21px;
-
-    border:
-        1px solid rgba(255, 255, 255, 0.70);
-
-    border-radius: 10px;
-
-    background:
-        rgba(255, 255, 255, 0.22);
-
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.65);
-}
-
-.account-form-heading {
-    display: flex;
-
-    align-items: flex-start;
-
-    justify-content: space-between;
-
-    gap: 15px;
-
-    padding-bottom: 14px;
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.11);
-}
-
-.account-form-heading>div {
-    min-width: 0;
-}
-
-.account-form-heading>div>span {
-    display: block;
-
-    margin-bottom: 5px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 8px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.15em;
-
-    color: var(--brown-muted);
-}
-
-.account-form-heading h3 {
-    margin: 0;
-
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 29px;
-
-    font-weight: 500;
-
-    color: var(--brown);
-}
-
-
-/* =========================================================
-   ICON BUTTON
-========================================================= */
-
-.account-icon-button {
-    width: 34px;
-    height: 34px;
-
-    flex-shrink: 0;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.14);
-
-    border-radius: 50%;
-
-    background:
-        rgba(255, 255, 255, 0.34);
-
-    color: var(--brown);
-
-    cursor: pointer;
-
-    transition:
-        background 0.2s ease,
-        border-color 0.2s ease;
-}
-
-.account-icon-button:hover {
-    background:
-        rgba(255, 255, 255, 0.60);
-
-    border-color:
-        rgba(93, 62, 53, 0.32);
-}
-
-.account-icon-button svg {
-    width: 15px;
-    height: 15px;
-
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.4;
-}
-
-
-/* =========================================================
-   EMPTY STATE
-========================================================= */
 
 .account-empty-state {
-    width: 100%;
-
-    min-height: 320px;
-
-    padding: 38px 25px;
-
     display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
+    min-height: 250px;
     flex-direction: column;
-
+    align-items: center;
+    justify-content: center;
+    padding: 35px 20px;
     text-align: center;
 }
 
 .account-empty-mark {
-    width: 56px;
-    height: 56px;
-
-    margin-bottom: 16px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border:
-        1px solid rgba(255, 255, 255, 0.88);
-
+    display: grid;
+    width: 48px;
+    height: 48px;
+    place-items: center;
+    margin-bottom: 14px;
+    border: 1px solid var(--geeka-line);
     border-radius: 50%;
-
-    background:
-        rgba(255, 255, 255, 0.56);
-
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.95),
-
-        0 5px 15px rgba(55, 35, 30, 0.08);
-
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 24px;
-
-    color: var(--brown);
+    color: var(--geeka-rose);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 25px;
 }
 
 .account-empty-state h3 {
     margin: 0;
-
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 31px;
-
-    font-weight: 500;
-
-    color: var(--brown);
+    color: var(--geeka-ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 22px;
+    font-weight: 400;
 }
 
 .account-empty-state p {
-    max-width: 430px;
-
-    margin: 8px 0 20px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 12px;
-
-    line-height: 1.7;
-
-    color: var(--brown-muted);
+    max-width: 390px;
+    margin: 9px 0 18px;
 }
 
-
-/* =========================================================
-   ORDERS
-========================================================= */
-
-.account-order-list {
-    margin-top: 21px;
-
-    display: flex;
-
-    flex-direction: column;
-
+.account-order-list,
+.account-address-list {
+    display: grid;
     gap: 12px;
+    padding-top: 20px;
 }
 
-.account-order-card {
-    padding: 17px 18px;
-
-    border:
-        1px solid rgba(255, 255, 255, 0.66);
-
-    border-radius: 9px;
-
-    background:
-        rgba(255, 255, 255, 0.24);
-
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.62);
+.account-order-card,
+.account-address-card {
+    padding: 18px !important;
+    border: 1px solid var(--geeka-line) !important;
+    border-radius: 10px !important;
+    background: #fff !important;
 }
 
-.account-order-top {
+.account-order-top,
+.account-address-top {
     display: flex;
-
-    align-items: center;
-
+    align-items: flex-start;
     justify-content: space-between;
-
-    gap: 12px;
-
-    padding-bottom: 13px;
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.10);
+    gap: 14px;
 }
 
-.account-order-top>div {
-    min-width: 0;
-
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 5px;
+.account-order-top strong,
+.account-order-meta strong,
+.account-address-body strong {
+    color: var(--geeka-ink);
+    font-size: 13px;
+    overflow-wrap: anywhere;
 }
 
-.account-order-top span:first-child {
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 8px;
-
+.account-order-status,
+.account-default-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 4px;
+    background: #f4eae6;
+    color: var(--geeka-rose-dark);
+    font-size: 9px;
     font-weight: 700;
-
-    letter-spacing: 0.16em;
-
-    color: var(--brown-muted);
-}
-
-.account-order-top strong {
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 22px;
-
-    font-weight: 500;
-
-    color: var(--brown);
-}
-
-.account-order-status {
-    flex-shrink: 0;
-
-    padding: 6px 9px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.17);
-
-    border-radius: 20px;
-
-    background:
-        rgba(255, 255, 255, 0.36);
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 7px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.11em;
-
-    color: var(--brown);
 }
 
 .account-order-meta {
-    margin-top: 14px;
-
     display: grid;
-
-    grid-template-columns:
-        repeat(3, 1fr);
-
-    gap: 14px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+    margin-top: 17px;
+    padding-top: 15px;
+    border-top: 1px solid #f0e8e3;
 }
 
-.account-order-meta>div {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 5px;
+.account-order-meta>div>span {
+    margin-bottom: 5px;
 }
-
-.account-order-meta span {
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 7px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.13em;
-
-    color: var(--brown-muted);
-}
-
-.account-order-meta strong {
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 11px;
-
-    font-weight: 500;
-
-    color: var(--brown);
-}
-
-
-/* =========================================================
-   WISHLIST
-========================================================= */
 
 .account-wishlist-grid {
-    margin-top: 21px;
-
     display: grid;
-
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+    gap: 16px;
+    padding-top: 20px;
 }
 
 .account-wishlist-card {
-    min-width: 0;
-
     overflow: hidden;
-
-    border:
-        1px solid rgba(255, 255, 255, 0.67);
-
-    border-radius: 9px;
-
-    background:
-        rgba(255, 255, 255, 0.23);
-
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.62);
+    border: 1px solid var(--geeka-line) !important;
+    border-radius: 10px !important;
+    background: #fff !important;
 }
 
 .account-wishlist-image {
     position: relative;
-
-    width: 100%;
-    height: 205px;
-
+    aspect-ratio: 4 / 4.5;
     overflow: hidden;
-
-    background:
-        rgba(255, 255, 255, 0.25);
+    background: #f7f1ec;
 }
 
 .account-wishlist-image img {
     width: 100%;
     height: 100%;
-
-    display: block;
-
     object-fit: cover;
 }
 
 .account-wishlist-image-placeholder {
     width: 100%;
     height: 100%;
-
-    background:
-        rgba(255, 255, 255, 0.20);
+    background: linear-gradient(135deg, #f8f0ea, #eee0d8);
 }
 
-.account-wishlist-image>.account-icon-button {
-    position: absolute;
+.account-icon-button {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid var(--geeka-line) !important;
+    border-radius: 50% !important;
+    background: rgba(255, 253, 251, .95) !important;
+    color: var(--geeka-rose) !important;
+    cursor: pointer;
+}
 
+.account-wishlist-image .account-icon-button {
+    position: absolute;
     top: 10px;
     right: 10px;
-
-    background:
-        rgba(255, 249, 244, 0.82);
-
-    backdrop-filter: blur(8px);
-
-    -webkit-backdrop-filter: blur(8px);
 }
 
 .account-wishlist-info {
-    padding: 15px;
+    display: grid;
+    gap: 7px;
+    padding: 13px;
 }
 
 .account-wishlist-info>span {
-    display: block;
-
-    margin-bottom: 5px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 7px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.13em;
-
-    color: var(--brown-muted);
+    color: var(--geeka-muted);
+    font-size: 10px;
 }
 
 .account-wishlist-info h3 {
-    margin: 0 0 7px;
-
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 24px;
-
-    font-weight: 500;
-
-    line-height: 1.05;
-
-    color: var(--brown);
+    margin: 0;
+    color: var(--geeka-ink);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    font-weight: 400;
+    overflow-wrap: anywhere;
 }
 
 .account-wishlist-info>strong {
-    display: block;
-
-    margin-bottom: 13px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 11px;
-
-    font-weight: 700;
-
-    color: var(--brown);
-}
-
-
-/* =========================================================
-   ADDRESSES
-========================================================= */
-
-.account-address-list {
-    margin-top: 21px;
-
-    display: grid;
-
-    grid-template-columns:
-        repeat(2, minmax(0, 1fr));
-
-    gap: 14px;
-}
-
-.account-address-card {
-    min-width: 0;
-
-    padding: 17px;
-
-    border:
-        1px solid rgba(255, 255, 255, 0.67);
-
-    border-radius: 9px;
-
-    background:
-        rgba(255, 255, 255, 0.23);
-
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.62);
-}
-
-.account-address-card.default {
-    border-color:
-        rgba(93, 62, 53, 0.25);
-}
-
-.account-address-top {
-    display: flex;
-
-    align-items: flex-start;
-
-    justify-content: space-between;
-
-    gap: 10px;
-
-    padding-bottom: 12px;
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.10);
+    color: var(--geeka-ink);
+    font-size: 13px;
 }
 
 .account-address-top>div:first-child {
     display: flex;
-
-    align-items: center;
-
     flex-wrap: wrap;
-
-    gap: 7px;
+    align-items: center;
+    gap: 8px;
 }
 
 .account-address-top>div:first-child>span {
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 8px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.13em;
-
-    color: var(--brown-muted);
-}
-
-.account-default-badge {
-    padding: 4px 7px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.16);
-
-    border-radius: 20px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 6px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.09em;
-
-    color: var(--brown);
+    margin: 0;
 }
 
 .account-address-actions {
     display: flex;
-
-    align-items: center;
-
-    gap: 6px;
+    gap: 7px;
 }
 
 .account-address-actions button {
-    width: 30px;
-    height: 30px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.13);
-
-    border-radius: 50%;
-
-    background:
-        rgba(255, 255, 255, 0.25);
-
-    color: var(--brown);
-
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border: 1px solid var(--geeka-line) !important;
+    border-radius: 7px !important;
+    background: #fff !important;
+    color: var(--geeka-muted) !important;
     cursor: pointer;
 }
 
-.account-address-actions svg {
-    width: 14px;
-    height: 14px;
-
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.35;
+.account-address-actions button:hover {
+    color: var(--geeka-rose) !important;
+    background: #f8efed !important;
 }
 
 .account-address-body {
-    padding: 14px 0;
-}
-
-.account-address-body>strong {
-    display: block;
-
-    margin-bottom: 6px;
-
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 23px;
-
-    font-weight: 500;
-
-    color: var(--brown);
+    padding-top: 14px;
 }
 
 .account-address-body p {
-    margin: 4px 0;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 10px;
-
-    line-height: 1.6;
-
-    color: var(--brown-muted);
+    margin: 5px 0;
 }
 
-
-/* =========================================================
-   PAYMENT METHODS
-========================================================= */
-
-.account-security-note {
-    margin-top: 19px;
-
-    padding: 13px 14px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.12);
-
-    border-radius: 7px;
-
-    background:
-        rgba(255, 255, 255, 0.18);
+.account-form,
+.account-content-panel form {
+    max-width: 780px;
 }
 
-.account-security-note>span {
-    display: block;
-
-    margin-bottom: 6px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 7px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.14em;
-
-    color: var(--brown-muted);
+.account-content-panel input:not([type="checkbox"]),
+.account-content-panel select,
+.account-content-panel textarea {
+    width: 100%;
+    min-height: 43px;
+    padding: 11px 12px;
+    border: 1px solid #e5d8d1 !important;
+    border-radius: 7px !important;
+    outline: none;
+    background: #fff !important;
+    color: var(--geeka-ink) !important;
+    font: inherit;
+    font-size: 13px;
+    box-sizing: border-box;
 }
 
-.account-security-note p {
-    max-width: 720px;
-
-    margin: 0;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 10px;
-
-    line-height: 1.65;
-
-    color: var(--brown-muted);
+.account-content-panel input:focus,
+.account-content-panel select:focus,
+.account-content-panel textarea:focus {
+    border-color: #ad8585 !important;
+    box-shadow: 0 0 0 3px rgba(123, 63, 70, .08);
 }
 
-.account-payment-list {
-    margin-top: 18px;
+.account-content-panel label {
+    color: var(--geeka-muted);
+    font-size: 11px;
+    font-weight: 600;
+}
 
+.account-form-actions {
     display: flex;
-
-    flex-direction: column;
-
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 10px;
+    margin-top: 22px;
 }
 
-.account-payment-card {
-    padding: 15px;
+.account-form-error,
+.phone-otp-message {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid #efd1cd;
+    border-radius: 7px;
+    background: #fff6f4;
+    color: #8c3f3a;
+    font-size: 12px;
+    line-height: 1.5;
+}
 
+.account-form-error.success,
+.phone-otp-message.success {
+    border-color: #d6e6d9;
+    background: #f5faf5;
+    color: #3d704b;
+}
+
+.account-form-error.error,
+.phone-otp-message.error {
+    color: #8c3f3a;
+}
+
+.phone-resend-button {
+    margin-top: 12px;
+    border: 0;
+    background: transparent;
+    color: var(--geeka-rose);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.phone-resend-button:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+@media (min-width: 1200px) {
+    .account-layout {
+        min-height: min(640px, calc(100vh - 245px));
+    }
+}
+
+@media (max-width: 850px) {
+    .account-page {
+        padding: 25px 18px 36px;
+    }
+
+    .account-layout {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .account-sidebar {
+        padding: 17px !important;
+    }
+
+    .account-sidebar-title {
+        padding-bottom: 12px;
+    }
+
+    .account-sidebar-title>span {
+        font-size: 22px;
+    }
+
+    .account-navigation {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        padding-top: 12px;
+    }
+
+    .account-navigation button {
+        min-height: 40px;
+        padding: 9px !important;
+        font-size: 12px;
+    }
+
+    .account-navigation button strong {
+        display: none;
+    }
+
+    .account-logout {
+        margin-top: 12px;
+        padding-top: 13px !important;
+    }
+
+    .account-main {
+        gap: 14px;
+    }
+}
+
+@media (max-width: 520px) {
+    .account-page {
+        padding: 20px 12px 28px;
+    }
+
+    .account-home-link {
+        margin-bottom: 22px;
+    }
+
+    .account-page-header {
+        padding-bottom: 22px;
+    }
+
+    .account-page-header p {
+        font-size: 13px;
+    }
+
+    .account-navigation {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .account-welcome {
+        min-height: 80px;
+        padding: 15px !important;
+    }
+
+    .account-avatar {
+        width: 45px;
+        height: 45px;
+        flex-basis: 45px;
+    }
+
+    .account-content-panel {
+        padding: 17px !important;
+    }
+
+    .account-content-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .account-content-header>.account-outline-button,
+    .account-content-header>button {
+        width: 100%;
+    }
+
+    .account-order-meta {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .account-wishlist-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .account-wishlist-info {
+        padding: 10px;
+    }
+
+    .account-wishlist-info h3 {
+        font-size: 15px;
+    }
+
+    .account-primary-button,
+    .account-secondary-button,
+    .account-outline-button {
+        max-width: 100%;
+        font-size: 9px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .account-page *,
+    .account-page *::before,
+    .account-page *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+    }
+}
+
+
+/* --------------------------------------------------------------------------
+   Modal forms: address and payment forms stay in the viewport, not at the
+   bottom of the account page. These rules intentionally override legacy CSS.
+   -------------------------------------------------------------------------- */
+.account-modal-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 9999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 24px !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    background: rgba(39, 26, 25, .58) !important;
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    animation: accountBackdropIn .18s ease-out both;
+}
+
+.account-modal {
+    position: relative !important;
+    inset: auto !important;
+    width: min(720px, 100%) !important;
+    max-width: 720px !important;
+    max-height: min(88vh, 820px) !important;
+    margin: auto !important;
+    padding: clamp(20px, 3vw, 32px) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    border: 1px solid #eadbd4 !important;
+    border-radius: 18px !important;
+    background: #fffdfb !important;
+    box-shadow: 0 24px 80px rgba(28, 16, 15, .24) !important;
+    animation: accountModalIn .22s ease-out both;
+}
+
+.account-modal .account-form-heading {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 18px !important;
+    margin: 0 0 24px !important;
+    padding: 0 0 18px !important;
+    border-bottom: 1px solid #eadfd8 !important;
+}
+
+.account-modal .account-form-heading span {
+    display: block;
+    margin-bottom: 7px;
+    color: #8a5557;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .16em;
+}
+
+.account-modal .account-form-heading h3 {
+    margin: 0 !important;
+    color: #432b2b !important;
+    font-family: Georgia, "Times New Roman", serif !important;
+    font-size: clamp(25px, 3vw, 34px) !important;
+    font-weight: 400 !important;
+    line-height: 1.2 !important;
+}
+
+.account-modal .account-form {
+    display: block;
+    width: 100%;
+}
+
+.account-modal .account-form-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 18px !important;
+}
+
+.account-modal .account-form-field {
+    min-width: 0;
     display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 14px;
-
-    border:
-        1px solid rgba(255, 255, 255, 0.65);
-
-    border-radius: 8px;
-
-    background:
-        rgba(255, 255, 255, 0.23);
-
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.58);
+    flex-direction: column;
+    gap: 8px;
 }
 
-.account-payment-card>div {
+.account-modal .account-form-field-full {
+    grid-column: 1 / -1;
+}
+
+.account-modal .account-form-field label {
+    color: #5d4542 !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: .015em;
+}
+
+.account-modal .account-form-field input,
+.account-modal .account-form-field select {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 46px !important;
+    padding: 11px 13px !important;
+    border: 1px solid #e4d7d0 !important;
+    border-radius: 8px !important;
+    outline: none !important;
+    background: #fff !important;
+    color: #432b2b !important;
+    font: inherit !important;
+    font-size: 14px !important;
+    box-shadow: none !important;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.account-modal .account-form-field input:focus,
+.account-modal .account-form-field select:focus {
+    border-color: #9b6668 !important;
+    box-shadow: 0 0 0 3px rgba(123, 63, 70, .1) !important;
+}
+
+.account-modal .account-form-field input::placeholder {
+    color: #a99a94;
+}
+
+.account-modal .account-form-actions {
+    display: flex !important;
+    justify-content: flex-end !important;
+    flex-wrap: wrap;
+    gap: 10px !important;
+    margin-top: 26px !important;
+    padding-top: 18px !important;
+    border-top: 1px solid #eee4df !important;
+}
+
+.account-modal .account-form-actions button {
+    min-height: 44px;
+}
+
+.account-modal .account-icon-button {
+    flex: 0 0 auto;
+    width: 40px !important;
+    height: 40px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #eadfd8 !important;
+    border-radius: 50% !important;
+    background: #fff !important;
+    color: #674a47 !important;
+    cursor: pointer;
+}
+
+.account-modal .account-icon-button:hover {
+    border-color: #c8a9a3 !important;
+    background: #f8efed !important;
+}
+
+.account-modal-backdrop button:focus-visible,
+.account-modal-backdrop input:focus-visible,
+.account-modal-backdrop select:focus-visible {
+    outline: 2px solid #8d5559 !important;
+    outline-offset: 2px;
+}
+
+@keyframes accountBackdropIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes accountModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 640px) {
+    .account-modal-backdrop {
+        align-items: flex-end !important;
+        padding: 10px !important;
+    }
+
+    .account-modal {
+        width: 100% !important;
+        max-width: none !important;
+        max-height: 92dvh !important;
+        padding: 20px 16px !important;
+        border-radius: 16px 16px 12px 12px !important;
+    }
+
+    .account-modal .account-form-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+        gap: 15px !important;
+    }
+
+    .account-modal .account-form-field-full {
+        grid-column: auto;
+    }
+
+    .account-modal .account-form-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .account-modal .account-form-actions button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .account-modal-backdrop,
+    .account-modal {
+        animation: none !important;
+    }
+}
+
+/* Complete component styles consolidated into this single Profile.css file. */
+.account-page *,
+.account-page *::before,
+.account-page *::after {
+    box-sizing: border-box;
+}
+
+.account-page button,
+.account-page input,
+.account-page select,
+.account-page textarea {
+    font: inherit;
+}
+
+.account-page button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.account-layout {
+    display: grid;
+    grid-template-columns: 248px minmax(0, 1fr);
+    gap: 22px;
+    align-items: stretch;
+}
+
+.account-sidebar {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 24px 18px;
+    background: #fffdfa;
+    border: 1px solid #eadfd8;
+    border-radius: 18px;
+}
+
+.account-sidebar-title {
+    padding: 0 8px 18px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #eee4de;
+}
+
+.account-sidebar-title h2 {
+    margin: 0;
+    color: #432b2b;
+    font: 400 25px/1.2 Georgia, serif;
+    letter-spacing: .08em;
+}
+
+.account-sidebar-title span {
+    display: block;
+    margin-top: 6px;
+    color: #907b75;
+    font-size: 9px;
+    letter-spacing: .19em;
+    text-transform: uppercase;
+}
+
+.account-navigation {
+    display: grid;
+    gap: 4px;
+}
+
+.account-navigation a,
+.account-navigation button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 10px;
+    border: 0;
+    border-radius: 8px;
+    color: #786762;
+    background: transparent;
+    text-align: left;
+    text-decoration: none;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease;
+}
+
+.account-navigation a:hover,
+.account-navigation button:hover,
+.account-navigation .active {
+    background: #f7efeb;
+    color: #542f32;
+}
+
+.account-logout {
+    margin-top: auto;
+    padding: 20px 8px 0;
+}
+
+.account-logout button {
+    border: 0;
+    background: transparent;
+    color: #8a5c5b;
+    padding: 8px 0;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    cursor: pointer;
+}
+
+.account-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.account-welcome {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    border: 1px solid #eadfd8;
+    border-radius: 18px;
+    background: #fffdfa;
+}
+
+.account-avatar {
+    width: 58px;
+    height: 58px;
+    flex: 0 0 58px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #f7efeb;
+    color: #603c3d;
+    font: 400 24px Georgia, serif;
+}
+
+.account-welcome-content {
     min-width: 0;
 }
 
-.account-payment-card>div>span {
+.account-welcome-content span {
     display: block;
-
-    margin-bottom: 5px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 7px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.14em;
-
-    color: var(--brown-muted);
+    margin-bottom: 4px;
+    color: #967b73;
+    font-size: 9px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
 }
 
-.account-payment-card h3 {
+.account-welcome-content h2 {
     margin: 0;
-
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 24px;
-
-    font-weight: 500;
-
-    color: var(--brown);
-
+    color: #432b2b;
+    font: 400 clamp(22px, 2vw, 30px)/1.2 Georgia, serif;
     overflow-wrap: anywhere;
 }
 
-.account-payment-card>button {
-    width: 32px;
-    height: 32px;
-
-    flex-shrink: 0;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.14);
-
-    border-radius: 50%;
-
-    background:
-        rgba(255, 255, 255, 0.28);
-
-    color: var(--brown);
-
-    cursor: pointer;
-}
-
-.account-payment-card svg {
-    width: 14px;
-    height: 14px;
-
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.35;
-}
-
-
-/* =========================================================
-   SETTINGS
-========================================================= */
-
-.account-settings-list {
-    margin-top: 3px;
-}
-
-.account-settings-list button {
-    width: 100%;
-
-    min-height: 76px;
-
-    padding: 15px 0;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    border: none;
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.12);
-
-    background: transparent;
-
-    text-align: left;
-
-    color: var(--brown);
-
-    cursor: pointer;
-}
-
-.account-settings-list button:last-child {
-    border-bottom: none;
-}
-
-.account-settings-list button div {
+.account-content-panel {
     min-width: 0;
+    padding: clamp(20px, 3vw, 32px);
+    border: 1px solid #eadfd8;
+    border-radius: 18px;
+    background: #fffdfa;
 }
 
-.account-settings-list button div span {
+.account-content-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding-bottom: 18px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid #eee4de;
+}
+
+.account-content-header>div>span {
     display: block;
-
-    margin-bottom: 6px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 8px;
-
+    margin-bottom: 7px;
+    color: #967b73;
+    font-size: 9px;
     font-weight: 700;
-
-    letter-spacing: 0.14em;
-
-    color: var(--brown-muted);
+    letter-spacing: .18em;
 }
 
-.account-settings-list button div strong {
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 24px;
-
-    font-weight: 500;
-
-    color: var(--brown);
+.account-content-header h2 {
+    margin: 0;
+    color: #432b2b;
+    font: 400 clamp(25px, 2.4vw, 34px)/1.15 Georgia, serif;
 }
 
-.account-settings-list button>svg {
-    width: 18px;
-    height: 18px;
+.account-outline-button,
+.account-primary-button,
+.account-secondary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 42px;
+    padding: 11px 15px;
+    border: 1px solid #d9c8c0;
+    border-radius: 7px;
+    background: #fffdfa;
+    color: #543638;
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
 
-    flex-shrink: 0;
+.account-outline-button:hover,
+.account-secondary-button:hover {
+    background: #f7efeb;
+    border-color: #b99791;
+}
 
+.account-primary-button {
+    background: #60383d;
+    border-color: #60383d;
+    color: #fff;
+}
+
+.account-primary-button:hover {
+    background: #47272c;
+    border-color: #47272c;
+}
+
+.account-page .account-outline-button svg,
+.account-page .account-primary-button svg,
+.account-page .account-secondary-button svg,
+.account-page .account-text-button svg {
+    width: 16px;
+    height: 16px;
     fill: none;
-
     stroke: currentColor;
-
-    stroke-width: 1.35;
-
-    transition:
-        transform 0.2s ease;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
-.account-settings-list button:hover>svg {
-    transform: translateX(4px);
+.account-text-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 12px;
+    color: #704449;
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
 }
 
+.account-text-button:hover {
+    color: #432b2b;
+}
 
-/* =========================================================
-   PREFERENCES
-========================================================= */
+.account-empty-state {
+    min-height: 230px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 34px 18px;
+    text-align: center;
+}
+
+.account-empty-mark {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 15px;
+    border: 1px solid #e7d9d1;
+    border-radius: 50%;
+    color: #8b6662;
+    font: 400 24px Georgia, serif;
+}
+
+.account-empty-state h3 {
+    margin: 0 0 8px;
+    color: #432b2b;
+    font: 400 23px/1.25 Georgia, serif;
+}
+
+.account-empty-state p {
+    max-width: 430px;
+    margin: 0 0 20px;
+    color: #897772;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.account-order-list,
+.account-address-list,
+.account-payment-list,
+.account-settings-list {
+    display: grid;
+    gap: 12px;
+}
+
+.account-order-card,
+.account-address-card,
+.account-payment-card,
+.account-preference-card {
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid #eee3dc;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.account-order-top,
+.account-address-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.account-order-top>div,
+.account-address-top>div:first-child {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 9px;
+}
+
+.account-order-top span:first-child {
+    color: #967b73;
+    font-size: 9px;
+    letter-spacing: .14em;
+}
+
+.account-order-top strong {
+    color: #4c3031;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.account-order-status,
+.account-default-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 20px;
+    background: #f5ece8;
+    color: #704449;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+.account-order-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    padding-top: 17px;
+    margin-top: 16px;
+    border-top: 1px solid #f0e7e1;
+}
+
+.account-order-meta div {
+    min-width: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.account-order-meta span {
+    color: #9a8880;
+    font-size: 9px;
+    letter-spacing: .1em;
+}
+
+.account-order-meta strong {
+    color: #543638;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.account-address-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.account-address-actions button,
+.account-payment-card>button {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #e9ddd6;
+    border-radius: 50%;
+    background: #fff;
+    color: #72514f;
+    cursor: pointer;
+}
+
+.account-address-actions button:hover,
+.account-payment-card>button:hover {
+    background: #f8efeb;
+}
+
+.account-address-actions svg,
+.account-payment-card>button svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.account-address-body {
+    margin-top: 14px;
+    color: #796963;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.account-address-body strong {
+    color: #4c3031;
+}
+
+.account-address-body p {
+    margin: 3px 0;
+}
+
+.account-payment-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.account-payment-card span {
+    color: #967b73;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .15em;
+}
+
+.account-payment-card h3 {
+    margin: 7px 0 0;
+    color: #4c3031;
+    font-size: 15px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+.account-wishlist-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.account-wishlist-card {
+    min-width: 0;
+    overflow: hidden;
+    border: 1px solid #eee3dc;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.account-wishlist-image {
+    position: relative;
+    aspect-ratio: 4 / 4.5;
+    overflow: hidden;
+    background: #f7f1ec;
+}
+
+.account-wishlist-image img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.account-wishlist-image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #f5ece5, #eadbd2);
+}
+
+.account-icon-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #eadfd8;
+    border-radius: 50%;
+    background: rgba(255, 253, 250, .95);
+    color: #5e3c3d;
+    cursor: pointer;
+}
+
+.account-icon-button svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+}
+
+.account-wishlist-info {
+    display: grid;
+    gap: 8px;
+    padding: 14px;
+}
+
+.account-wishlist-info>span {
+    color: #9a8178;
+    font-size: 9px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.account-wishlist-info h3 {
+    margin: 0;
+    color: #4c3031;
+    font: 400 17px/1.35 Georgia, serif;
+    overflow-wrap: anywhere;
+}
+
+.account-wishlist-info>strong {
+    color: #543638;
+    font-size: 14px;
+}
 
 .account-preference-card {
-    margin-top: 11px;
-
-    padding: 17px 18px;
-
     display: flex;
-
     align-items: center;
-
     justify-content: space-between;
-
     gap: 20px;
-
-    border:
-        1px solid rgba(255, 255, 255, 0.62);
-
-    border-radius: 8px;
-
-    background:
-        rgba(255, 255, 255, 0.22);
-
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.58);
 }
 
 .account-preference-card>div {
@@ -2150,1020 +1552,409 @@
 
 .account-preference-card>div>span {
     display: block;
-
-    margin-bottom: 5px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 7px;
-
+    margin-bottom: 7px;
+    color: #967b73;
+    font-size: 9px;
     font-weight: 700;
-
-    letter-spacing: 0.14em;
-
-    color: var(--brown-muted);
+    letter-spacing: .15em;
 }
 
-.account-preference-card>div>strong {
+.account-preference-card strong {
     display: block;
-
-    margin-bottom: 4px;
-
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 23px;
-
-    font-weight: 500;
-
-    color: var(--brown);
+    color: #4c3031;
+    font-size: 14px;
+    font-weight: 600;
 }
 
-.account-preference-card>div>p {
-    max-width: 650px;
-
-    margin: 0;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 10px;
-
-    line-height: 1.6;
-
-    color: var(--brown-muted);
+.account-preference-card p,
+.account-note,
+.account-security-note {
+    margin: 7px 0 0;
+    color: #897772;
+    font-size: 12px;
+    line-height: 1.65;
 }
-
-
-/* =========================================================
-   TOGGLE
-========================================================= */
 
 .account-toggle {
-    position: relative;
-
-    width: 42px;
-    height: 24px;
-
-    flex-shrink: 0;
-
-    padding: 0;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.20);
-
+    width: 44px;
+    height: 25px;
+    flex: 0 0 auto;
+    padding: 3px;
+    border: 0;
     border-radius: 20px;
-
-    background:
-        rgba(255, 255, 255, 0.42);
-
+    background: #d8cbc4;
     cursor: pointer;
-
-    transition:
-        background 0.2s ease,
-        border-color 0.2s ease;
+    transition: background .2s ease;
 }
 
 .account-toggle span {
-    position: absolute;
-
-    top: 4px;
-    left: 4px;
-
-    width: 14px;
-    height: 14px;
-
+    display: block;
+    width: 19px;
+    height: 19px;
     border-radius: 50%;
-
-    background:
-        rgba(93, 62, 53, 0.48);
-
-    transition:
-        transform 0.2s ease,
-        background 0.2s ease;
+    background: #fff;
+    box-shadow: 0 1px 3px #0002;
+    transition: transform .2s ease;
 }
 
 .account-toggle.active {
-    background:
-        var(--brown);
-
-    border-color:
-        var(--brown);
+    background: #704449;
 }
 
 .account-toggle.active span {
-    transform:
-        translateX(18px);
-
-    background:
-        #fff9f4;
+    transform: translateX(19px);
 }
 
-
-/* =========================================================
-   PHONE INPUT
-========================================================= */
-
-.phone-input-wrapper {
-    width: 100%;
-
-    display: flex;
-
-    align-items: center;
-
-    overflow: hidden;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.16);
-
-    border-radius: 6px;
-
-    background:
-        rgba(255, 255, 255, 0.38);
-
-    transition:
-        border-color 0.2s ease,
-        background 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.phone-input-wrapper:focus-within {
-    border-color:
-        rgba(93, 62, 53, 0.42);
-
-    background:
-        rgba(255, 255, 255, 0.54);
-
-    box-shadow:
-        0 0 0 3px rgba(93, 62, 53, 0.05);
-}
-
-.phone-prefix {
-    height: 46px;
-
-    padding: 0 11px;
-
-    display: flex;
-
-    align-items: center;
-
-    flex-shrink: 0;
-
-    border-right:
-        1px solid rgba(93, 62, 53, 0.11);
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 11px;
-
-    font-weight: 600;
-
-    color: var(--brown-muted);
-}
-
-.phone-input-wrapper input {
-    min-width: 0;
-
-    flex: 1;
-
-    height: 46px;
-
-    padding: 0 12px;
-
-    border: none;
-
-    outline: none;
-
-    background: transparent;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 12px;
-
-    color: var(--brown);
-}
-
-.phone-input-wrapper input::placeholder {
-    color:
-        rgba(93, 62, 53, 0.42);
-}
-
-
-/* =========================================================
-   SEND OTP
-========================================================= */
-
-.phone-verification-row {
-    margin-top: 8px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: flex-start;
-}
-
-.phone-send-otp-button {
-    min-height: 34px;
-
-    padding: 0 13px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.22);
-
-    border-radius: 5px;
-
-    background:
-        rgba(255, 255, 255, 0.32);
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 8px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.11em;
-
-    color: var(--brown);
-
-    cursor: pointer;
-
-    transition:
-        background 0.2s ease,
-        border-color 0.2s ease,
-        transform 0.2s ease;
-}
-
-.phone-send-otp-button:hover:not(:disabled) {
-    background:
-        rgba(255, 255, 255, 0.58);
-
-    border-color:
-        rgba(93, 62, 53, 0.38);
-
-    transform:
-        translateY(-1px);
-}
-
-.phone-send-otp-button:disabled {
-    opacity: 0.52;
-
-    cursor: not-allowed;
-}
-
-
-/* =========================================================
-   VERIFIED STATE
-========================================================= */
-
-.phone-verified-state {
-    display: inline-flex;
-
-    align-items: center;
-
-    gap: 6px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 8px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.11em;
-
-    color: var(--brown);
-}
-
-.phone-verified-state svg {
-    width: 15px;
-    height: 15px;
-
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.5;
-}
-
-
-/* =========================================================
-   OTP BOX
-========================================================= */
-
-.phone-otp-box {
-    width: 100%;
-
-    margin-top: 13px;
-
-    padding: 15px;
-
-    border:
-        1px solid rgba(255, 255, 255, 0.68);
-
+.account-note,
+.account-security-note {
+    padding: 12px 14px;
     border-radius: 8px;
-
-    background:
-        rgba(255, 255, 255, 0.23);
-
-    box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.62);
+    background: #faf4f0;
 }
 
-.phone-otp-header {
-    display: flex;
-
-    align-items: flex-start;
-
-    justify-content: space-between;
-
-    gap: 12px;
-
-    padding-bottom: 12px;
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.10);
-}
-
-.phone-otp-header>div {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 4px;
-}
-
-.phone-otp-header>div>span {
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 7px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.14em;
-
-    color: var(--brown-muted);
-}
-
-.phone-otp-header strong {
-    font-family:
-        "Cormorant Garamond",
-        serif;
-
-    font-size: 25px;
-
-    font-weight: 500;
-
-    color: var(--brown);
-}
-
-.phone-otp-box>p {
-    margin: 12px 0 11px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 9px;
-
-    line-height: 1.6;
-
-    color: var(--brown-muted);
-}
-
-
-/* =========================================================
-   OTP ACTIONS
-========================================================= */
-
-.phone-otp-actions {
-    display: flex;
-
-    align-items: center;
-
-    gap: 9px;
-}
-
-.phone-otp-input {
-    width: 165px;
-
-    height: 43px;
-
-    padding: 0 11px;
-
-    border:
-        1px solid rgba(93, 62, 53, 0.17);
-
-    border-radius: 6px;
-
-    outline: none;
-
-    background:
-        rgba(255, 255, 255, 0.42);
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 18px;
-
-    font-weight: 600;
-
-    letter-spacing: 0.20em;
-
-    text-align: center;
-
-    color: var(--brown);
-}
-
-.phone-otp-input::placeholder {
-    color:
-        rgba(93, 62, 53, 0.30);
-}
-
-.phone-otp-input:focus {
-    border-color:
-        rgba(93, 62, 53, 0.42);
-
-    background:
-        rgba(255, 255, 255, 0.56);
-
-    box-shadow:
-        0 0 0 3px rgba(93, 62, 53, 0.05);
-}
-
-
-/* =========================================================
-   OTP MESSAGE
-========================================================= */
-
-.phone-otp-message {
-    margin-top: 10px;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 9px;
-
+.account-success-message,
+.account-form-error {
+    padding: 11px 13px;
+    border-radius: 7px;
+    font-size: 12px;
     line-height: 1.5;
 }
 
-.phone-otp-message.error {
-    color: var(--brown);
+.account-success-message {
+    background: #edf6ee;
+    color: #356440;
 }
 
-.phone-otp-message.success {
-    color: var(--brown);
+.account-form-error {
+    background: #fbefed;
+    color: #963f38;
 }
 
-
-/* =========================================================
-   RESEND
-========================================================= */
-
-.phone-resend-button {
-    margin-top: 12px;
-
-    padding: 0 0 5px;
-
-    border: none;
-
-    border-bottom:
-        1px solid rgba(93, 62, 53, 0.30);
-
-    background: transparent;
-
-    font-family:
-        "DM Sans",
-        sans-serif;
-
-    font-size: 7px;
-
-    font-weight: 700;
-
-    letter-spacing: 0.12em;
-
-    color: var(--brown-muted);
-
-    cursor: pointer;
+.account-form {
+    width: 100%;
 }
 
-.phone-resend-button:disabled {
-    opacity: 0.50;
-
-    cursor: not-allowed;
+.account-form-card {
+    width: min(100%, 620px);
+    padding: 26px;
+    border: 1px solid #eadfd8;
+    border-radius: 14px;
+    background: #fffdfa;
 }
 
+.account-form-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 22px;
+}
 
-/* =========================================================
-   TABLET
-========================================================= */
+.account-form-heading h3 {
+    margin: 0;
+    color: #432b2b;
+    font: 400 25px/1.2 Georgia, serif;
+}
 
-@media (max-width: 950px) {
+.account-form-heading p {
+    margin: 7px 0 0;
+    color: #897772;
+    font-size: 12px;
+    line-height: 1.6;
+}
 
+.account-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 17px;
+}
+
+.account-form-field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.account-form-field-full {
+    grid-column: 1 / -1;
+}
+
+.account-form-field label {
+    color: #6f5651;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.account-form-field input,
+.account-form-field select,
+.account-form-field textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 11px 12px;
+    border: 1px solid #e3d6cf;
+    border-radius: 7px;
+    outline: none;
+    background: #fff;
+    color: #432b2b;
+    font-size: 13px;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.account-form-field textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.account-form-field input:focus,
+.account-form-field select:focus,
+.account-form-field textarea:focus {
+    border-color: #9e7470;
+    box-shadow: 0 0 0 3px #8d55591a;
+}
+
+.account-form-field input::placeholder,
+.account-form-field textarea::placeholder {
+    color: #b1a19a;
+}
+
+.account-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: #796963;
+    font-size: 12px;
+}
+
+.account-checkbox-row input {
+    accent-color: #704449;
+}
+
+.account-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 23px;
+    padding-top: 18px;
+    border-top: 1px solid #eee4de;
+}
+
+.account-modal-backdrop {
+    position: fixed !important;
+    z-index: 9999 !important;
+    inset: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow-y: auto !important;
+    padding: 24px !important;
+    background: rgba(38, 25, 24, .52) !important;
+    backdrop-filter: blur(3px);
+    animation: accountBackdropIn .18s ease-out;
+}
+
+.account-modal {
+    width: min(640px, 100%) !important;
+    max-height: min(88dvh, 820px) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    margin: auto !important;
+    box-shadow: 0 24px 80px rgba(38, 25, 24, .22) !important;
+    animation: accountModalIn .2s ease-out;
+}
+
+.account-modal .account-form-heading {
+    position: sticky;
+    top: -1px;
+    z-index: 2;
+    padding-bottom: 14px;
+    background: #fffdfa;
+}
+
+.account-modal .account-form-actions {
+    position: sticky;
+    bottom: -1px;
+    z-index: 2;
+    background: #fffdfa;
+}
+
+.account-modal-backdrop button:focus-visible,
+.account-modal-backdrop input:focus-visible,
+.account-modal-backdrop select:focus-visible,
+.account-modal-backdrop a:focus-visible {
+    outline: 2px solid #8d5559;
+    outline-offset: 2px;
+}
+
+@keyframes accountBackdropIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes accountModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 900px) {
+    .account-layout {
+        grid-template-columns: 210px minmax(0, 1fr);
+        gap: 14px;
+    }
+
+    .account-wishlist-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 680px) {
     .account-page {
-        padding: 35px 4% 28px;
-    }
-
-    .account-page-header h1 {
-        font-size: 62px;
-    }
-
-    .account-page-header p {
-        font-size: 13px;
+        padding: 22px 13px 32px;
     }
 
     .account-layout {
-        grid-template-columns:
-            205px minmax(0, 1fr);
-
-        gap: 15px;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .account-sidebar {
-        padding: 20px 16px;
-    }
-
-    .account-navigation button {
-        font-size: 10px;
-    }
-
-    .profile-details {
-        grid-template-columns: 1fr;
-    }
-
-    .profile-detail {
-        min-height: auto;
-
-        padding:
-            0 0 17px;
-
-        border-right: none;
-
-        border-bottom:
-            1px solid rgba(93, 62, 53, 0.12);
-    }
-
-    .profile-detail:not(:first-child) {
-        padding-left: 0;
-
-        padding-top: 17px;
-    }
-
-    .profile-detail:last-child {
-        padding-bottom: 0;
-
-        border-bottom: none;
-    }
-
-    .account-wishlist-grid,
-    .account-address-list {
-        grid-template-columns: 1fr;
-    }
-
-    .account-sidebar,
-    .account-welcome,
-    .account-content-panel {
-        backdrop-filter:
-            blur(22px) saturate(110%);
-
-        -webkit-backdrop-filter:
-            blur(22px) saturate(110%);
-    }
-}
-
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media (max-width: 700px) {
-
-    .account-page {
-        height: 100dvh;
-
-        padding:
-            25px 4% 22px;
-    }
-
-    .account-page-header {
-        margin-bottom: 12px;
-    }
-
-    .account-page-header>span {
-        font-size: 8px;
-    }
-
-    .account-page-header h1 {
-        font-size: 48px;
-    }
-
-    .account-page-header p {
-        font-size: 10px;
-    }
-
-
-    /* =====================================================
-       LAYOUT
-    ===================================================== */
-
-    .account-layout {
-        display: flex;
-
-        flex-direction: column;
-
-        gap: 10px;
-    }
-
-
-    /* =====================================================
-       SIDEBAR
-    ===================================================== */
-
-    .account-sidebar {
-        width: 100%;
-
-        height: auto;
-
-        min-height: 0;
-
-        flex-shrink: 0;
-
-        padding:
-            14px 15px;
-
-        border-radius: 13px;
+        padding: 14px;
     }
 
     .account-sidebar-title {
-        padding-bottom: 11px;
-    }
-
-    .account-sidebar-title span {
-        font-size: 22px;
-    }
-
-    .account-sidebar-title small {
-        font-size: 7px;
+        padding-bottom: 12px;
+        margin-bottom: 10px;
     }
 
     .account-navigation {
-        margin-top: 6px;
-
-        display: grid;
-
-        grid-template-columns:
-            repeat(3, 1fr);
-
-        gap: 0 8px;
+        display: flex;
+        gap: 7px;
+        overflow-x: auto;
+        padding-bottom: 5px;
     }
 
+    .account-navigation a,
     .account-navigation button {
-        min-height: 33px;
-
-        padding: 6px 0;
-
-        font-size: 7.5px;
-    }
-
-    .account-navigation button strong {
-        display: none;
-    }
-
-    .account-navigation button:hover,
-    .account-navigation button.active {
-        padding-left: 0;
-
-        background:
-            rgba(255, 255, 255, 0.48);
+        width: auto;
+        flex: 0 0 auto;
+        white-space: nowrap;
+        padding: 10px 12px;
     }
 
     .account-logout {
-        margin-top: 9px;
-
-        font-size: 7px;
+        padding-top: 10px;
     }
-
-
-    /* =====================================================
-       WELCOME
-    ===================================================== */
 
     .account-welcome {
-        min-height: 69px;
-
-        padding:
-            10px 14px;
-
-        border-radius: 13px;
+        padding: 16px;
     }
-
-    .account-avatar {
-        width: 44px;
-        height: 44px;
-
-        font-size: 18px;
-    }
-
-    .account-welcome-content>span {
-        font-size: 6.5px;
-    }
-
-    .account-welcome h2 {
-        font-size: 25px;
-    }
-
-
-    /* =====================================================
-       CONTENT
-    ===================================================== */
 
     .account-content-panel {
-        height:
-            calc(100% - 79px);
-
-        margin-top: 9px;
-
-        padding: 19px;
-
-        border-radius: 13px;
+        padding: 18px 14px;
     }
 
     .account-content-header {
-        min-height: 43px;
-
-        padding-bottom: 12px;
+        align-items: flex-start;
+        flex-direction: column;
     }
 
-    .account-content-header>div span {
-        font-size: 6.5px;
+    .account-content-header>a,
+    .account-content-header>button {
+        width: 100%;
     }
 
-    .account-content-header h2 {
-        font-size: 29px;
+    .account-order-meta {
+        grid-template-columns: 1fr;
+        gap: 12px;
     }
 
-    .account-content-header>button,
-    .account-outline-button {
-        font-size: 7px;
+    .account-order-meta div {
+        grid-template-columns: 100px minmax(0, 1fr);
+        align-items: center;
     }
 
-
-    /* =====================================================
-       PROFILE
-    ===================================================== */
-
-    .profile-details {
-        margin-top: 16px;
+    .account-wishlist-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
     }
 
-    .profile-detail {
-        padding-bottom: 13px;
+    .account-wishlist-info {
+        padding: 11px;
     }
 
-    .profile-detail:not(:first-child) {
-        padding-top: 13px;
+    .account-wishlist-info h3 {
+        font-size: 15px;
     }
-
-    .profile-detail>span {
-        font-size: 6.5px;
-    }
-
-    .profile-detail p {
-        font-size: 21px;
-    }
-
-    .profile-account-note {
-        margin-top: 17px;
-
-        padding-top: 14px;
-    }
-
-    .profile-account-note span {
-        font-size: 6.5px;
-    }
-
-    .profile-account-note p {
-        font-size: 9px;
-    }
-
-
-    /* =====================================================
-       EMPTY
-    ===================================================== */
-
-    .account-empty-state {
-        min-height: 255px;
-
-        padding:
-            25px 10px;
-    }
-
-    .account-empty-mark {
-        width: 44px;
-        height: 44px;
-
-        margin-bottom: 13px;
-
-        font-size: 20px;
-    }
-
-    .account-empty-state h3 {
-        font-size: 26px;
-    }
-
-    .account-empty-state p {
-        font-size: 9px;
-    }
-
-
-    /* =====================================================
-       FORM
-    ===================================================== */
 
     .account-form-grid {
-        grid-template-columns: 1fr;
-
-        gap: 14px;
+        grid-template-columns: minmax(0, 1fr);
     }
 
     .account-form-field-full {
         grid-column: auto;
     }
 
-    .account-form-field label {
-        font-size: 6.5px;
+    .account-modal-backdrop {
+        align-items: flex-end !important;
+        padding: 10px !important;
     }
 
-    .account-form-field input,
-    .account-form-field select {
-        height: 42px;
-
-        font-size: 10px;
+    .account-modal {
+        width: 100% !important;
+        max-height: 92dvh !important;
+        padding: 20px 16px !important;
+        border-radius: 16px 16px 12px 12px !important;
     }
 
-    .account-form-actions {
-        flex-direction: column;
-
-        align-items: stretch;
+    .account-modal .account-form-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
     }
 
-    .account-form-actions button {
+    .account-modal .account-form-actions button {
         width: 100%;
-    }
-
-
-    /* =====================================================
-       OTP
-    ===================================================== */
-
-    .phone-otp-actions {
-        align-items: stretch;
-
-        flex-direction: column;
-    }
-
-    .phone-otp-input {
-        width: 100%;
-    }
-
-    .phone-otp-actions .account-primary-button {
-        width: 100%;
-    }
-
-    .phone-send-otp-button {
-        width: 100%;
-    }
-
-    .phone-verification-row {
-        width: 100%;
-    }
-
-
-    /* =====================================================
-       WISHLIST
-    ===================================================== */
-
-    .account-wishlist-grid {
-        grid-template-columns: 1fr;
-
-        gap: 10px;
-    }
-
-    .account-wishlist-image {
-        height: 190px;
-    }
-
-
-    /* =====================================================
-       ADDRESSES
-    ===================================================== */
-
-    .account-address-list {
-        grid-template-columns: 1fr;
-
-        gap: 10px;
-    }
-
-
-    /* =====================================================
-       ORDERS
-    ===================================================== */
-
-    .account-order-meta {
-        grid-template-columns: 1fr;
-
-        gap: 10px;
-    }
-
-
-    /* =====================================================
-       SETTINGS
-    ===================================================== */
-
-    .account-preference-card {
-        align-items: flex-start;
-
-        padding: 14px;
-    }
-
-    .account-preference-card>div>strong {
-        font-size: 20px;
-    }
-
-    .account-preference-card>div>p {
-        font-size: 8px;
-    }
-
-
-    /* =====================================================
-       BACKGROUND
-    ===================================================== */
-
-    .account-background-overlay {
-        background:
-            linear-gradient(180deg,
-                rgba(248, 241, 235, 0.30) 0%,
-                rgba(248, 241, 235, 0.24) 55%,
-                rgba(248, 241, 235, 0.32) 100%);
     }
 }
 
-
-/* =========================================================
-   SMALL MOBILE
-========================================================= */
-
-@media (max-width: 420px) {
-
-    .account-page {
-        padding:
-            20px 3.5% 18px;
+@media (max-width: 380px) {
+    .account-wishlist-grid {
+        grid-template-columns: minmax(0, 1fr);
     }
 
-    .account-page-header h1 {
-        font-size: 42px;
-    }
-
-    .account-layout {
-        gap: 8px;
-    }
-
-    .account-navigation {
-        grid-template-columns:
-            repeat(2, 1fr);
-    }
-
-    .account-content-header {
-        align-items: flex-start;
-
-        flex-direction: column;
-    }
-
-    .account-content-header>button,
-    .account-outline-button {
-        align-self: flex-start;
+    .account-wishlist-image {
+        aspect-ratio: 5 / 4;
     }
 
     .account-form-actions {
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 1fr;
     }
 
     .account-form-actions button {
         width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .account-modal-backdrop,
+    .account-modal,
+    .account-page * {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
     }
 }
