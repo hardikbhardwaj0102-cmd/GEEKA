@@ -4387,9 +4387,9 @@ export default function Profile() {
                 case "settings":
 
                     return (
-                        <section className="account-content-panel">
+                        <section className="account-content-panel account-settings-panel">
 
-                            <div className="account-content-header">
+                            <div className="account-content-header account-settings-header">
 
                                 <div>
 
@@ -4401,6 +4401,7 @@ export default function Profile() {
                                     <h2>
                                         Settings
                                     </h2>
+                                    <p>Manage your account security and shopping preferences.</p>
 
                                 </div>
 
@@ -4581,6 +4582,13 @@ export default function Profile() {
                             </section>
 
 
+                            <div className="account-settings-preferences">
+                                <div className="account-settings-section-heading">
+                                    <span>YOUR EXPERIENCE</span>
+                                    <h3>Communication &amp; recommendations</h3>
+                                    <p>Choose which updates and personalised features you want from Geeka.</p>
+                                </div>
+
                             <div className="account-preference-card">
 
                                 <div>
@@ -4707,6 +4715,7 @@ export default function Profile() {
                                     <span />
                                 </button>
 
+                            </div>
                             </div>
 
                         </section>
