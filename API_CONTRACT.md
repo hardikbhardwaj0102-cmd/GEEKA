@@ -4452,3 +4452,45 @@ The following limitations are important when integrating this endpoint:
 - No order cancellation, order history, order-detail, or payment-processing endpoints are documented here because those API capabilities have not yet been implemented and verified.
 
 These limitations must be resolved or explicitly addressed in the remaining Phase 5 work before the complete checkout and order lifecycle can be considered production-ready.
+
+
+## 5.2 Cancel Order
+
+**Endpoint:** `POST /api/v1/orders/{order_id}/cancel/`
+
+**Authentication:** Required. Uses the project's session authentication.
+
+**Purpose:** Allows an authenticated customer to cancel their own eligible order.
+
+**Request body:** None.
+
+**Success response — `200 OK`:**
+
+Returns a success message and the updated order using the same order response structure as checkout.
+
+```json
+{
+  "message": "Order cancelled successfully.",
+  "order": {
+    "id": "order-uuid",
+    "order_number": "GK-XXXXXXXXXXXX",
+    "status": "CANCELLED",
+    "payment_status": "PENDING"
+  }
+}
+```
+
+The example above shows the principal fields only. The actual response includes the contact details, delivery address snapshot, items, totals, currency, and creation timestamp returned by the shared order response builder.
+
+**Cancellation rules:**
+- Only the authenticated order owner can cancel the order.
+- The order must have `PENDING` status.
+- The payment status must be `PENDING`.
+- Successful cancellation restores stock for existing product variants and marks the order as `CANCELLED`.
+- Repeated cancellation is rejected; stock must not be restored twice.
+
+**Error responses:**
+- `400 Bad Request`: Order not found for the requesting customer, order is ineligible for cancellation, or cancellation has already occurred.
+- `401 Unauthorized` or `403 Forbidden`: Request is unauthenticated, depending on the configured authentication behavior.
+
+**Important:** This endpoint does not process payment refunds or cancel shipments. Payment gateway integration and post-payment cancellation are not implemented.

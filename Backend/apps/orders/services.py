@@ -264,3 +264,66 @@ def create_order_from_cart(
     clear_cart(cart=locked_cart)
 
     return order, True
+
+
+
+
+
+
+@transaction.atomic
+def cancel_order(*, order_id, customer):
+    """
+    Cancel an eligible unpaid order and restore its stock exactly once.
+    """
+    try:
+        order = (
+            Order.objects
+            .select_for_update()
+            .get(id=order_id, customer=customer)
+        )
+    except Order.DoesNotExist:
+        raise ValidationError("Order not found.")
+
+    if order.status != Order.Status.PENDING:
+        raise ValidationError(
+            "Only pending orders can be cancelled."
+        )
+
+    if order.payment_status != Order.PaymentStatus.PENDING:
+        raise ValidationError(
+            "Only unpaid orders can be cancelled."
+        )
+
+    order_items = list(
+        OrderItem.objects
+        .filter(order=order)
+        .order_by("id")
+    )
+
+    variant_ids = sorted({
+        item.product_variant_id
+        for item in order_items
+        if item.product_variant_id is not None
+    }, key=str)
+
+    locked_variants = {
+        variant.id: variant
+        for variant in (
+            ProductVariant.objects
+            .select_for_update()
+            .filter(id__in=variant_ids)
+            .order_by("id")
+        )
+    }
+
+    for item in order_items:
+        variant = locked_variants.get(item.product_variant_id)
+
+        if variant is not None:
+            variant.stock += item.quantity
+            variant.save(update_fields=["stock"])
+
+    order.status = Order.Status.CANCELLED
+    order.save(update_fields=["status", "updated_at"])
+
+    return order

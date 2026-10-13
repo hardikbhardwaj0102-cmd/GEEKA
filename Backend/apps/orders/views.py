@@ -11,8 +11,10 @@ from apps.addresses.models import Address
 from apps.cart.models import Cart
 from apps.orders.models import Order
 from apps.orders.serializers import CheckoutSerializer
-from apps.orders.services import create_order_from_cart
-
+from apps.orders.services import (
+    create_order_from_cart,
+    cancel_order,
+)
 
 def build_order_response(order):
     """Build a checkout response from persisted order snapshots."""
@@ -189,4 +191,32 @@ class CheckoutView(APIView):
                 "order": build_order_response(order),
             },
             status=response_status,
+        )
+
+
+
+
+class CancelOrderView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, order_id):
+        try:
+            order = cancel_order(
+                order_id=order_id,
+                customer=request.user,
+            )
+        except DjangoValidationError as exc:
+            detail = getattr(exc, "message_dict", None)
+
+            if detail is None:
+                detail = {"detail": exc.messages}
+
+            raise DRFValidationError(detail) from exc
+
+        return Response(
+            {
+                "message": "Order cancelled successfully.",
+                "order": build_order_response(order),
+            },
+            status=status.HTTP_200_OK,
         )
