@@ -1,6 +1,5 @@
 const API_BASE_URL = (
-    import.meta.env.VITE_API_URL ||
-    "https://geeka-backend.onrender.com"
+    import.meta.env.VITE_API_URL || "https://geeka-backend.onrender.com"
 ).replace(/\/+$/, "");
 
 const WISHLIST_URL = `${API_BASE_URL}/api/v1/cart/wishlist/`;
@@ -8,9 +7,11 @@ const WISHLIST_ITEMS_URL = `${API_BASE_URL}/api/v1/cart/wishlist/items/`;
 const CSRF_URL = `${API_BASE_URL}/api/v1/auth/csrf/`;
 
 function getCookie(name) {
-    const cookies = document.cookie
-        ? document.cookie.split(";")
-        : [];
+    if (typeof document === "undefined") {
+        return null;
+    }
+
+    const cookies = document.cookie ? document.cookie.split(";") : [];
 
     for (const cookie of cookies) {
         const [key, ...value] = cookie.trim().split("=");
@@ -41,56 +42,58 @@ async function getCsrfToken() {
         },
     });
 
-    const data = await response.json().catch(() => ({}));
-
     if (!response.ok) {
-        throw new Error(
-            data?.message ||
-            data?.error ||
-            data?.detail ||
-            "Unable to obtain a CSRF token."
-        );
+        throw new Error("Unable to obtain CSRF token. Please try again.");
     }
 
-    const token =
+    const data = await response.json().catch(() => ({}));
+
+    return (
+        getCookie("csrftoken") ||
+        getCookie("csrfToken") ||
+        getCookie("csrf_token") ||
         data?.csrfToken ||
         data?.csrf_token ||
         data?.csrf_token_value ||
         data?.token ||
-        getCookie("csrftoken") ||
-        getCookie("csrfToken") ||
-        getCookie("csrf_token");
-
-    return token || null;
+        null
+    );
 }
 
-async function requestJson(url, options = {}) {
-    const response = await fetch(url, {
-        credentials: "include",
-        ...options,
-        headers: {
-            Accept: "application/json",
-            ...(options.body
-                ? { "Content-Type": "application/json" }
-                : {}),
-            ...options.headers,
-        },
-    });
+async function request(url, options = {}) {
+    const method = (options.method || "GET").toUpperCase();
 
-    if (response.status === 204) {
-        return null;
+    const headers = {
+        Accept: "application/json",
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...options.headers,
+    };
+
+    if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+        const csrfToken = await getCsrfToken();
+
+        if (csrfToken) {
+            headers["X-CSRFToken"] = csrfToken;
+        }
     }
 
-    const responseData = await response
-        .json()
-        .catch(() => null);
+    const response = await fetch(url, {
+        ...options,
+        method,
+        headers,
+        credentials: "include",
+    });
+
+    const responseData = await response.json().catch(() => ({}));
 
     if (!response.ok) {
         const message =
             responseData?.message ||
             responseData?.error ||
             responseData?.detail ||
-            `Request failed with status ${response.status}.`;
+            (response.status === 401
+                ? "Please log in to manage your wishlist."
+                : `Wishlist request failed (${response.status}).`);
 
         throw new Error(message);
     }
@@ -98,7 +101,9 @@ async function requestJson(url, options = {}) {
     return responseData;
 }
 
-function extractWishlistItems(data) {
+export async function getWishlist() {
+    const data = await request(WISHLIST_URL);
+
     if (Array.isArray(data)) {
         return data;
     }
@@ -119,40 +124,18 @@ function extractWishlistItems(data) {
         return data.data;
     }
 
-    if (data == null) {
-        return [];
-    }
-
-    console.warn(
-        "Unexpected wishlist API response:",
-        data
-    );
+    console.error("Unexpected wishlist API response:", data);
 
     return [];
 }
 
-export async function getWishlist() {
-    const data = await requestJson(WISHLIST_URL, {
-        method: "GET",
-    });
-
-    return extractWishlistItems(data);
-}
-
 export async function addWishlistItem(productId) {
     if (!productId) {
-        throw new Error(
-            "A valid product ID is required to add an item to the wishlist."
-        );
+        throw new Error("A valid product ID is required.");
     }
 
-    const csrfToken = await getCsrfToken();
-
-    return requestJson(WISHLIST_ITEMS_URL, {
+    return request(WISHLIST_ITEMS_URL, {
         method: "POST",
-        headers: csrfToken
-            ? { "X-CSRFToken": csrfToken }
-            : {},
         body: JSON.stringify({
             product_id: String(productId),
         }),
@@ -161,33 +144,19 @@ export async function addWishlistItem(productId) {
 
 export async function removeWishlistItem(wishlistItemId) {
     if (!wishlistItemId) {
-        throw new Error(
-            "A valid wishlist item ID is required to remove an item."
-        );
+        throw new Error("A valid wishlist item ID is required.");
     }
 
-    const csrfToken = await getCsrfToken();
-
-    const url =
-        `${WISHLIST_ITEMS_URL}${encodeURIComponent(
-            String(wishlistItemId)
-        )}/`;
-
-    return requestJson(url, {
-        method: "DELETE",
-        headers: csrfToken
-            ? { "X-CSRFToken": csrfToken }
-            : {},
-    });
+    return request(
+        `${WISHLIST_ITEMS_URL}${encodeURIComponent(wishlistItemId)}/`,
+        {
+            method: "DELETE",
+        }
+    );
 }
 
 export async function clearWishlist() {
-    const csrfToken = await getCsrfToken();
-
-    return requestJson(WISHLIST_URL, {
+    return request(WISHLIST_URL, {
         method: "DELETE",
-        headers: csrfToken
-            ? { "X-CSRFToken": csrfToken }
-            : {},
     });
 }

@@ -437,12 +437,18 @@ function CloseIcon() {
 
 export default function Profile() {
     const {
-        wishlistItems,
+        wishlist,
         toggleWishlist,
         clearWishlist: clearRemoteWishlist,
-        loading: wishlistRemoteLoading,
-        error: wishlistRemoteError,
+        loadingWishlist: wishlistRemoteLoading,
+        wishlistError: wishlistRemoteError,
     } = useWishlist();
+
+    // Keep Profile compatible with the shared useWishlist hook.
+    // The hook exposes `wishlist`, not `wishlistItems`.
+    const wishlistItems = Array.isArray(wishlist)
+        ? wishlist
+        : [];
 
 
     const navigate =
@@ -1143,47 +1149,104 @@ export default function Profile() {
                 return;
             }
 
+            const safeWishlistItems = Array.isArray(wishlistItems)
+                ? wishlistItems
+                : [];
+
+            if (safeWishlistItems.length === 0) {
+                setWishlistProducts([]);
+                setWishlistProductsLoading(false);
+                setWishlistError(wishlistRemoteError || "");
+                return;
+            }
+
             setWishlistProductsLoading(true);
 
             try {
                 const productsResponse = await getProducts();
                 const productList = Array.isArray(productsResponse)
                     ? productsResponse
-                    : [];
+                    : Array.isArray(productsResponse?.results)
+                        ? productsResponse.results
+                        : Array.isArray(productsResponse?.products)
+                            ? productsResponse.products
+                            : Array.isArray(productsResponse?.items)
+                                ? productsResponse.items
+                                : [];
 
-                const mappedProducts = wishlistItems.map((item) => {
-                    const product = productList.find(
-                        (candidate) =>
-                            String(candidate?.id) === String(item.product_id)
-                    );
+                const mappedProducts = safeWishlistItems.map((item) => {
+                    const productId =
+                        item?.product_id ??
+                        item?.product?.id ??
+                        item?.product?.product_id ??
+                        item?.productId ??
+                        null;
+
+                    const wishlistItemId =
+                        item?.id ??
+                        item?.wishlist_item_id ??
+                        item?.wishlistItemId ??
+                        null;
+
+                    const product = productList.find((candidate) => {
+                        const candidateId =
+                            candidate?.id ??
+                            candidate?.product_id ??
+                            candidate?.productId;
+
+                        return productId != null &&
+                            candidateId != null &&
+                            String(candidateId) === String(productId);
+                    }) || item?.product || null;
+
+                    const category =
+                        product?.category?.name ||
+                        product?.category ||
+                        product?.category_name ||
+                        item?.category_name ||
+                        item?.category?.name ||
+                        item?.category ||
+                        "Collection";
+
+                    const productName =
+                        product?.name ||
+                        product?.product_name ||
+                        item?.product_name ||
+                        item?.name ||
+                        "Product";
 
                     if (product) {
+                        const primaryImage =
+                            product?.primary_image?.image_url ||
+                            product?.image ||
+                            product?.image_url ||
+                            item?.image ||
+                            item?.image_url ||
+                            "";
+
                         return {
                             ...product,
-                            wishlistItemId: item.id,
-                            productId: item.product_id,
-                            name:
-                                product.name ||
-                                product.product_name ||
-                                item.product_name ||
-                                "Product",
-                            category:
-                                product.category ||
-                                product.category_name ||
-                                item.category_name ||
-                                "Collection",
+                            id: product.id ?? productId ?? wishlistItemId,
+                            productId: productId ?? product.id ?? null,
+                            wishlistItemId,
+                            name: productName,
+                            category,
+                            image: primaryImage,
+                            displayImage: product.displayImage || primaryImage,
                         };
                     }
 
                     return {
-                        id: item.product_id,
-                        productId: item.product_id,
-                        wishlistItemId: item.id,
-                        name: item.product_name || "Product",
-                        category: item.category_name || "Collection",
-                        image: "",
-                        price: 0,
-                        slug: item.product_slug || "",
+                        id: productId ?? wishlistItemId,
+                        productId,
+                        wishlistItemId,
+                        name: productName,
+                        category,
+                        image: item?.image || item?.image_url || "",
+                        displayImage: item?.image || item?.image_url || "",
+                        images: Array.isArray(item?.images) ? item.images : [],
+                        price: item?.price ?? 0,
+                        slug: item?.product_slug || item?.slug || "",
                     };
                 });
 
@@ -1197,7 +1260,8 @@ export default function Profile() {
                 if (!cancelled) {
                     setWishlistProducts([]);
                     setWishlistError(
-                        error.message || "Unable to load wishlist products."
+                        error?.message ||
+                        "Unable to load wishlist products."
                     );
                 }
             } finally {
