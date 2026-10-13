@@ -8,17 +8,34 @@
     --geeka-paper: #fffdfb;
     --geeka-rose: #7b3f46;
     --geeka-rose-dark: #613038;
+
     position: relative;
+    isolation: isolate;
     min-height: 100vh;
     padding: 36px clamp(18px, 4vw, 64px) 56px;
-    background: #f8f4ef !important;
+    background: #f8f4ef;
     color: var(--geeka-ink);
-    isolation: isolate;
 }
 
-.account-background-image,
+/* profile.png background, supplied through the existing JSX custom property */
+.account-background-image {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background-image: var(--profile-background);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    pointer-events: none;
+}
+
+/* Soft ivory wash preserves readability of the account interface */
 .account-background-overlay {
-    display: none !important;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: rgba(255, 250, 247, 0.76);
+    pointer-events: none;
 }
 
 .account-page-header,
