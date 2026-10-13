@@ -18,6 +18,10 @@ import {
     getProducts,
 } from "../services/productService";
 
+import {
+    useWishlist,
+} from "../hooks/useWishlist";
+
 
 /*
 |--------------------------------------------------------------------------
@@ -83,11 +87,6 @@ const CSRF_URL =
 const LOGOUT_URL =
     `${API_URL}/api/v1/auth/logout/`;
 
-const WISHLIST_URL =
-    `${API_URL}/api/v1/cart/wishlist/`;
-
-const WISHLIST_ITEMS_URL =
-    `${API_URL}/api/v1/cart/wishlist/items/`;
 
 
 /*
@@ -437,6 +436,14 @@ function CloseIcon() {
 */
 
 export default function Profile() {
+    const {
+        wishlistItems,
+        toggleWishlist,
+        clearWishlist: clearRemoteWishlist,
+        loading: wishlistRemoteLoading,
+        error: wishlistRemoteError,
+    } = useWishlist();
+
 
     const navigate =
         useNavigate();
@@ -1055,18 +1062,13 @@ export default function Profile() {
     */
 
     const [
-        wishlistItems,
-        setWishlistItems,
-    ] = useState([]);
-
-    const [
         wishlistProducts,
         setWishlistProducts,
     ] = useState([]);
 
     const [
-        wishlistLoading,
-        setWishlistLoading,
+        wishlistProductsLoading,
+        setWishlistProductsLoading,
     ] = useState(false);
 
     const [
@@ -1078,6 +1080,8 @@ export default function Profile() {
         wishlistActionLoading,
         setWishlistActionLoading,
     ] = useState(false);
+
+    const wishlistLoading = wishlistRemoteLoading || wishlistProductsLoading;
 
 
     /*
@@ -1124,58 +1128,30 @@ export default function Profile() {
 
     /*
     |--------------------------------------------------------------------------
-    | LOAD WISHLIST FROM BACKEND
+    | MAP SHARED BACKEND WISHLIST ITEMS TO PRODUCT CARDS
     |--------------------------------------------------------------------------
     */
 
     useEffect(() => {
         let cancelled = false;
 
-        async function loadWishlist() {
+        async function mapWishlistProducts() {
             if (!accountUser) {
-                setWishlistItems([]);
                 setWishlistProducts([]);
-                setWishlistLoading(false);
+                setWishlistProductsLoading(false);
                 setWishlistError("");
                 return;
             }
 
-            setWishlistLoading(true);
-            setWishlistError("");
+            setWishlistProductsLoading(true);
 
             try {
-                const [wishlistResponse, productsResponse] = await Promise.all([
-                    fetch(WISHLIST_URL, {
-                        method: "GET",
-                        credentials: "include",
-                        cache: "no-store",
-                        headers: {
-                            Accept: "application/json",
-                        },
-                    }),
-                    getProducts(),
-                ]);
-
-                const wishlistData = await readResponseData(wishlistResponse);
-
-                if (!wishlistResponse.ok) {
-                    throw new Error(
-                        wishlistData.detail ||
-                        wishlistData.message ||
-                        wishlistData.error ||
-                        `Unable to load wishlist (${wishlistResponse.status}).`
-                    );
-                }
-
-                const remoteItems = Array.isArray(wishlistData.items)
-                    ? wishlistData.items
-                    : [];
-
+                const productsResponse = await getProducts();
                 const productList = Array.isArray(productsResponse)
                     ? productsResponse
                     : [];
 
-                const mappedProducts = remoteItems.map((item) => {
+                const mappedProducts = wishlistItems.map((item) => {
                     const product = productList.find(
                         (candidate) =>
                             String(candidate?.id) === String(item.product_id)
@@ -1212,33 +1188,37 @@ export default function Profile() {
                 });
 
                 if (!cancelled) {
-                    setWishlistItems(remoteItems);
                     setWishlistProducts(mappedProducts);
-                    setWishlistError("");
+                    setWishlistError(wishlistRemoteError || "");
                 }
             } catch (error) {
-                console.error("GEEKA WISHLIST LOAD ERROR:", error);
+                console.error("GEEKA WISHLIST PRODUCT MAP ERROR:", error);
 
                 if (!cancelled) {
-                    setWishlistItems([]);
                     setWishlistProducts([]);
                     setWishlistError(
-                        error.message || "Unable to load your wishlist."
+                        error.message || "Unable to load wishlist products."
                     );
                 }
             } finally {
                 if (!cancelled) {
-                    setWishlistLoading(false);
+                    setWishlistProductsLoading(false);
                 }
             }
         }
 
-        loadWishlist();
+        mapWishlistProducts();
 
         return () => {
             cancelled = true;
         };
-    }, [accountUser]);
+    }, [accountUser, wishlistItems, wishlistRemoteError]);
+
+    useEffect(() => {
+        if (wishlistRemoteError) {
+            setWishlistError(wishlistRemoteError);
+        }
+    }, [wishlistRemoteError]);
 
 
     /*
@@ -2465,12 +2445,12 @@ export default function Profile() {
 
     /*
     |--------------------------------------------------------------------------
-    | WISHLIST MANAGEMENT
+    | WISHLIST MANAGEMENT — SHARED WITH SHOP / NEW ARRIVALS / CATALOG
     |--------------------------------------------------------------------------
     */
 
-    async function removeFromWishlist(wishlistItemId) {
-        if (!wishlistItemId || wishlistActionLoading) {
+    async function removeFromWishlist(productId) {
+        if (!productId || wishlistActionLoading) {
             return;
         }
 
@@ -2478,45 +2458,7 @@ export default function Profile() {
         setWishlistError("");
 
         try {
-            const csrfToken = await getCsrfToken();
-
-            const response = await fetch(
-                `${WISHLIST_ITEMS_URL}${encodeURIComponent(wishlistItemId)}/`,
-                {
-                    method: "DELETE",
-                    credentials: "include",
-                    headers: {
-                        Accept: "application/json",
-                        "X-CSRFToken": csrfToken,
-                    },
-                }
-            );
-
-            const data = response.status === 204
-                ? {}
-                : await readResponseData(response);
-
-            if (!response.ok) {
-                throw new Error(
-                    data.detail ||
-                    data.message ||
-                    data.error ||
-                    `Unable to remove wishlist item (${response.status}).`
-                );
-            }
-
-            setWishlistItems((current) =>
-                current.filter((item) => String(item.id) !== String(wishlistItemId))
-            );
-
-            setWishlistProducts((current) =>
-                current.filter(
-                    (product) =>
-                        String(product.wishlistItemId) !== String(wishlistItemId)
-                )
-            );
-
-            window.dispatchEvent(new Event("geeka-wishlist-updated"));
+            await toggleWishlist(productId);
         } catch (error) {
             console.error("GEEKA WISHLIST REMOVE ERROR:", error);
             setWishlistError(
@@ -2527,7 +2469,6 @@ export default function Profile() {
         }
     }
 
-
     async function clearWishlist() {
         if (wishlistActionLoading || wishlistItems.length === 0) {
             return;
@@ -2537,33 +2478,7 @@ export default function Profile() {
         setWishlistError("");
 
         try {
-            const csrfToken = await getCsrfToken();
-
-            const response = await fetch(WISHLIST_URL, {
-                method: "DELETE",
-                credentials: "include",
-                headers: {
-                    Accept: "application/json",
-                    "X-CSRFToken": csrfToken,
-                },
-            });
-
-            const data = response.status === 204
-                ? {}
-                : await readResponseData(response);
-
-            if (!response.ok) {
-                throw new Error(
-                    data.detail ||
-                    data.message ||
-                    data.error ||
-                    `Unable to clear wishlist (${response.status}).`
-                );
-            }
-
-            setWishlistItems([]);
-            setWishlistProducts([]);
-            window.dispatchEvent(new Event("geeka-wishlist-updated"));
+            await clearRemoteWishlist();
         } catch (error) {
             console.error("GEEKA WISHLIST CLEAR ERROR:", error);
             setWishlistError(
@@ -3289,7 +3204,7 @@ export default function Profile() {
                                                         className="account-icon-button"
                                                         onClick={() =>
                                                             removeFromWishlist(
-                                                                product.wishlistItemId
+                                                                product.productId
                                                             )
                                                         }
                                                         disabled={wishlistActionLoading}
