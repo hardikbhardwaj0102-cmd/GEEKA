@@ -84,6 +84,12 @@ const ME_URL =
 const CSRF_URL =
     `${API_URL}/api/v1/auth/csrf/`;
 
+const EMAIL_CHANGE_REQUEST_URL =
+    `${API_URL}/api/v1/auth/email-change/request/`;
+
+const EMAIL_CHANGE_VERIFY_URL =
+    `${API_URL}/api/v1/auth/email-change/verify/`;
+
 const LOGOUT_URL =
     `${API_URL}/api/v1/auth/logout/`;
 
@@ -599,6 +605,21 @@ export default function Profile() {
     ] = useState(
         "success"
     );
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EMAIL CHANGE VERIFICATION
+    |--------------------------------------------------------------------------
+    */
+
+    const [emailChangeDraft, setEmailChangeDraft] = useState("");
+    const [emailChangeOtp, setEmailChangeOtp] = useState("");
+    const [emailChangeOtpSent, setEmailChangeOtpSent] = useState(false);
+    const [emailChangeRequestLoading, setEmailChangeRequestLoading] = useState(false);
+    const [emailChangeVerifyLoading, setEmailChangeVerifyLoading] = useState(false);
+    const [emailChangeMessage, setEmailChangeMessage] = useState("");
+    const [emailChangeMessageType, setEmailChangeMessageType] = useState("success");
 
 
     /*
@@ -1149,114 +1170,41 @@ export default function Profile() {
                 const productsResponse = await getProducts();
                 const productList = Array.isArray(productsResponse)
                     ? productsResponse
-                    : Array.isArray(productsResponse?.results)
-                        ? productsResponse.results
-                        : Array.isArray(productsResponse?.products)
-                            ? productsResponse.products
-                            : Array.isArray(productsResponse?.data)
-                                ? productsResponse.data
-                                : [];
+                    : [];
 
-                const readProductId = (value) =>
-                    value?.product_id ??
-                    value?.productId ??
-                    value?.product?.id ??
-                    value?.product?.product_id ??
-                    value?.id ??
-                    null;
-
-                const readProductPrice = (...sources) => {
-                    const candidates = [];
-                    const add = (value) => {
-                        if (value === null || value === undefined || value === "") return;
-                        const number = Number(value);
-                        if (Number.isFinite(number) && number > 0) candidates.push(number);
-                    };
-
-                    for (const source of sources) {
-                        if (!source || typeof source !== "object") continue;
-                        add(source.sale_price);
-                        add(source.selling_price);
-                        add(source.discount_price);
-                        add(source.final_price);
-                        add(source.price);
-                        add(source.unit_price);
-                        add(source.min_price);
-                        add(source.starting_price);
-                        add(source.regular_price);
-                        add(source.mrp);
-                        add(source.variant?.sale_price);
-                        add(source.variant?.price);
-                        add(source.default_variant?.sale_price);
-                        add(source.default_variant?.price);
-                        for (const variant of source.variants || source.product_variants || []) {
-                            add(variant?.sale_price);
-                            add(variant?.selling_price);
-                            add(variant?.price);
-                            add(variant?.final_price);
-                        }
-                    }
-
-                    return candidates.length ? Math.min(...candidates) : null;
-                };
-
-                const mappedProducts = (Array.isArray(wishlistItems) ? wishlistItems : []).map((item) => {
-                    const productId =
-                        item?.product_id ??
-                        item?.productId ??
-                        item?.product?.id ??
-                        item?.product?.product_id ??
-                        item?.product_details?.id ??
-                        item?.product_detail?.id ??
-                        null;
-
-                    const embeddedProduct =
-                        item?.product && typeof item.product === "object"
-                            ? item.product
-                            : item?.product_details || item?.product_detail || null;
-
-                    const product = embeddedProduct || productList.find(
-                        (candidate) => String(readProductId(candidate)) === String(productId)
+                const mappedProducts = wishlistItems.map((item) => {
+                    const product = productList.find(
+                        (candidate) =>
+                            String(candidate?.id) === String(item.product_id)
                     );
 
-                    const image =
-                        product?.image ||
-                        product?.image_url ||
-                        product?.primary_image ||
-                        product?.thumbnail ||
-                        product?.main_image ||
-                        product?.images?.[0]?.url ||
-                        product?.images?.[0]?.image ||
-                        product?.images?.[0] ||
-                        item?.image ||
-                        item?.image_url ||
-                        item?.product_image ||
-                        "";
+                    if (product) {
+                        return {
+                            ...product,
+                            wishlistItemId: item.id,
+                            productId: item.product_id,
+                            name:
+                                product.name ||
+                                product.product_name ||
+                                item.product_name ||
+                                "Product",
+                            category:
+                                product.category ||
+                                product.category_name ||
+                                item.category_name ||
+                                "Collection",
+                        };
+                    }
 
                     return {
-                        ...(product && typeof product === "object" ? product : {}),
-                        id: productId ?? product?.id ?? item?.id,
-                        productId: productId ?? product?.id ?? item?.product_id,
-                        wishlistItemId: item?.id ?? item?.wishlist_item_id ?? item?.wishlistItemId,
-                        name:
-                            product?.name ||
-                            product?.product_name ||
-                            product?.title ||
-                            item?.product_name ||
-                            item?.name ||
-                            item?.product?.name ||
-                            "Product",
-                        category:
-                            product?.category?.name ||
-                            product?.category ||
-                            product?.category_name ||
-                            item?.category_name ||
-                            item?.category ||
-                            "Collection",
-                        image,
-                        price: readProductPrice(product, item),
-                        currency: product?.currency || item?.currency || "INR",
-                        slug: product?.slug || item?.product_slug || item?.slug || "",
+                        id: item.product_id,
+                        productId: item.product_id,
+                        wishlistItemId: item.id,
+                        name: item.product_name || "Product",
+                        category: item.category_name || "Collection",
+                        image: "",
+                        price: 0,
+                        slug: item.product_slug || "",
                     };
                 });
 
@@ -2216,6 +2164,164 @@ export default function Profile() {
         setProfileMessageType(
             "success"
         );
+    }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | EMAIL CHANGE REQUEST AND VERIFICATION
+    |--------------------------------------------------------------------------
+    */
+
+    function getApiErrorMessage(data, fallback) {
+        if (data?.errors && typeof data.errors === "object") {
+            const firstError = Object.values(data.errors)
+                .flat()
+                .find((value) => typeof value === "string" && value.trim());
+            if (firstError) return firstError;
+        }
+
+        return data?.detail || data?.message || data?.error || fallback;
+    }
+
+    async function requestEmailChangeOtp(event) {
+        event.preventDefault();
+
+        const newEmail = emailChangeDraft.trim().toLowerCase();
+        const currentEmail = (accountUser?.email || profile.email || "").trim().toLowerCase();
+
+        if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+            setEmailChangeMessage("Enter a valid email address.");
+            setEmailChangeMessageType("error");
+            return;
+        }
+
+        if (newEmail === currentEmail) {
+            setEmailChangeMessage("This is already your current email address.");
+            setEmailChangeMessageType("error");
+            return;
+        }
+
+        setEmailChangeRequestLoading(true);
+        setEmailChangeMessage("");
+
+        try {
+            const csrfToken = await getCsrfToken();
+            const response = await fetch(EMAIL_CHANGE_REQUEST_URL, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({ new_email: newEmail }),
+            });
+
+            const data = await readResponseData(response);
+            if (!response.ok) {
+                throw new Error(getApiErrorMessage(data, "Unable to send a verification code."));
+            }
+
+            setEmailChangeDraft(newEmail);
+            setEmailChangeOtp("");
+            setEmailChangeOtpSent(true);
+            setEmailChangeMessage(data.message || "Verification code sent to your new email address.");
+            setEmailChangeMessageType("success");
+        } catch (error) {
+            setEmailChangeMessage(error.message || "Unable to send a verification code. Please try again.");
+            setEmailChangeMessageType("error");
+        } finally {
+            setEmailChangeRequestLoading(false);
+        }
+    }
+
+    async function verifyEmailChangeOtp(event) {
+        event.preventDefault();
+
+        const newEmail = emailChangeDraft.trim().toLowerCase();
+        const otp = emailChangeOtp.trim();
+
+        if (!newEmail) {
+            setEmailChangeMessage("Enter the new email address first.");
+            setEmailChangeMessageType("error");
+            return;
+        }
+
+        if (!/^\d{6}$/.test(otp)) {
+            setEmailChangeMessage("Enter the 6-digit verification code.");
+            setEmailChangeMessageType("error");
+            return;
+        }
+
+        setEmailChangeVerifyLoading(true);
+        setEmailChangeMessage("");
+
+        try {
+            const csrfToken = await getCsrfToken();
+            const response = await fetch(EMAIL_CHANGE_VERIFY_URL, {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    Accept: "application/json",
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+                body: JSON.stringify({ new_email: newEmail, otp }),
+            });
+
+            const data = await readResponseData(response);
+            if (!response.ok) {
+                throw new Error(getApiErrorMessage(data, "Unable to verify this code."));
+            }
+
+            const updatedUser = data.user || {
+                ...(accountUser || {}),
+                email: newEmail,
+                email_verified: true,
+            };
+            updatedUser.email = updatedUser.email || newEmail;
+            updatedUser.email_verified = updatedUser.email_verified ?? true;
+
+            setAccountUser(updatedUser);
+
+            const updatedProfile = {
+                ...profile,
+                name: updatedUser.full_name || profile.name || "",
+                email: updatedUser.email,
+                emailVerified: Boolean(updatedUser.email_verified),
+            };
+            setProfile(updatedProfile);
+            setProfileDraft((current) => ({
+                ...current,
+                name: updatedUser.full_name || current.name || "",
+                email: updatedUser.email,
+                emailVerified: Boolean(updatedUser.email_verified),
+            }));
+
+            writeStorage(PROFILE_STORAGE_KEY, updatedProfile);
+            const existingUser = readStorage(USER_STORAGE_KEY, {});
+            writeStorage(USER_STORAGE_KEY, {
+                ...(existingUser || {}),
+                ...updatedProfile,
+                id: updatedUser.id || existingUser?.id,
+                full_name: updatedUser.full_name || updatedProfile.name,
+                email: updatedUser.email,
+                email_verified: updatedUser.email_verified,
+            });
+
+            window.dispatchEvent(new Event("geeka-auth-updated"));
+            setEmailChangeOtpSent(false);
+            setEmailChangeOtp("");
+            setEmailChangeDraft("");
+            setEmailChangeMessage(data.message || "Email address updated successfully.");
+            setEmailChangeMessageType("success");
+        } catch (error) {
+            setEmailChangeMessage(error.message || "Unable to verify this code. Please try again.");
+            setEmailChangeMessageType("error");
+        } finally {
+            setEmailChangeVerifyLoading(false);
+        }
     }
 
 
@@ -3307,15 +3413,15 @@ export default function Profile() {
 
                                                     <strong>
                                                         {
-                                                            product.price != null
-                                                                ? formatPrice(product.price, product.currency || "INR")
-                                                                : "PRICE ON REQUEST"
+                                                            formatPrice(
+                                                                product.price
+                                                            )
                                                         }
                                                     </strong>
 
 
                                                     <Link
-                                                        to={`/product/${encodeURIComponent(String(product.productId ?? product.id))}`}
+                                                        to="/shop"
                                                         className="account-text-button"
                                                     >
                                                         VIEW PRODUCT
@@ -4298,6 +4404,84 @@ export default function Profile() {
                             </div>
 
 
+                            <section className="account-email-change-card" aria-labelledby="account-email-change-title">
+                                <div className="account-email-change-heading">
+                                    <span>ACCOUNT SECURITY</span>
+                                    <h3 id="account-email-change-title">Change email address</h3>
+                                    <p>
+                                        Current email: <strong>{displayEmail}</strong>. We’ll send a verification code to your new email before updating your account.
+                                    </p>
+                                </div>
+
+                                <form className="account-form account-email-change-form" onSubmit={emailChangeOtpSent ? verifyEmailChangeOtp : requestEmailChangeOtp}>
+                                    <div className="account-form-grid">
+                                        <div className="account-form-field account-form-field-full">
+                                            <label htmlFor="account-new-email">New email address</label>
+                                            <input
+                                                id="account-new-email"
+                                                type="email"
+                                                value={emailChangeDraft}
+                                                onChange={(event) => {
+                                                    setEmailChangeDraft(event.target.value);
+                                                    if (emailChangeMessage) setEmailChangeMessage("");
+                                                }}
+                                                placeholder="Enter your new email address"
+                                                autoComplete="email"
+                                                required
+                                                disabled={emailChangeRequestLoading || emailChangeVerifyLoading || emailChangeOtpSent}
+                                            />
+                                        </div>
+
+                                        {emailChangeOtpSent && (
+                                            <div className="account-form-field account-form-field-full">
+                                                <label htmlFor="account-email-change-otp">6-digit verification code</label>
+                                                <input
+                                                    id="account-email-change-otp"
+                                                    type="text"
+                                                    value={emailChangeOtp}
+                                                    onChange={(event) => setEmailChangeOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                                                    placeholder="Enter the code sent to your new email"
+                                                    inputMode="numeric"
+                                                    autoComplete="one-time-code"
+                                                    maxLength={6}
+                                                    required
+                                                    disabled={emailChangeVerifyLoading}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {emailChangeMessage && (
+                                        <div className={`account-success-message ${emailChangeMessageType === "error" ? "error" : ""}`} role="status">
+                                            {emailChangeMessage}
+                                        </div>
+                                    )}
+
+                                    <div className="account-email-change-actions">
+                                        <button type="submit" className="account-primary-button" disabled={emailChangeRequestLoading || emailChangeVerifyLoading}>
+                                            {emailChangeRequestLoading ? "SENDING CODE..." : emailChangeVerifyLoading ? "VERIFYING..." : emailChangeOtpSent ? "VERIFY & UPDATE EMAIL" : "SEND VERIFICATION CODE"}
+                                        </button>
+
+                                        {emailChangeOtpSent && (
+                                            <button
+                                                type="button"
+                                                className="account-outline-button"
+                                                onClick={() => {
+                                                    setEmailChangeOtpSent(false);
+                                                    setEmailChangeOtp("");
+                                                    setEmailChangeMessage("");
+                                                }}
+                                                disabled={emailChangeRequestLoading || emailChangeVerifyLoading}
+                                            >
+                                                CHANGE EMAIL
+                                            </button>
+                                        )}
+                                    </div>
+                                    {emailChangeOtpSent && <p className="account-email-change-hint">The code expires in 10 minutes. Request a new code if it expires.</p>}
+                                </form>
+                            </section>
+
+
                             <div className="account-preference-card">
 
                                 <div>
@@ -4649,13 +4833,13 @@ export default function Profile() {
                                                 value={
                                                     profileDraft.email
                                                 }
-                                                onChange={
-                                                    handleProfileChange
-                                                }
-                                                placeholder="Enter your email"
+                                                readOnly
+                                                aria-describedby="profile-email-change-note"
                                                 autoComplete="email"
-                                                required
                                             />
+                                            <small id="profile-email-change-note" className="profile-email-change-note">
+                                                To change this address, use Settings → Change email address and verify the OTP.
+                                            </small>
 
                                         </div>
 

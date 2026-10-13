@@ -1958,3 +1958,475 @@
         scroll-behavior: auto !important;
     }
 }
+
+
+
+/* ==========================================================================
+   FINAL GEeka PROFILE POLISH
+   Consolidated overrides for the existing account page and email OTP flow.
+   Keep this section last so it consistently wins over older legacy rules.
+   ========================================================================== */
+
+.account-page {
+    --geeka-ink: #392627;
+    --geeka-muted: #806e6a;
+    --geeka-line: #e9ddd6;
+    --geeka-paper: #fffdfa;
+    --geeka-rose: #754149;
+    --geeka-rose-dark: #572f36;
+    background: #f7f3ef !important;
+    color: var(--geeka-ink);
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+.account-page,
+.account-page * {
+    box-sizing: border-box;
+}
+
+.account-page button,
+.account-page input,
+.account-page select,
+.account-page textarea {
+    font-family: inherit;
+}
+
+.account-page button:focus-visible,
+.account-page a:focus-visible,
+.account-page input:focus-visible,
+.account-page select:focus-visible,
+.account-page textarea:focus-visible {
+    outline: 2px solid #8e5a60;
+    outline-offset: 3px;
+}
+
+.account-page-header {
+    padding-bottom: 26px;
+}
+
+.account-page-header h1 {
+    letter-spacing: -.045em;
+}
+
+.account-page-header p {
+    max-width: 650px;
+}
+
+.account-layout {
+    grid-template-columns: 250px minmax(0, 1fr);
+    align-items: start;
+    gap: 22px;
+}
+
+.account-sidebar {
+    position: sticky;
+    top: 22px;
+    align-self: start;
+    max-height: calc(100vh - 44px);
+    overflow-y: auto;
+    border-radius: 15px !important;
+    box-shadow: 0 5px 22px rgba(57, 38, 39, .035) !important;
+}
+
+.account-navigation button,
+.account-navigation a {
+    min-height: 43px;
+    border-radius: 8px !important;
+    font-weight: 500;
+}
+
+.account-navigation button:hover,
+.account-navigation button.active,
+.account-navigation a:hover,
+.account-navigation .active {
+    background: #f6ece9 !important;
+    border-color: #ead8d5 !important;
+    color: var(--geeka-rose-dark) !important;
+}
+
+.account-main {
+    min-width: 0;
+}
+
+.account-welcome,
+.account-content-panel,
+.account-sidebar {
+    box-shadow: 0 5px 22px rgba(57, 38, 39, .035) !important;
+}
+
+.account-welcome {
+    border-radius: 15px !important;
+}
+
+.account-content-panel {
+    border-radius: 15px !important;
+}
+
+.account-content-header {
+    margin-bottom: 22px;
+}
+
+.account-primary-button,
+.account-secondary-button,
+.account-outline-button {
+    min-height: 44px;
+    border-radius: 7px !important;
+    font-size: 10px;
+    letter-spacing: .07em;
+    transition: transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.account-primary-button:hover,
+.account-secondary-button:hover,
+.account-outline-button:hover {
+    transform: translateY(-1px);
+}
+
+.account-primary-button:disabled,
+.account-secondary-button:disabled,
+.account-outline-button:disabled {
+    opacity: .58;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.account-content-panel input:not([type="checkbox"]),
+.account-content-panel select,
+.account-content-panel textarea {
+    min-height: 46px;
+    border-radius: 8px !important;
+}
+
+.account-content-panel input[readonly] {
+    background: #f8f4f1 !important;
+    color: #77635e !important;
+    cursor: not-allowed;
+}
+
+.profile-email-change-note {
+    display: block;
+    margin-top: 8px;
+    color: #806e6a;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.account-email-change-card {
+    position: relative;
+    display: grid;
+    gap: 22px;
+    width: 100%;
+    margin: 22px 0;
+    padding: clamp(20px, 3vw, 28px);
+    overflow: hidden;
+    border: 1px solid #e8d9d3;
+    border-radius: 14px;
+    background:
+        radial-gradient(ellipse at top right, rgba(244, 229, 223, .58), transparent 42%),
+        #fff;
+    box-shadow: 0 8px 26px rgba(57, 38, 39, .045);
+}
+
+.account-email-change-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: #845057;
+}
+
+.account-email-change-heading {
+    min-width: 0;
+}
+
+.account-email-change-heading > span {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 10px;
+    color: #87535a;
+    font-size: 9px;
+    font-weight: 750;
+    letter-spacing: .17em;
+}
+
+.account-email-change-heading h3 {
+    margin: 0;
+    color: #392627;
+    font: 400 clamp(23px, 2.4vw, 30px)/1.2 Georgia, "Times New Roman", serif;
+    letter-spacing: -.025em;
+}
+
+.account-email-change-heading p {
+    max-width: 650px;
+    margin: 10px 0 0;
+    color: #806e6a;
+    font-size: 12px;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+}
+
+.account-email-change-heading p strong {
+    color: #513638;
+    font-weight: 650;
+    overflow-wrap: anywhere;
+}
+
+.account-email-change-form {
+    max-width: none !important;
+}
+
+.account-email-change-form .account-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+}
+
+.account-email-change-form .account-form-field {
+    gap: 8px;
+}
+
+.account-email-change-form .account-form-field label {
+    color: #5f4846;
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.account-email-change-form .account-form-field input {
+    min-height: 48px;
+    padding: 12px 14px;
+    border-color: #e3d5ce !important;
+    border-radius: 8px !important;
+    background: #fff !important;
+    font-size: 13px;
+}
+
+.account-email-change-form .account-form-field input:focus {
+    border-color: #9b6a70 !important;
+    box-shadow: 0 0 0 3px rgba(117, 65, 73, .1) !important;
+}
+
+.account-email-change-form #account-email-change-otp {
+    max-width: 100%;
+    letter-spacing: .22em;
+    font-size: 17px;
+    font-weight: 650;
+}
+
+.account-email-change-form .account-form-field input:disabled {
+    background: #f7f2ef !important;
+    color: #897772 !important;
+    opacity: 1;
+}
+
+.account-email-change-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.account-email-change-actions .account-primary-button {
+    min-width: 210px;
+}
+
+.account-email-change-actions .account-outline-button {
+    min-width: 130px;
+}
+
+.account-email-change-form .account-success-message {
+    margin: 16px 0 0;
+    padding: 12px 14px;
+    border: 1px solid #d6e6d9;
+    border-radius: 8px;
+    background: #f2f8f2;
+    color: #356440;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.account-email-change-form .account-success-message.error {
+    border-color: #efd4cf;
+    background: #fff5f3;
+    color: #963f38;
+}
+
+.account-email-change-hint {
+    margin: 12px 0 0 !important;
+    padding: 10px 12px;
+    border-left: 2px solid #c7a5a0;
+    border-radius: 0 6px 6px 0;
+    background: #faf5f2;
+    color: #806e6a !important;
+    font-size: 11px !important;
+    line-height: 1.6 !important;
+}
+
+.account-preference-card {
+    padding: 18px 20px;
+    border: 1px solid #e9ddd6;
+    border-radius: 12px;
+    background: #fff;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.account-preference-card:hover {
+    border-color: #dcc7c1;
+    box-shadow: 0 5px 18px rgba(57, 38, 39, .035);
+}
+
+.account-order-card,
+.account-address-card,
+.account-payment-card,
+.account-wishlist-card {
+    border-radius: 11px !important;
+}
+
+.account-order-card,
+.account-address-card,
+.account-payment-card {
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.account-order-card:hover,
+.account-address-card:hover,
+.account-payment-card:hover {
+    border-color: #decbc5 !important;
+}
+
+.account-modal-backdrop {
+    z-index: 99999 !important;
+}
+
+.account-modal {
+    border-radius: 15px !important;
+}
+
+@media (min-width: 1200px) {
+    .account-layout {
+        min-height: min(680px, calc(100vh - 230px));
+    }
+}
+
+@media (max-width: 900px) {
+    .account-layout {
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 16px;
+    }
+
+    .account-sidebar {
+        top: 14px;
+    }
+
+    .account-wishlist-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 680px) {
+    .account-page {
+        padding: 22px 13px 32px;
+    }
+
+    .account-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+    }
+
+    .account-sidebar {
+        position: relative;
+        top: auto;
+        max-height: none;
+        padding: 14px !important;
+        overflow: visible;
+    }
+
+    .account-navigation {
+        display: flex;
+        gap: 7px;
+        overflow-x: auto;
+        padding: 3px 1px 8px;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .account-navigation button,
+    .account-navigation a {
+        width: auto;
+        min-height: 40px;
+        flex: 0 0 auto;
+        white-space: nowrap;
+        padding: 10px 13px !important;
+    }
+
+    .account-logout {
+        margin-top: 8px;
+    }
+
+    .account-email-change-card {
+        gap: 18px;
+        margin: 18px 0;
+        padding: 20px 17px;
+    }
+
+    .account-email-change-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .account-email-change-actions button,
+    .account-email-change-actions .account-primary-button,
+    .account-email-change-actions .account-outline-button {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .account-preference-card {
+        padding: 16px;
+        gap: 14px;
+    }
+}
+
+@media (max-width: 420px) {
+    .account-page-header h1 {
+        font-size: 35px;
+    }
+
+    .account-content-panel {
+        padding: 17px 13px !important;
+    }
+
+    .account-welcome {
+        gap: 12px;
+        padding: 15px !important;
+    }
+
+    .account-avatar {
+        width: 46px;
+        height: 46px;
+        flex-basis: 46px;
+    }
+
+    .account-wishlist-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .account-order-top,
+    .account-address-top {
+        gap: 10px;
+    }
+
+    .account-email-change-heading h3 {
+        font-size: 24px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .account-page *,
+    .account-page *::before,
+    .account-page *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
+}
