@@ -15,7 +15,8 @@ import "../style/Profile.css";
 import profileBackground from "../assets/profile.png";
 
 import {
-    getProducts,
+    getAllProducts,
+    getProductCards,
 } from "../services/productService";
 
 import {
@@ -166,6 +167,28 @@ function removeStorage(
     } catch {
         // Ignore storage errors.
     }
+}
+
+
+/* Convert API values into safe, readable text before rendering them. */
+function toDisplayText(value, fallback = "") {
+    if (typeof value === "string" || typeof value === "number") {
+        const text = String(value).trim();
+        return text || fallback;
+    }
+
+    if (value && typeof value === "object") {
+        return toDisplayText(
+            value.name ??
+            value.label ??
+            value.title ??
+            value.category_name ??
+            value.slug,
+            fallback
+        );
+    }
+
+    return fallback;
 }
 
 
@@ -1167,44 +1190,106 @@ export default function Profile() {
             setWishlistProductsLoading(true);
 
             try {
-                const productsResponse = await getProducts();
-                const productList = Array.isArray(productsResponse)
+                // Use the same normalized product cards as Shop/New Arrivals.
+                // The older getProducts() response does not always contain the
+                // display price fields used by the storefront.
+                const productsResponse = await getAllProducts();
+                const baseProducts = Array.isArray(productsResponse)
                     ? productsResponse
+                    : [];
+                const normalizedCards = await getProductCards(baseProducts);
+                const productList = Array.isArray(normalizedCards)
+                    ? normalizedCards
                     : [];
 
                 const mappedProducts = wishlistItems.map((item) => {
-                    const product = productList.find(
-                        (candidate) =>
-                            String(candidate?.id) === String(item.product_id)
-                    );
+                    const wishlistProductId =
+                        item?.product_id ??
+                        item?.productId ??
+                        item?.product?.id ??
+                        item?.product?.product_id;
+                    const wishlistSlug =
+                        item?.product_slug ?? item?.slug ?? item?.product?.slug;
+
+                    // Wishlist API and catalogue API may use different field names.
+                    const product = productList.find((candidate) => {
+                        const candidateId =
+                            candidate?.id ??
+                            candidate?.product_id ??
+                            candidate?.productId ??
+                            candidate?.detail?.id;
+                        const candidateSlug =
+                            candidate?.slug ?? candidate?.product_slug ?? candidate?.detail?.slug;
+                        const sameId =
+                            wishlistProductId != null &&
+                            candidateId != null &&
+                            String(candidateId) === String(wishlistProductId);
+                        const sameSlug =
+                            Boolean(wishlistSlug && candidateSlug) &&
+                            String(candidateSlug) === String(wishlistSlug);
+                        return sameId || sameSlug;
+                    });
+
+                    const variantPrice =
+                        product?.detail?.variants?.find(
+                            (variant) => variant?.is_active !== false
+                        )?.price;
+                    const resolvedPrice =
+                        product?.price ??
+                        product?.selling_price ??
+                        product?.sale_price ??
+                        product?.discounted_price ??
+                        product?.unit_price ??
+                        product?.detail?.price ??
+                        product?.detail?.selling_price ??
+                        variantPrice ??
+                        item?.price ??
+                        item?.product_price ??
+                        item?.selling_price ??
+                        item?.sale_price ??
+                        item?.product?.price ??
+                        null;
 
                     if (product) {
                         return {
                             ...product,
-                            wishlistItemId: item.id,
-                            productId: item.product_id,
-                            name:
-                                product.name ||
-                                product.product_name ||
-                                item.product_name ||
-                                "Product",
-                            category:
-                                product.category ||
-                                product.category_name ||
-                                item.category_name ||
-                                "Collection",
+                            wishlistItemId: item?.id ?? item?.wishlist_item_id,
+                            productId: product.id ?? product.product_id ?? wishlistProductId,
+                            name: toDisplayText(
+                                product.name ??
+                                product.product_name ??
+                                item.product_name ??
+                                item?.product?.name,
+                                "Product"
+                            ),
+                            category: toDisplayText(
+                                product.categoryName ??
+                                product.category_name ??
+                                product.category ??
+                                item.category_name ??
+                                item?.product?.category,
+                                "Collection"
+                            ),
+                            price: resolvedPrice,
+                            slug: product.slug ?? wishlistSlug ?? "",
                         };
                     }
 
                     return {
-                        id: item.product_id,
-                        productId: item.product_id,
-                        wishlistItemId: item.id,
-                        name: item.product_name || "Product",
-                        category: item.category_name || "Collection",
-                        image: "",
-                        price: 0,
-                        slug: item.product_slug || "",
+                        id: wishlistProductId,
+                        productId: wishlistProductId,
+                        wishlistItemId: item?.id ?? item?.wishlist_item_id,
+                        name: toDisplayText(
+                            item.product_name ?? item?.product?.name,
+                            "Product"
+                        ),
+                        category: toDisplayText(
+                            item.category_name ?? item?.product?.category,
+                            "Collection"
+                        ),
+                        image: item?.image ?? item?.product?.image ?? "",
+                        price: resolvedPrice,
+                        slug: wishlistSlug || "",
                     };
                 });
 
@@ -1345,16 +1430,23 @@ export default function Profile() {
         "Not added yet";
 
 
-    const formatPrice =
-        (value) => {
+    const formatPrice = (value) => {
+        if (value === null || value === undefined || value === "") {
+            return "Price unavailable";
+        }
 
-            return `₹${Number(
-                value || 0
-            ).toLocaleString(
-                "en-IN"
-            )}`;
+        // Accept numeric values and formatted API strings such as "₹1,299".
+        const numericPrice =
+            typeof value === "number"
+                ? value
+                : Number(String(value).replace(/[^0-9.-]/g, ""));
 
-        };
+        if (!Number.isFinite(numericPrice)) {
+            return "Price unavailable";
+        }
+
+        return `₹${numericPrice.toLocaleString("en-IN")}`;
+    };
 
 
     const formatDate =
@@ -3445,8 +3537,15 @@ export default function Profile() {
 
 
                                                     <Link
-                                                        to="/shop"
+                                                        to={`/product/${encodeURIComponent(
+                                                            product.productId ??
+                                                            product.id ??
+                                                            product.product_id ??
+                                                            product.slug ??
+                                                            ""
+                                                        )}`}
                                                         className="account-text-button"
+                                                        aria-label={`View ${product.name}`}
                                                     >
                                                         VIEW PRODUCT
                                                         <ArrowIcon />
@@ -3622,7 +3721,7 @@ export default function Profile() {
 
                                                     <p>
                                                         {
-                                                            profile.phone || address.phone
+                                                            address.phone
                                                         }
                                                     </p>
 
@@ -4315,9 +4414,9 @@ export default function Profile() {
                 case "settings":
 
                     return (
-                        <section className="account-content-panel">
+                        <section className="account-content-panel account-settings-panel">
 
-                            <div className="account-content-header">
+                            <div className="account-content-header account-settings-header">
 
                                 <div>
 
@@ -4329,6 +4428,7 @@ export default function Profile() {
                                     <h2>
                                         Settings
                                     </h2>
+                                    <p>Manage your account security and shopping preferences.</p>
 
                                 </div>
 
@@ -4509,6 +4609,13 @@ export default function Profile() {
                             </section>
 
 
+                            <div className="account-settings-preferences">
+                                <div className="account-settings-section-heading">
+                                    <span>YOUR EXPERIENCE</span>
+                                    <h3>Communication &amp; recommendations</h3>
+                                    <p>Choose which updates and personalised features you want from Geeka.</p>
+                                </div>
+
                             <div className="account-preference-card">
 
                                 <div>
@@ -4635,6 +4742,7 @@ export default function Profile() {
                                     <span />
                                 </button>
 
+                            </div>
                             </div>
 
                         </section>
