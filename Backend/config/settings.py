@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "apps.authentication",
     "apps.catalog",
     "apps.cart",
+    "apps.addresses",
 
     "rest_framework",
     "corsheaders",

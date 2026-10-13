@@ -4124,3 +4124,113 @@ The Wishlist itself remains available for future use.
 - Wishlist data does not contain a separate product-price snapshot.
 - The frontend should use `product_id` to navigate to the existing product-detail API when full product information is required.
 - Product availability, pricing, variants, and images remain authoritative from the Product APIs.
+
+
+# 4. Address Management
+
+**Base URL:** `/api/v1/addresses/`
+
+All endpoints require an authenticated customer session. Requests that create, update, or delete addresses must follow the existing session-authentication and CSRF configuration.
+
+### 1. List Addresses
+
+- **Method:** `GET`
+- **Endpoint:** `/api/v1/addresses/`
+
+Returns only addresses belonging to the authenticated customer, ordered by default status and most recently updated.
+
+**Success:** `200 OK`
+
+Returns an array of address objects. If the customer has no saved addresses, returns an empty array (`[]`).
+
+### 2. Create Address
+
+- **Method:** `POST`
+- **Endpoint:** `/api/v1/addresses/`
+
+**Request body:**
+
+```json
+{
+  "label": "HOME",
+  "recipient_name": "Test Customer",
+  "phone_number": "9876543210",
+  "address_line1": "House 12, Model Town",
+  "address_line2": "Near Main Market",
+  "city": "Delhi",
+  "state": "Delhi",
+  "postal_code": "110009",
+  "is_default": false
+}
+```
+
+**Success:** `201 Created`
+
+The first saved address automatically becomes the default. Creating another address with `is_default: true` makes it the default and unsets the previous default.
+
+The authenticated user is assigned by the backend; clients must not submit a `user` field.
+
+### 3. Retrieve Address
+
+- **Method:** `GET`
+- **Endpoint:** `/api/v1/addresses/{address_uuid}/`
+
+Returns one address belonging to the authenticated customer.
+
+**Success:** `200 OK`
+
+An address that does not exist or belongs to another customer returns `404 Not Found`.
+
+### 4. Update Address
+
+- **Method:** `PATCH`
+- **Endpoint:** `/api/v1/addresses/{address_uuid}/`
+
+Accepts partial updates. For example:
+
+```json
+{
+  "label": "WORK",
+  "is_default": true
+}
+```
+
+**Success:** `200 OK`
+
+Making an address the default unsets the previous default. If the current default is explicitly unset, another address becomes the default when available.
+
+### 5. Delete Address
+
+- **Method:** `DELETE`
+- **Endpoint:** `/api/v1/addresses/{address_uuid}/`
+
+**Success:** `204 No Content`
+
+Deleting the default address promotes another saved address to default when one exists. Deleting the only address leaves the customer with no saved addresses.
+
+### Address Object
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | UUID string | Address identifier |
+| `label` | String | `HOME`, `WORK`, or `OTHER` |
+| `recipient_name` | String | Delivery recipient's name |
+| `phone_number` | String | Delivery contact number, 10–15 digits |
+| `address_line1` | String | Primary street address |
+| `address_line2` | String | Optional additional address details |
+| `city` | String | City |
+| `state` | String | State |
+| `postal_code` | String | Six-digit Indian PIN code |
+| `is_default` | Boolean | Whether this is the default address |
+| `created_at` | Date-time | Creation timestamp |
+| `updated_at` | Date-time | Last update timestamp |
+
+### Validation and Security
+
+- Only authenticated customers can access these endpoints.
+- Customers can only list, retrieve, update, or delete their own addresses.
+- The backend assigns address ownership; clients cannot choose another user.
+- PIN codes must match the six-digit Indian format.
+- Phone numbers must contain 10–15 digits.
+- Write requests must comply with the project's CSRF configuration.
+- Default-address selection is maintained by the backend.
