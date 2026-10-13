@@ -51,9 +51,6 @@ const SETTINGS_STORAGE_KEY =
 const ORDERS_STORAGE_KEY =
     "geeka-orders";
 
-const WISHLIST_STORAGE_KEY =
-    "geeka-wishlist";
-
 const USER_STORAGE_KEY =
     "geeka-user";
 
@@ -85,6 +82,12 @@ const CSRF_URL =
 
 const LOGOUT_URL =
     `${API_URL}/api/v1/auth/logout/`;
+
+const WISHLIST_URL =
+    `${API_URL}/api/v1/cart/wishlist/`;
+
+const WISHLIST_ITEMS_URL =
+    `${API_URL}/api/v1/cart/wishlist/items/`;
 
 
 /*
@@ -181,76 +184,6 @@ function createId(
 
 /*
 |--------------------------------------------------------------------------
-| WISHLIST NORMALIZATION
-|--------------------------------------------------------------------------
-
-   Your other components may currently save either:
-
-   ["12", "15"]
-
-   OR
-
-   [
-       { id: 12, name: "...", ... },
-       { id: 15, name: "...", ... }
-   ]
-
-   The Profile page only needs product IDs to load the real
-   products from the backend, so everything is normalized here.
-|--------------------------------------------------------------------------
-*/
-
-function normalizeWishlistIds(
-    value
-) {
-    if (!Array.isArray(value)) {
-        return [];
-    }
-
-
-    const ids = value
-        .map((item) => {
-
-            if (
-                item &&
-                typeof item ===
-                "object"
-            ) {
-                return item.id;
-            }
-
-            return item;
-        })
-        .filter(
-            (id) =>
-                id !== null &&
-                id !== undefined &&
-                String(id).trim() !== ""
-        )
-        .map((id) =>
-            String(id)
-        );
-
-
-    return [
-        ...new Set(ids),
-    ];
-}
-
-
-function wishlistIdsSignature(
-    value
-) {
-    return normalizeWishlistIds(
-        value
-    )
-        .sort()
-        .join("|");
-}
-
-
-/*
-|--------------------------------------------------------------------------
 | RESPONSE HELPER
 |--------------------------------------------------------------------------
 */
@@ -336,6 +269,42 @@ function getCookie(
 
 
     return null;
+}
+
+
+async function getCsrfToken() {
+    const response = await fetch(CSRF_URL, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+            Accept: "application/json",
+        },
+    });
+
+    const data = await readResponseData(response);
+
+    if (!response.ok) {
+        throw new Error(
+            data.detail ||
+            data.message ||
+            data.error ||
+            `Unable to initialize CSRF protection (${response.status}).`
+        );
+    }
+
+    const token =
+        getCookie("csrftoken") ||
+        data?.csrfToken ||
+        data?.csrf_token ||
+        "";
+
+    if (!token) {
+        throw new Error(
+            "CSRF token is missing. Please refresh the page and try again."
+        );
+    }
+
+    return token;
 }
 
 
@@ -1081,44 +1050,33 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     | WISHLIST
     |--------------------------------------------------------------------------
-    |
-    | IMPORTANT:
-    |
-    | Normalize existing wishlist data immediately.
-    |
-    | This allows the Wishlist page to understand both:
-    |
-    |     ["12", "15"]
-    |
-    | and:
-    |
-    |     [{ id: 12, ... }, { id: 15, ... }]
-    |
-    |--------------------------------------------------------------------------
+    | The backend is the source of truth. Each wishlist item has its own
+    | UUID, which is required by the remove endpoint.
     */
 
     const [
-        wishlistIds,
-        setWishlistIds,
-    ] = useState(() =>
-        normalizeWishlistIds(
-            readStorage(
-                WISHLIST_STORAGE_KEY,
-                []
-            )
-        )
-    );
-
+        wishlistItems,
+        setWishlistItems,
+    ] = useState([]);
 
     const [
         wishlistProducts,
         setWishlistProducts,
     ] = useState([]);
 
-
     const [
         wishlistLoading,
         setWishlistLoading,
+    ] = useState(false);
+
+    const [
+        wishlistError,
+        setWishlistError,
+    ] = useState("");
+
+    const [
+        wishlistActionLoading,
+        setWishlistActionLoading,
     ] = useState(false);
 
 
@@ -1166,254 +1124,121 @@ export default function Profile() {
 
     /*
     |--------------------------------------------------------------------------
-    | PERSIST NORMALIZED WISHLIST
+    | LOAD WISHLIST FROM BACKEND
     |--------------------------------------------------------------------------
     */
 
     useEffect(() => {
-
-        const normalized =
-            normalizeWishlistIds(
-                wishlistIds
-            );
-
-
-        if (
-            wishlistIdsSignature(
-                normalized
-            ) !==
-            wishlistIdsSignature(
-                wishlistIds
-            )
-        ) {
-
-            setWishlistIds(
-                normalized
-            );
-
-            return;
-        }
-
-
-        writeStorage(
-            WISHLIST_STORAGE_KEY,
-            normalized
-        );
-
-    }, [
-        wishlistIds,
-    ]);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | LISTEN FOR WISHLIST CHANGES
-    |--------------------------------------------------------------------------
-    */
-
-    useEffect(() => {
-
-        function syncWishlist() {
-
-            const saved =
-                readStorage(
-                    WISHLIST_STORAGE_KEY,
-                    []
-                );
-
-
-            const normalized =
-                normalizeWishlistIds(
-                    saved
-                );
-
-
-            setWishlistIds(
-                (current) => {
-
-                    const currentSignature =
-                        wishlistIdsSignature(
-                            current
-                        );
-
-
-                    const nextSignature =
-                        wishlistIdsSignature(
-                            normalized
-                        );
-
-
-                    if (
-                        currentSignature ===
-                        nextSignature
-                    ) {
-                        return current;
-                    }
-
-
-                    return normalized;
-
-                }
-            );
-        }
-
-
-        window.addEventListener(
-            "storage",
-            syncWishlist
-        );
-
-
-        window.addEventListener(
-            "geeka-wishlist-updated",
-            syncWishlist
-        );
-
-
-        return () => {
-
-            window.removeEventListener(
-                "storage",
-                syncWishlist
-            );
-
-
-            window.removeEventListener(
-                "geeka-wishlist-updated",
-                syncWishlist
-            );
-
-        };
-
-    }, []);
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | LOAD WISHLIST PRODUCTS
-    |--------------------------------------------------------------------------
-    */
-
-    useEffect(() => {
-
         let cancelled = false;
 
-
         async function loadWishlist() {
-
-            const normalizedIds =
-                normalizeWishlistIds(
-                    wishlistIds
-                );
-
-
-            if (
-                normalizedIds.length ===
-                0
-            ) {
-
-                setWishlistProducts(
-                    []
-                );
-
-                setWishlistLoading(
-                    false
-                );
-
+            if (!accountUser) {
+                setWishlistItems([]);
+                setWishlistProducts([]);
+                setWishlistLoading(false);
+                setWishlistError("");
                 return;
             }
 
-
-            setWishlistLoading(
-                true
-            );
-
+            setWishlistLoading(true);
+            setWishlistError("");
 
             try {
+                const [wishlistResponse, productsResponse] = await Promise.all([
+                    fetch(WISHLIST_URL, {
+                        method: "GET",
+                        credentials: "include",
+                        cache: "no-store",
+                        headers: {
+                            Accept: "application/json",
+                        },
+                    }),
+                    getProducts(),
+                ]);
 
-                const products =
-                    await getProducts();
+                const wishlistData = await readResponseData(wishlistResponse);
 
-
-                const productList =
-                    Array.isArray(
-                        products
-                    )
-                        ? products
-                        : [];
-
-
-                const filtered =
-                    productList.filter(
-                        (product) =>
-                            normalizedIds.some(
-                                (savedId) =>
-                                    String(
-                                        savedId
-                                    ) ===
-                                    String(
-                                        product?.id
-                                    )
-                            )
+                if (!wishlistResponse.ok) {
+                    throw new Error(
+                        wishlistData.detail ||
+                        wishlistData.message ||
+                        wishlistData.error ||
+                        `Unable to load wishlist (${wishlistResponse.status}).`
                     );
-
-
-                if (
-                    !cancelled
-                ) {
-
-                    setWishlistProducts(
-                        filtered
-                    );
-
                 }
 
-            } catch (
-            error
-            ) {
+                const remoteItems = Array.isArray(wishlistData.items)
+                    ? wishlistData.items
+                    : [];
 
-                console.error(
-                    "GEEKA WISHLIST LOAD ERROR:",
-                    error
-                );
+                const productList = Array.isArray(productsResponse)
+                    ? productsResponse
+                    : [];
 
-
-                if (
-                    !cancelled
-                ) {
-
-                    setWishlistProducts(
-                        []
+                const mappedProducts = remoteItems.map((item) => {
+                    const product = productList.find(
+                        (candidate) =>
+                            String(candidate?.id) === String(item.product_id)
                     );
 
-                }
+                    if (product) {
+                        return {
+                            ...product,
+                            wishlistItemId: item.id,
+                            productId: item.product_id,
+                            name:
+                                product.name ||
+                                product.product_name ||
+                                item.product_name ||
+                                "Product",
+                            category:
+                                product.category ||
+                                product.category_name ||
+                                item.category_name ||
+                                "Collection",
+                        };
+                    }
 
+                    return {
+                        id: item.product_id,
+                        productId: item.product_id,
+                        wishlistItemId: item.id,
+                        name: item.product_name || "Product",
+                        category: item.category_name || "Collection",
+                        image: "",
+                        price: 0,
+                        slug: item.product_slug || "",
+                    };
+                });
+
+                if (!cancelled) {
+                    setWishlistItems(remoteItems);
+                    setWishlistProducts(mappedProducts);
+                    setWishlistError("");
+                }
+            } catch (error) {
+                console.error("GEEKA WISHLIST LOAD ERROR:", error);
+
+                if (!cancelled) {
+                    setWishlistItems([]);
+                    setWishlistProducts([]);
+                    setWishlistError(
+                        error.message || "Unable to load your wishlist."
+                    );
+                }
             } finally {
-
-                if (
-                    !cancelled
-                ) {
-
-                    setWishlistLoading(
-                        false
-                    );
-
+                if (!cancelled) {
+                    setWishlistLoading(false);
                 }
-
             }
         }
 
-
         loadWishlist();
-
 
         return () => {
             cancelled = true;
         };
-
-    }, [
-        wishlistIds,
-    ]);
+    }, [accountUser]);
 
 
     /*
@@ -2644,72 +2469,109 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     */
 
-    function removeFromWishlist(
-        productId
-    ) {
+    async function removeFromWishlist(wishlistItemId) {
+        if (!wishlistItemId || wishlistActionLoading) {
+            return;
+        }
 
-        const normalizedId =
-            String(
-                productId
+        setWishlistActionLoading(true);
+        setWishlistError("");
+
+        try {
+            const csrfToken = await getCsrfToken();
+
+            const response = await fetch(
+                `${WISHLIST_ITEMS_URL}${encodeURIComponent(wishlistItemId)}/`,
+                {
+                    method: "DELETE",
+                    credentials: "include",
+                    headers: {
+                        Accept: "application/json",
+                        "X-CSRFToken": csrfToken,
+                    },
+                }
             );
 
+            const data = response.status === 204
+                ? {}
+                : await readResponseData(response);
 
-        const nextWishlist =
-            normalizeWishlistIds(
-                wishlistIds
-            ).filter(
-                (id) =>
-                    String(id) !==
-                    normalizedId
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    data.message ||
+                    data.error ||
+                    `Unable to remove wishlist item (${response.status}).`
+                );
+            }
+
+            setWishlistItems((current) =>
+                current.filter((item) => String(item.id) !== String(wishlistItemId))
             );
 
+            setWishlistProducts((current) =>
+                current.filter(
+                    (product) =>
+                        String(product.wishlistItemId) !== String(wishlistItemId)
+                )
+            );
 
-        setWishlistIds(
-            nextWishlist
-        );
-
-
-        writeStorage(
-            WISHLIST_STORAGE_KEY,
-            nextWishlist
-        );
-
-
-        window.dispatchEvent(
-            new Event(
-                "geeka-wishlist-updated"
-            )
-        );
+            window.dispatchEvent(new Event("geeka-wishlist-updated"));
+        } catch (error) {
+            console.error("GEEKA WISHLIST REMOVE ERROR:", error);
+            setWishlistError(
+                error.message || "Unable to remove this product from your wishlist."
+            );
+        } finally {
+            setWishlistActionLoading(false);
+        }
     }
 
 
-    function clearWishlist() {
+    async function clearWishlist() {
+        if (wishlistActionLoading || wishlistItems.length === 0) {
+            return;
+        }
 
-        const nextWishlist =
-            [];
+        setWishlistActionLoading(true);
+        setWishlistError("");
 
+        try {
+            const csrfToken = await getCsrfToken();
 
-        setWishlistIds(
-            nextWishlist
-        );
+            const response = await fetch(WISHLIST_URL, {
+                method: "DELETE",
+                credentials: "include",
+                headers: {
+                    Accept: "application/json",
+                    "X-CSRFToken": csrfToken,
+                },
+            });
 
+            const data = response.status === 204
+                ? {}
+                : await readResponseData(response);
 
-        setWishlistProducts(
-            []
-        );
+            if (!response.ok) {
+                throw new Error(
+                    data.detail ||
+                    data.message ||
+                    data.error ||
+                    `Unable to clear wishlist (${response.status}).`
+                );
+            }
 
-
-        writeStorage(
-            WISHLIST_STORAGE_KEY,
-            nextWishlist
-        );
-
-
-        window.dispatchEvent(
-            new Event(
-                "geeka-wishlist-updated"
-            )
-        );
+            setWishlistItems([]);
+            setWishlistProducts([]);
+            window.dispatchEvent(new Event("geeka-wishlist-updated"));
+        } catch (error) {
+            console.error("GEEKA WISHLIST CLEAR ERROR:", error);
+            setWishlistError(
+                error.message || "Unable to clear your wishlist."
+            );
+        } finally {
+            setWishlistActionLoading(false);
+        }
     }
 
 
@@ -3320,9 +3182,8 @@ export default function Profile() {
                                         <button
                                             type="button"
                                             className="account-outline-button"
-                                            onClick={
-                                                clearWishlist
-                                            }
+                                            onClick={clearWishlist}
+                                            disabled={wishlistActionLoading}
                                         >
                                             CLEAR WISHLIST
                                         </button>
@@ -3331,6 +3192,12 @@ export default function Profile() {
 
                             </div>
 
+
+                            {wishlistError && (
+                                <div className="account-form-error error" role="alert">
+                                    {wishlistError}
+                                </div>
+                            )}
 
                             {wishlistLoading ? (
 
@@ -3422,9 +3289,10 @@ export default function Profile() {
                                                         className="account-icon-button"
                                                         onClick={() =>
                                                             removeFromWishlist(
-                                                                product.id
+                                                                product.wishlistItemId
                                                             )
                                                         }
+                                                        disabled={wishlistActionLoading}
                                                         aria-label={`Remove ${product.name} from wishlist`}
                                                     >
                                                         <CloseIcon />
