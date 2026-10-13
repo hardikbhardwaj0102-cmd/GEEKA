@@ -169,6 +169,28 @@ function removeStorage(
 }
 
 
+/* Convert API values into safe, readable text before rendering them. */
+function toDisplayText(value, fallback = "") {
+    if (typeof value === "string" || typeof value === "number") {
+        const text = String(value).trim();
+        return text || fallback;
+    }
+
+    if (value && typeof value === "object") {
+        return toDisplayText(
+            value.name ??
+            value.label ??
+            value.title ??
+            value.category_name ??
+            value.slug,
+            fallback
+        );
+    }
+
+    return fallback;
+}
+
+
 function createId(
     prefix = "item"
 ) {
@@ -1183,16 +1205,18 @@ export default function Profile() {
                             ...product,
                             wishlistItemId: item.id,
                             productId: item.product_id,
-                            name:
-                                product.name ||
-                                product.product_name ||
-                                item.product_name ||
-                                "Product",
-                            category:
-                                product.category ||
-                                product.category_name ||
-                                item.category_name ||
-                                "Collection",
+                            name: toDisplayText(
+                                product.name ??
+                                product.product_name ??
+                                item.product_name,
+                                "Product"
+                            ),
+                            category: toDisplayText(
+                                product.category ??
+                                product.category_name ??
+                                item.category_name,
+                                "Collection"
+                            ),
                         };
                     }
 
@@ -1200,8 +1224,8 @@ export default function Profile() {
                         id: item.product_id,
                         productId: item.product_id,
                         wishlistItemId: item.id,
-                        name: item.product_name || "Product",
-                        category: item.category_name || "Collection",
+                        name: toDisplayText(item.product_name, "Product"),
+                        category: toDisplayText(item.category_name, "Collection"),
                         image: "",
                         price: 0,
                         slug: item.product_slug || "",
