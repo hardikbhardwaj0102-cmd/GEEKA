@@ -13,25 +13,26 @@
     isolation: isolate;
     min-height: 100vh;
     padding: 36px clamp(18px, 4vw, 64px) 56px;
-    background: #f8f4ef;
+    background: transparent;
     color: var(--geeka-ink);
 }
 
-/* profile.png background, supplied through the existing JSX custom property */
+/* Fixed viewport background: stays still while account content scrolls */
 .account-background-image {
-    position: absolute;
+    position: fixed;
     inset: 0;
     z-index: -2;
     background-image: var(--profile-background);
-    background-position: center;
+    background-position: center center;
     background-size: cover;
     background-repeat: no-repeat;
     pointer-events: none;
+    will-change: auto;
 }
 
-/* Soft ivory wash preserves readability of the account interface */
+/* Fixed ivory wash preserves readability without moving with the page */
 .account-background-overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
     z-index: -1;
     background: rgba(255, 250, 247, 0.76);
@@ -1991,7 +1992,7 @@
     --geeka-paper: #fffdfa;
     --geeka-rose: #754149;
     --geeka-rose-dark: #572f36;
-    background: #f7f3ef !important;
+    background: transparent !important;
     color: var(--geeka-ink);
     font-family: Inter, "Segoe UI", Arial, sans-serif;
 }
