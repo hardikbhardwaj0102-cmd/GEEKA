@@ -15,7 +15,8 @@ import "../style/Profile.css";
 import profileBackground from "../assets/profile.png";
 
 import {
-    getProducts,
+    getAllProducts,
+    getProductCards,
 } from "../services/productService";
 
 import {
@@ -1189,39 +1190,59 @@ export default function Profile() {
             setWishlistProductsLoading(true);
 
             try {
-                const productsResponse = await getProducts();
-                const productList = Array.isArray(productsResponse)
+                // Use the same normalized product cards as Shop/New Arrivals.
+                // The older getProducts() response does not always contain the
+                // display price fields used by the storefront.
+                const productsResponse = await getAllProducts();
+                const baseProducts = Array.isArray(productsResponse)
                     ? productsResponse
+                    : [];
+                const normalizedCards = await getProductCards(baseProducts);
+                const productList = Array.isArray(normalizedCards)
+                    ? normalizedCards
                     : [];
 
                 const mappedProducts = wishlistItems.map((item) => {
                     const wishlistProductId =
-                        item?.product_id ?? item?.productId ?? item?.product?.id;
-                    const wishlistSlug = item?.product_slug ?? item?.slug ?? item?.product?.slug;
+                        item?.product_id ??
+                        item?.productId ??
+                        item?.product?.id ??
+                        item?.product?.product_id;
+                    const wishlistSlug =
+                        item?.product_slug ?? item?.slug ?? item?.product?.slug;
 
-                    // Match against common ID/slug shapes returned by the API.
+                    // Wishlist API and catalogue API may use different field names.
                     const product = productList.find((candidate) => {
                         const candidateId =
-                            candidate?.id ?? candidate?.product_id ?? candidate?.productId;
+                            candidate?.id ??
+                            candidate?.product_id ??
+                            candidate?.productId ??
+                            candidate?.detail?.id;
+                        const candidateSlug =
+                            candidate?.slug ?? candidate?.product_slug ?? candidate?.detail?.slug;
                         const sameId =
                             wishlistProductId != null &&
                             candidateId != null &&
                             String(candidateId) === String(wishlistProductId);
                         const sameSlug =
-                            wishlistSlug &&
-                            candidate?.slug &&
-                            String(candidate.slug) === String(wishlistSlug);
+                            Boolean(wishlistSlug && candidateSlug) &&
+                            String(candidateSlug) === String(wishlistSlug);
                         return sameId || sameSlug;
                     });
 
-                    // Different API endpoints may use different names for the price.
+                    const variantPrice =
+                        product?.detail?.variants?.find(
+                            (variant) => variant?.is_active !== false
+                        )?.price;
                     const resolvedPrice =
                         product?.price ??
                         product?.selling_price ??
                         product?.sale_price ??
                         product?.discounted_price ??
                         product?.unit_price ??
-                        product?.variant?.price ??
+                        product?.detail?.price ??
+                        product?.detail?.selling_price ??
+                        variantPrice ??
                         item?.price ??
                         item?.product_price ??
                         item?.selling_price ??
@@ -1232,8 +1253,8 @@ export default function Profile() {
                     if (product) {
                         return {
                             ...product,
-                            wishlistItemId: item.id,
-                            productId: wishlistProductId ?? product.id,
+                            wishlistItemId: item?.id ?? item?.wishlist_item_id,
+                            productId: product.id ?? product.product_id ?? wishlistProductId,
                             name: toDisplayText(
                                 product.name ??
                                 product.product_name ??
@@ -1242,20 +1263,22 @@ export default function Profile() {
                                 "Product"
                             ),
                             category: toDisplayText(
-                                product.category ??
+                                product.categoryName ??
                                 product.category_name ??
+                                product.category ??
                                 item.category_name ??
                                 item?.product?.category,
                                 "Collection"
                             ),
                             price: resolvedPrice,
+                            slug: product.slug ?? wishlistSlug ?? "",
                         };
                     }
 
                     return {
                         id: wishlistProductId,
                         productId: wishlistProductId,
-                        wishlistItemId: item.id,
+                        wishlistItemId: item?.id ?? item?.wishlist_item_id,
                         name: toDisplayText(
                             item.product_name ?? item?.product?.name,
                             "Product"
@@ -3490,8 +3513,15 @@ export default function Profile() {
 
 
                                                     <Link
-                                                        to="/shop"
+                                                        to={`/product/${encodeURIComponent(
+                                                            product.productId ??
+                                                            product.id ??
+                                                            product.product_id ??
+                                                            product.slug ??
+                                                            ""
+                                                        )}`}
                                                         className="account-text-button"
+                                                        aria-label={`View ${product.name}`}
                                                     >
                                                         VIEW PRODUCT
                                                         <ArrowIcon />
