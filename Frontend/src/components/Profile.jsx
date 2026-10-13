@@ -4616,133 +4616,133 @@ export default function Profile() {
                                     <p>Choose which updates and personalised features you want from Geeka.</p>
                                 </div>
 
-                            <div className="account-preference-card">
+                                <div className="account-preference-card">
 
-                                <div>
+                                    <div>
 
-                                    <span>
-                                        ORDER UPDATES
-                                    </span>
-
-
-                                    <strong>
-                                        Receive order notifications
-                                    </strong>
+                                        <span>
+                                            ORDER UPDATES
+                                        </span>
 
 
-                                    <p>
-                                        Get updates about your orders,
-                                        delivery and status changes.
-                                    </p>
-
-                                </div>
+                                        <strong>
+                                            Receive order notifications
+                                        </strong>
 
 
-                                <button
-                                    type="button"
-                                    className={`account-toggle ${settings.orderUpdates
-                                        ? "active"
-                                        : ""
-                                        }`}
-                                    onClick={() =>
-                                        toggleSetting(
-                                            "orderUpdates"
-                                        )
-                                    }
-                                    aria-pressed={
-                                        settings.orderUpdates
-                                    }
-                                >
-                                    <span />
-                                </button>
+                                        <p>
+                                            Get updates about your orders,
+                                            delivery and status changes.
+                                        </p>
 
-                            </div>
+                                    </div>
 
 
-                            <div className="account-preference-card">
-
-                                <div>
-
-                                    <span>
-                                        PROMOTIONS
-                                    </span>
-
-
-                                    <strong>
-                                        Promotional communication
-                                    </strong>
-
-
-                                    <p>
-                                        Receive occasional updates about
-                                        collections and offers.
-                                    </p>
+                                    <button
+                                        type="button"
+                                        className={`account-toggle ${settings.orderUpdates
+                                            ? "active"
+                                            : ""
+                                            }`}
+                                        onClick={() =>
+                                            toggleSetting(
+                                                "orderUpdates"
+                                            )
+                                        }
+                                        aria-pressed={
+                                            settings.orderUpdates
+                                        }
+                                    >
+                                        <span />
+                                    </button>
 
                                 </div>
 
 
-                                <button
-                                    type="button"
-                                    className={`account-toggle ${settings.promotionalEmails
-                                        ? "active"
-                                        : ""
-                                        }`}
-                                    onClick={() =>
-                                        toggleSetting(
-                                            "promotionalEmails"
-                                        )
-                                    }
-                                    aria-pressed={
-                                        settings.promotionalEmails
-                                    }
-                                >
-                                    <span />
-                                </button>
+                                <div className="account-preference-card">
 
-                            </div>
+                                    <div>
+
+                                        <span>
+                                            PROMOTIONS
+                                        </span>
 
 
-                            <div className="account-preference-card">
-
-                                <div>
-
-                                    <span>
-                                        RECOMMENDATIONS
-                                    </span>
+                                        <strong>
+                                            Promotional communication
+                                        </strong>
 
 
-                                    <strong>
-                                        Personalized product suggestions
-                                    </strong>
+                                        <p>
+                                            Receive occasional updates about
+                                            collections and offers.
+                                        </p>
+
+                                    </div>
 
 
-                                    <p>
-                                        Allow Geeka to use your shopping
-                                        activity for product recommendations.
-                                    </p>
+                                    <button
+                                        type="button"
+                                        className={`account-toggle ${settings.promotionalEmails
+                                            ? "active"
+                                            : ""
+                                            }`}
+                                        onClick={() =>
+                                            toggleSetting(
+                                                "promotionalEmails"
+                                            )
+                                        }
+                                        aria-pressed={
+                                            settings.promotionalEmails
+                                        }
+                                    >
+                                        <span />
+                                    </button>
 
                                 </div>
 
 
-                                <button
-                                    type="button"
-                                    className={`account-toggle ${settings.productRecommendations
-                                        ? "active"
-                                        : ""
-                                        }`}
-                                    onClick={() =>
-                                        toggleSetting(
-                                            "productRecommendations"
-                                        )
-                                    }
-                                    aria-pressed={
-                                        settings.productRecommendations
-                                    }
-                                >
-                                    <span />
-                                </button>
+                                <div className="account-preference-card">
 
-                            </div>
+                                    <div>
+
+                                        <span>
+                                            RECOMMENDATIONS
+                                        </span>
+
+
+                                        <strong>
+                                            Personalized product suggestions
+                                        </strong>
+
+
+                                        <p>
+                                            Allow Geeka to use your shopping
+                                            activity for product recommendations.
+                                        </p>
+
+                                    </div>
+
+
+                                    <button
+                                        type="button"
+                                        className={`account-toggle ${settings.productRecommendations
+                                            ? "active"
+                                            : ""
+                                            }`}
+                                        onClick={() =>
+                                            toggleSetting(
+                                                "productRecommendations"
+                                            )
+                                        }
+                                        aria-pressed={
+                                            settings.productRecommendations
+                                        }
+                                    >
+                                        <span />
+                                    </button>
+
+                                </div>
                             </div>
 
                         </section>
