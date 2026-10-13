@@ -29,7 +29,7 @@ function notifyWishlistUpdated() {
     }
 }
 
-export default function useWishlist() {
+export function useWishlist() {
     const [wishlist, setWishlist] = useState([]);
     const [loadingWishlist, setLoadingWishlist] = useState(true);
     const [pendingWishlistIds, setPendingWishlistIds] = useState([]);
