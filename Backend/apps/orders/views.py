@@ -15,6 +15,10 @@ from apps.orders.services import (
     create_order_from_cart,
     cancel_order,
 )
+from .pagination import OrderHistoryPagination
+
+
+
 
 def build_order_response(order):
     """Build a checkout response from persisted order snapshots."""
@@ -224,28 +228,31 @@ class CancelOrderView(APIView):
 
 
 
-
 class OrderHistoryView(APIView):
     permission_classes = [IsAuthenticated]
+    pagination_class = OrderHistoryPagination
 
     def get(self, request):
         orders = (
             Order.objects
             .filter(customer=request.user)
             .prefetch_related("items")
-            .order_by("-created_at")
+            .order_by("-created_at", "-id")
         )
 
-        return Response(
-            {
-                "count": orders.count(),
-                "orders": [
-                    build_order_response(order)
-                    for order in orders
-                ],
-            },
-            status=status.HTTP_200_OK,
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(
+            orders,
+            request,
+            view=self,
         )
+
+        order_data = [
+            build_order_response(order)
+            for order in page
+        ]
+
+        return paginator.get_paginated_response(order_data)
 
 
 

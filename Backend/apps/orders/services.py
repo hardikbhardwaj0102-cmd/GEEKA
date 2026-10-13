@@ -269,7 +269,6 @@ def create_order_from_cart(
 
 
 
-
 @transaction.atomic
 def cancel_order(*, order_id, customer):
     """
@@ -324,6 +323,57 @@ def cancel_order(*, order_id, customer):
             variant.save(update_fields=["stock"])
 
     order.status = Order.Status.CANCELLED
+    order.save(update_fields=["status", "updated_at"])
+
+    return order
+
+
+
+ALLOWED_ORDER_TRANSITIONS = {
+    Order.Status.PENDING: {
+        Order.Status.CONFIRMED,
+    },
+    Order.Status.CONFIRMED: {
+        Order.Status.PROCESSING,
+    },
+    Order.Status.PROCESSING: {
+        Order.Status.SHIPPED,
+    },
+    Order.Status.SHIPPED: {
+        Order.Status.DELIVERED,
+    },
+}
+
+
+@transaction.atomic
+def transition_order_status(*, order_id, new_status):
+    """
+    Apply a valid staff-driven order status transition.
+
+    Cancellation must use the existing cancel_order service.
+    This function does not modify payment status or stock.
+    """
+    try:
+        order = (
+            Order.objects
+            .select_for_update()
+            .get(id=order_id)
+        )
+    except Order.DoesNotExist:
+        raise ValidationError("Order not found.")
+
+    allowed_statuses = ALLOWED_ORDER_TRANSITIONS.get(
+        order.status,
+        set(),
+    )
+
+    if new_status not in allowed_statuses:
+        raise ValidationError(
+            f"Cannot change order status from "
+            f"{order.status} to {new_status}."
+        )
+
+    order.status = new_status
     order.save(update_fields=["status", "updated_at"])
 
     return order

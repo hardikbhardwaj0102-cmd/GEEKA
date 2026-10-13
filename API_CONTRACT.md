@@ -4237,13 +4237,13 @@ Deleting the default address promotes another saved address to default when one 
 
 
 
-# 5. Checkout & Order Creation
+# 5. Checkout & Order
 
 This section documents the checkout workflow that converts an authenticated customer's cart into a persistent order.
 
 The backend is the source of truth for product availability, inventory, prices, order totals, and order status. The frontend must not calculate or submit authoritative order totals.
 
-**Current implementation scope:** Checkout and order creation are implemented for authenticated customers. Guest checkout, order history, order-detail retrieval, and order cancellation are not yet implemented by the current order API.
+**Current implementation scope:** Checkout and order creation, customer order history with pagination, order-detail retrieval, and eligible order cancellation are implemented for authenticated customers. Order-status transitions are implemented through a backend service and a Django Admin action. Payment gateway integration, guest checkout, and payment/refund processing are not implemented.
 
 ## 5.1 Create Order from Cart
 
@@ -4387,7 +4387,9 @@ The order and its items are created within a database transaction. If checkout f
 
 After successful order creation, the authenticated customer's cart is cleared. A failed checkout must not clear the cart or partially deduct inventory.
 
-Stock reservation expiry, cancellation-related stock restoration, and payment-failure inventory handling are not yet implemented. These behaviors must be addressed before the order lifecycle is considered complete.
+Stock is deducted when an order is created, while payment remains pending. Eligible cancellation of a pending, unpaid order restores stock for its existing product variants within a database transaction. Repeated cancellation is rejected to prevent stock from being restored twice.
+
+Stock reservation expiry, payment-failure inventory handling, and payment-related refund processing are not implemented. These behaviors require further design before payment integration and production readiness.
 
 ### Order Status and Payment Status
 
@@ -4497,23 +4499,31 @@ The example above shows the principal fields only. The actual response includes 
 
 
 ## 5.3 Order History
+
 ### 5.3.1 Get Customer Order History
 
 **Endpoint:** `GET /api/v1/orders/`
 
 **Authentication:** Required — session authentication.
 
-**Purpose:** Retrieves the authenticated customer's order history, newest orders first.
+**Purpose:** Retrieves the authenticated customer's order history, newest orders first, using page-number pagination.
 
 **Request body:** None.
 
-**Success response — `200 OK`:**
+**Query parameters:**
 
-Returns the total number of matching orders and an array of order objects.
+| Parameter | Required | Default | Rules |
+|---|---|---|---|
+| `page` | No | `1` | Page number, starting at 1 |
+| `page_size` | No | `10` | Number of orders per page; maximum `50` |
+
+**Success response — `200 OK`:**
 
 ```json
 {
-  "count": 1,
+  "count": 25,
+  "next": "https://example.com/api/v1/orders/?page=2",
+  "previous": null,
   "orders": [
     {
       "id": "order-uuid",
@@ -4531,15 +4541,25 @@ Returns the total number of matching orders and an array of order objects.
 }
 ```
 
-The example shows representative fields only. Each order uses the shared order response structure, including contact information, delivery address, and item snapshots.
+The example shows representative order fields only. Each order uses the shared order response structure, including contact information, delivery address, and item snapshots.
+
+**Response fields:**
+- `count`: Total number of matching orders for the authenticated customer.
+- `next`: URL for the next page, or `null` if there is no next page.
+- `previous`: URL for the previous page, or `null` if there is no previous page.
+- `orders`: Order objects on the current page.
 
 **Behavior and rules:**
 - Returns only orders belonging to the authenticated customer.
-- Orders are sorted by creation time, newest first.
-- Includes the saved order and item snapshots rather than recalculating historical prices from the current catalog.
-- The current implementation returns the full history without pagination.
+- Orders are sorted by creation time, newest first, with a deterministic tie-breaker.
+- Includes saved order and item snapshots rather than recalculating historical prices from the current catalog.
+- Returns 10 orders per page by default.
+- Accepts a custom `page_size` up to 50.
+- An out-of-range page returns `404 Not Found`.
+- The `orders` array contains the same order response structure used before pagination.
 
 **Error responses:**
+- `404 Not Found`: Requested page is out of range.
 - `401 Unauthorized` or `403 Forbidden`: Request is unauthenticated, depending on authentication configuration.
 
 ### 5.3.2 Get Order Details
@@ -4585,3 +4605,35 @@ The abbreviated nested objects above represent the response structure; consult t
 **Error responses:**
 - `404 Not Found`: The order does not exist or does not belong to the authenticated customer.
 - `401 Unauthorized` or `403 Forbidden`: Request is unauthenticated, depending on authentication configuration.
+
+
+## 5.4 Order Status Lifecycle
+
+Order status and payment status are separate fields. Order status transitions are validated by the backend service and can be initiated through the Django Admin action available to authorized staff.
+
+### Allowed Order Status Transitions
+
+| Current Status | Next Status | Conditions |
+|---|---|---|
+| `PENDING` | `CONFIRMED` | Authorized staff action |
+| `CONFIRMED` | `PROCESSING` | Authorized staff action |
+| `PROCESSING` | `SHIPPED` | Authorized staff action |
+| `SHIPPED` | `DELIVERED` | Authorized staff action |
+| `PENDING` | `CANCELLED` | Existing customer cancellation service, subject to cancellation eligibility |
+
+`DELIVERED` and `CANCELLED` are terminal states in the current transition workflow.
+
+### Lifecycle Rules
+
+- Invalid and backward transitions are rejected by the transition service.
+- The Admin action advances an order by one valid step at a time.
+- Cancellation must use the existing cancellation service; the normal fulfilment transition service does not perform cancellation.
+- The fulfilment transition service does not modify payment status or inventory.
+- Customers cannot use the Django Admin action; Django Admin access is restricted to authorized staff.
+- Payment status must not be changed through the fulfilment transition workflow.
+
+### Current Limitations
+
+- No public REST API endpoint for order-status transitions is currently documented or implemented.
+- Payment gateway verification, payment webhooks, refunds, and payment-failure handling remain outside the current implementation.
+- Automated tests for all valid and invalid lifecycle transitions must be completed before considering the workflow fully verified.
