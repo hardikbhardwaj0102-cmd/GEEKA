@@ -2,11 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
 
-
-
 import "../style/NewArrivals.css";
-
-
 
 import {
 
@@ -18,17 +14,11 @@ import {
 
 } from "../services/productService";
 
-
-
 import { useCart } from "../hooks/useCart";
 
 import { useWishlist } from "../hooks/useWishlist";
 
-
-
 const PRODUCTS_PER_PAGE = 4;
-
-
 
 /* =========================================================
 
@@ -36,35 +26,21 @@ const PRODUCTS_PER_PAGE = 4;
 
 ========================================================= */
 
-
-
-
-
-
-
-
-
 /* =========================================================
 
    HELPERS
 
 ========================================================= */
 
-
-
 function formatPrice(value, currency = "INR") {
 
     const amount = Number(value);
-
-
 
     if (!Number.isFinite(amount)) {
 
         return "PRICE ON REQUEST";
 
     }
-
-
 
     try {
 
@@ -86,23 +62,17 @@ function formatPrice(value, currency = "INR") {
 
 }
 
-
-
 function productId(product) {
 
     return String(product?.id ?? "").trim();
 
 }
 
-
-
 /* =========================================================
 
    ICONS
 
 ========================================================= */
-
-
 
 function ArrowIcon() {
 
@@ -121,8 +91,6 @@ function ArrowIcon() {
                 strokeLinecap="round"
 
             />
-
-
 
             <path
 
@@ -143,8 +111,6 @@ function ArrowIcon() {
     );
 
 }
-
-
 
 function HeartIcon({ filled = false }) {
 
@@ -174,8 +140,6 @@ function HeartIcon({ filled = false }) {
 
 }
 
-
-
 function PlusIcon() {
 
     return (
@@ -200,21 +164,15 @@ function PlusIcon() {
 
 }
 
-
-
 /* =========================================================
 
    PRODUCT GALLERY HOVER SLIDESHOW
 
 ========================================================= */
 
-
-
 const GALLERY_SLIDE_INTERVAL = 2200;
 
 const GALLERY_TRANSITION_DURATION = 520;
-
-
 
 function getProductGalleryImages(product) {
 
@@ -236,8 +194,6 @@ function getProductGalleryImages(product) {
 
         : [];
 
-
-
     const imageSources = [
 
         product?.displayImage,
@@ -258,8 +214,6 @@ function getProductGalleryImages(product) {
 
             }
 
-
-
             return String(
 
                 image?.image_url ??
@@ -278,15 +232,11 @@ function getProductGalleryImages(product) {
 
         .filter(Boolean);
 
-
-
     // Keep the primary image first and avoid duplicate images.
 
     return [...new Set(imageSources)];
 
 }
-
-
 
 function NewArrivalProductImage({
 
@@ -304,19 +254,13 @@ function NewArrivalProductImage({
 
     const productName = product?.name || "Geeka product";
 
-
-
     const [activeIndex, setActiveIndex] = useState(0);
 
     const [transitionEnabled, setTransitionEnabled] = useState(true);
 
-
-
     const intervalRef = useRef(null);
 
     const resetTimeoutRef = useRef(null);
-
-
 
     const clearSlideshowTimers = () => {
 
@@ -328,8 +272,6 @@ function NewArrivalProductImage({
 
         }
 
-
-
         if (resetTimeoutRef.current !== null) {
 
             window.clearTimeout(resetTimeoutRef.current);
@@ -339,8 +281,6 @@ function NewArrivalProductImage({
         }
 
     };
-
-
 
     useEffect(() => {
 
@@ -352,8 +292,6 @@ function NewArrivalProductImage({
 
             }
 
-
-
             if (resetTimeoutRef.current !== null) {
 
                 window.clearTimeout(resetTimeoutRef.current);
@@ -364,8 +302,6 @@ function NewArrivalProductImage({
 
     }, []);
 
-
-
     /*
 
        When the slideshow reaches the duplicated first image,
@@ -373,8 +309,6 @@ function NewArrivalProductImage({
        jump back to the beginning without a visible reverse slide.
 
     */
-
-
 
     useEffect(() => {
 
@@ -390,15 +324,11 @@ function NewArrivalProductImage({
 
         }
 
-
-
         resetTimeoutRef.current = window.setTimeout(() => {
 
             setTransitionEnabled(false);
 
             setActiveIndex(0);
-
-
 
             window.requestAnimationFrame(() => {
 
@@ -411,8 +341,6 @@ function NewArrivalProductImage({
             });
 
         }, GALLERY_TRANSITION_DURATION + 30);
-
-
 
         return () => {
 
@@ -428,8 +356,6 @@ function NewArrivalProductImage({
 
     }, [activeIndex, galleryImages.length]);
 
-
-
     const handleMouseEnter = () => {
 
         if (
@@ -444,8 +370,6 @@ function NewArrivalProductImage({
 
         }
 
-
-
         // Preload gallery images to make the transition smoother.
 
         galleryImages.slice(1).forEach((src) => {
@@ -455,8 +379,6 @@ function NewArrivalProductImage({
             preloadImage.src = src;
 
         });
-
-
 
         intervalRef.current = window.setInterval(() => {
 
@@ -474,13 +396,9 @@ function NewArrivalProductImage({
 
     };
 
-
-
     const handleMouseLeave = () => {
 
         clearSlideshowTimers();
-
-
 
         setTransitionEnabled(true);
 
@@ -488,15 +406,11 @@ function NewArrivalProductImage({
 
     };
 
-
-
     /*
 
        Duplicate the first image to create a continuous loop.
 
     */
-
-
 
     const slides =
 
@@ -505,8 +419,6 @@ function NewArrivalProductImage({
             ? [...galleryImages, galleryImages[0]]
 
             : galleryImages;
-
-
 
     return (
 
@@ -628,23 +540,18 @@ function NewArrivalProductImage({
 
             </Link>
 
-
-
             {/* IMAGE LABEL AND WISHLIST */}
-
-
 
             <div className="new-arrival-image-top">
 
                 <span className="new-arrival-label">NEW</span>
 
-
-
                 <button
 
                     type="button"
 
-                    className="new-arrival-heart"
+                    className={`new-arrival-heart ${wishlisted ? "active" : ""}`}
+                    style={{ color: wishlisted ? "#c62828" : undefined }}
 
                     onClick={(event) => {
 
@@ -682,15 +589,11 @@ function NewArrivalProductImage({
 
 }
 
-
-
 /* =========================================================
 
    NEW ARRIVALS
 
 ========================================================= */
-
-
 
 export default function NewArrivals() {
 
@@ -698,11 +601,7 @@ export default function NewArrivals() {
 
     const { addItem } = useCart();
 
-
-
     const toastTimerRef = useRef(null);
-
-
 
     const [products, setProducts] = useState([]);
 
@@ -712,9 +611,7 @@ export default function NewArrivals() {
 
     const [toast, setToast] = useState("");
 
-    const { wishlist, toggleWishlist: updateWishlist } = useWishlist();
-
-
+    const { isWishlisted, toggleWishlist: updateWishlist } = useWishlist();
 
     /* =====================================================
 
@@ -722,29 +619,21 @@ export default function NewArrivals() {
 
     ===================================================== */
 
-
-
     const loadPage = async () => {
 
         setLoading(true);
 
         setError("");
 
-
-
         try {
 
             const response = await getProductsPage();
-
-
 
             const results = Array.isArray(response?.results)
 
                 ? response.results
 
                 : [];
-
-
 
             const firstProducts = results.slice(
 
@@ -754,11 +643,7 @@ export default function NewArrivals() {
 
             );
 
-
-
             const cards = await getProductCards(firstProducts);
-
-
 
             setProducts(Array.isArray(cards) ? cards : []);
 
@@ -772,8 +657,6 @@ export default function NewArrivals() {
 
             );
 
-
-
             setProducts([]);
 
         } finally {
@@ -784,21 +667,15 @@ export default function NewArrivals() {
 
     };
 
-
-
     /* =====================================================
 
        INITIAL LOAD
 
     ===================================================== */
 
-
-
     useEffect(() => {
 
         loadPage();
-
-
 
         return () => {
 
@@ -812,20 +689,16 @@ export default function NewArrivals() {
 
     }, []);
 
-
-
     /* =====================================================
 
        WISHLIST
 
     ===================================================== */
 
-
-
     const toggleWishlist = async (id) => {
         if (!id) return;
 
-        const wasWishlisted = wishlist.includes(String(id));
+        const wasWishlisted = isWishlisted(id);
 
         try {
             await updateWishlist(id);
@@ -838,29 +711,21 @@ export default function NewArrivals() {
         }
     };
 
-
-
     /* =====================================================
 
        TOAST
 
     ===================================================== */
 
-
-
     const showToast = (message) => {
 
         setToast(message);
-
-
 
         if (toastTimerRef.current) {
 
             clearTimeout(toastTimerRef.current);
 
         }
-
-
 
         toastTimerRef.current = setTimeout(
 
@@ -872,15 +737,11 @@ export default function NewArrivals() {
 
     };
 
-
-
     /* =====================================================
 
        ADD TO CART
 
     ===================================================== */
-
-
 
     const addToCart = async (product) => {
 
@@ -889,8 +750,6 @@ export default function NewArrivals() {
             product?.detail
 
         );
-
-
 
         if (
 
@@ -910,13 +769,9 @@ export default function NewArrivals() {
 
             );
 
-
-
             return;
 
         }
-
-
 
         try {
 
@@ -938,15 +793,11 @@ export default function NewArrivals() {
 
     };
 
-
-
     /* =====================================================
 
        ERROR STATE
 
     ===================================================== */
-
-
 
     if (error) {
 
@@ -964,8 +815,6 @@ export default function NewArrivals() {
 
                         </span>
 
-
-
                         <h2>New Arrivals</h2>
 
                         <p>{error}</p>
@@ -974,8 +823,6 @@ export default function NewArrivals() {
 
                 </div>
 
-
-
                 <div className="new-arrivals-empty">
 
                     <p>
@@ -983,8 +830,6 @@ export default function NewArrivals() {
                         We could not load the latest products right now.
 
                     </p>
-
-
 
                     <button
 
@@ -1006,15 +851,11 @@ export default function NewArrivals() {
 
     }
 
-
-
     /* =====================================================
 
        MAIN UI
 
     ===================================================== */
-
-
 
     return (
 
@@ -1030,11 +871,7 @@ export default function NewArrivals() {
 
                     </span>
 
-
-
                     <h2>New Arrivals</h2>
-
-
 
                     <p>
 
@@ -1048,11 +885,7 @@ export default function NewArrivals() {
 
             </div>
 
-
-
             {/* LOADING */}
-
-
 
             {loading ? (
 
@@ -1084,8 +917,6 @@ export default function NewArrivals() {
 
                 /* EMPTY */
 
-
-
                 <div className="new-arrivals-empty">
 
                     <p>
@@ -1093,8 +924,6 @@ export default function NewArrivals() {
                         No published products are available yet.
 
                     </p>
-
-
 
                     <Link
 
@@ -1116,15 +945,11 @@ export default function NewArrivals() {
 
                     {/* PRODUCT GRID */}
 
-
-
                     <div className="new-arrivals-grid">
 
                         {products.map((product) => {
 
                             const id = productId(product);
-
-
 
                             const category =
 
@@ -1134,9 +959,7 @@ export default function NewArrivals() {
 
                                 "COLLECTION";
 
-
-
-                            const wishlisted = wishlist.includes(id);
+                            const wishlisted = isWishlisted(id);
 
                             const price = product?.price;
 
@@ -1144,13 +967,9 @@ export default function NewArrivals() {
 
                             const detail = product?.detail;
 
-
-
                             const purchasable =
 
                                 detail?.is_purchasable === true;
-
-
 
                             const hasStock =
 
@@ -1168,8 +987,6 @@ export default function NewArrivals() {
 
                                 );
 
-
-
                             return (
 
                                 <article
@@ -1181,8 +998,6 @@ export default function NewArrivals() {
                                 >
 
                                     {/* PRODUCT IMAGE WITH HOVER SLIDESHOW */}
-
-
 
                                     <NewArrivalProductImage
 
@@ -1200,19 +1015,13 @@ export default function NewArrivals() {
 
                                     />
 
-
-
                                     {/* PRODUCT DETAILS */}
-
-
 
                                     <div className="new-arrival-details">
 
                                         <div className="new-arrival-meta">
 
                                             <span>{category}</span>
-
-
 
                                             {(!purchasable || !hasStock) && (
 
@@ -1225,8 +1034,6 @@ export default function NewArrivals() {
                                             )}
 
                                         </div>
-
-
 
                                         <h3>
 
@@ -1241,8 +1048,6 @@ export default function NewArrivals() {
                                             </Link>
 
                                         </h3>
-
-
 
                                         <div className="new-arrival-bottom">
 
@@ -1268,8 +1073,6 @@ export default function NewArrivals() {
 
                                             </div>
 
-
-
                                             <button
 
                                                 type="button"
@@ -1292,8 +1095,6 @@ export default function NewArrivals() {
 
                                                     : "VIEW PRODUCT"}
 
-
-
                                                 {purchasable && hasStock && (
 
                                                     <PlusIcon />
@@ -1314,11 +1115,7 @@ export default function NewArrivals() {
 
                     </div>
 
-
-
                     {/* VIEW ALL */}
-
-
 
                     <div className="new-arrivals-footer">
 
@@ -1336,11 +1133,7 @@ export default function NewArrivals() {
 
                     </div>
 
-
-
                     {/* CART NOTIFICATION */}
-
-
 
                     {toast && (
 

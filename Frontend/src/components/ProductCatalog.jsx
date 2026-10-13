@@ -2,11 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
 
-
-
 import "../style/ProductCatalog.css";
-
-
 
 import {
 
@@ -18,19 +14,13 @@ import {
 
 } from "../services/productService";
 
-
-
 import { addCartItem } from "../services/cartService";
 
 import { useWishlist } from "../hooks/useWishlist";
 
-
-
 const PRODUCTS_TO_SHOW = 8;
 
 const SLIDE_INTERVAL = 1800;
-
-
 
 /* =========================================================
 
@@ -38,35 +28,21 @@ const SLIDE_INTERVAL = 1800;
 
 ========================================================= */
 
-
-
-
-
-
-
-
-
 /* =========================================================
 
    HELPERS
 
 ========================================================= */
 
-
-
 function formatPrice(value, currency = "INR") {
 
     const amount = Number(value);
-
-
 
     if (!Number.isFinite(amount)) {
 
         return "PRICE ON REQUEST";
 
     }
-
-
 
     try {
 
@@ -88,15 +64,11 @@ function formatPrice(value, currency = "INR") {
 
 }
 
-
-
 function getProductId(product) {
 
     return String(product?.id ?? "").trim();
 
 }
-
-
 
 function getImageUrl(image) {
 
@@ -106,15 +78,11 @@ function getImageUrl(image) {
 
     }
 
-
-
     if (!image || typeof image !== "object") {
 
         return "";
 
     }
-
-
 
     return String(
 
@@ -138,13 +106,9 @@ function getImageUrl(image) {
 
 }
 
-
-
 function getProductImages(product) {
 
     const detail = product?.detail ?? {};
-
-
 
     const detailImages = Array.isArray(detail.images)
 
@@ -152,23 +116,17 @@ function getProductImages(product) {
 
         : [];
 
-
-
     const productImages = Array.isArray(product?.images)
 
         ? product.images
 
         : [];
 
-
-
     const galleryImages = Array.isArray(product?.gallery)
 
         ? product.gallery
 
         : [];
-
-
 
     const sortedDetailImages = [...detailImages]
 
@@ -179,8 +137,6 @@ function getProductImages(product) {
                 return true;
 
             }
-
-
 
             return (
 
@@ -202,21 +158,15 @@ function getProductImages(product) {
 
             );
 
-
-
             const orderB = Number(
 
                 b?.sort_order ?? b?.position ?? b?.order ?? 0
 
             );
 
-
-
             return orderA - orderB;
 
         });
-
-
 
     const candidates = [
 
@@ -230,19 +180,13 @@ function getProductImages(product) {
 
     ];
 
-
-
     const uniqueImages = [];
 
     const seen = new Set();
 
-
-
     for (const candidate of candidates) {
 
         const url = getImageUrl(candidate);
-
-
 
         if (url && !seen.has(url)) {
 
@@ -254,21 +198,15 @@ function getProductImages(product) {
 
     }
 
-
-
     return uniqueImages;
 
 }
-
-
 
 /* =========================================================
 
    ICONS
 
 ========================================================= */
-
-
 
 function ArrowIcon() {
 
@@ -308,8 +246,6 @@ function ArrowIcon() {
 
 }
 
-
-
 function CloseIcon() {
 
     return (
@@ -346,8 +282,6 @@ function CloseIcon() {
 
 }
 
-
-
 function HeartIcon({ filled = false }) {
 
     return (
@@ -375,8 +309,6 @@ function HeartIcon({ filled = false }) {
     );
 
 }
-
-
 
 function BagCheckIcon() {
 
@@ -428,15 +360,11 @@ function BagCheckIcon() {
 
 }
 
-
-
 /* =========================================================
 
    PRODUCT IMAGE SLIDESHOW
 
 ========================================================= */
-
-
 
 function CatalogCardSlideshow({
 
@@ -462,8 +390,6 @@ function CatalogCardSlideshow({
 
     const [slideIndex, setSlideIndex] = useState(0);
 
-
-
     useEffect(() => {
 
         if (!hovered || images.length <= 1) {
@@ -472,29 +398,21 @@ function CatalogCardSlideshow({
 
         }
 
-
-
         const interval = window.setInterval(() => {
 
             setSlideIndex((current) => (current + 1) % images.length);
 
         }, SLIDE_INTERVAL);
 
-
-
         return () => window.clearInterval(interval);
 
     }, [hovered, images.length]);
-
-
 
     const startSlideshow = () => {
 
         setHovered(true);
 
     };
-
-
 
     const stopSlideshow = () => {
 
@@ -503,8 +421,6 @@ function CatalogCardSlideshow({
         setSlideIndex(0);
 
     };
-
-
 
     return (
 
@@ -626,15 +542,11 @@ function CatalogCardSlideshow({
 
             )}
 
-
-
             <span className="catalog-product-number">
 
                 {String(productNumber).padStart(2, "0")}
 
             </span>
-
-
 
             <span className="catalog-product-badge">
 
@@ -642,13 +554,12 @@ function CatalogCardSlideshow({
 
             </span>
 
-
-
             <button
 
                 type="button"
 
                 className={`catalog-wishlist ${wishlisted ? "active" : ""}`}
+                style={{ color: wishlisted ? "#c62828" : undefined }}
 
                 onClick={(event) => {
 
@@ -677,8 +588,6 @@ function CatalogCardSlideshow({
                 <HeartIcon filled={wishlisted} />
 
             </button>
-
-
 
             {images.length > 1 && hovered && (
 
@@ -720,15 +629,11 @@ function CatalogCardSlideshow({
 
 }
 
-
-
 /* =========================================================
 
    PRODUCT CATALOG
 
 ========================================================= */
-
-
 
 export default function ProductCatalog({
 
@@ -740,13 +645,11 @@ export default function ProductCatalog({
 
     const timerRef = useRef(null);
 
-
-
     const [products, setProducts] = useState([]);
 
     const [activeCategory, setActiveCategory] = useState("ALL");
 
-    const { wishlist, toggleWishlist: updateWishlist } = useWishlist();
+    const { isWishlisted, toggleWishlist: updateWishlist } = useWishlist();
 
     const [toast, setToast] = useState("");
 
@@ -754,17 +657,11 @@ export default function ProductCatalog({
 
     const [error, setError] = useState("");
 
-
-
     /* LOAD PRODUCTS */
-
-
 
     useEffect(() => {
 
         let active = true;
-
-
 
         async function load() {
 
@@ -772,13 +669,9 @@ export default function ProductCatalog({
 
             setError("");
 
-
-
             try {
 
                 let baseProducts = [];
-
-
 
                 if (Array.isArray(productsProp)) {
 
@@ -794,8 +687,6 @@ export default function ProductCatalog({
 
                     const response = await getProductsPage();
 
-
-
                     baseProducts = Array.isArray(response?.results)
 
                         ? response.results.slice(0, PRODUCTS_TO_SHOW)
@@ -804,23 +695,15 @@ export default function ProductCatalog({
 
                 }
 
-
-
                 const cards = await getProductCards(baseProducts);
 
-
-
                 if (!active) return;
-
-
 
                 setProducts(Array.isArray(cards) ? cards : []);
 
             } catch (requestError) {
 
                 if (!active) return;
-
-
 
                 setProducts([]);
 
@@ -844,17 +727,11 @@ export default function ProductCatalog({
 
         }
 
-
-
         load();
-
-
 
         return () => {
 
             active = false;
-
-
 
             if (timerRef.current) {
 
@@ -866,11 +743,7 @@ export default function ProductCatalog({
 
     }, [productsProp]);
 
-
-
     /* PRELOAD GALLERY IMAGES */
-
-
 
     useEffect(() => {
 
@@ -888,11 +761,7 @@ export default function ProductCatalog({
 
     }, [products]);
 
-
-
     /* CATEGORIES */
-
-
 
     const categories = useMemo(() => {
 
@@ -901,8 +770,6 @@ export default function ProductCatalog({
             .map((product) => product?.categoryName)
 
             .filter(Boolean);
-
-
 
         return [
 
@@ -924,17 +791,11 @@ export default function ProductCatalog({
 
     }, [products]);
 
-
-
     /* FILTERED PRODUCTS */
-
-
 
     const visibleProducts = useMemo(() => {
 
         if (activeCategory === "ALL") return products;
-
-
 
         return products.filter(
 
@@ -948,25 +809,17 @@ export default function ProductCatalog({
 
     }, [activeCategory, products]);
 
-
-
     /* TOAST */
-
-
 
     const showToast = (message) => {
 
         setToast(message);
-
-
 
         if (timerRef.current) {
 
             clearTimeout(timerRef.current);
 
         }
-
-
 
         timerRef.current = setTimeout(() => {
 
@@ -976,16 +829,12 @@ export default function ProductCatalog({
 
     };
 
-
-
     /* WISHLIST */
-
-
 
     const toggleWishlist = async (id) => {
         if (!id) return;
 
-        const wasWishlisted = wishlist.includes(String(id));
+        const wasWishlisted = isWishlisted(id);
 
         try {
             await updateWishlist(id);
@@ -998,25 +847,17 @@ export default function ProductCatalog({
         }
     };
 
-
-
     /* ADD TO BAG */
-
-
 
     const handleAddToBag = async (product) => {
 
         if (!product) return;
-
-
 
         const variant = getDefaultPurchasableVariant(
 
             product?.detail
 
         );
-
-
 
         if (
 
@@ -1038,8 +879,6 @@ export default function ProductCatalog({
 
         }
 
-
-
         try {
 
             await addCartItem(variant.id, 1);
@@ -1060,17 +899,11 @@ export default function ProductCatalog({
 
     };
 
-
-
     /* PRODUCT NAVIGATION */
-
-
 
     const openProduct = (product) => {
 
         const id = getProductId(product);
-
-
 
         if (!id) {
 
@@ -1080,17 +913,11 @@ export default function ProductCatalog({
 
         }
 
-
-
         navigate(`/product/${encodeURIComponent(id)}`);
 
     };
 
-
-
     /* RENDER */
-
-
 
     return (
 
@@ -1110,8 +937,6 @@ export default function ProductCatalog({
 
                         </div>
 
-
-
                         <h2>
 
                             <span>Shop</span>{" "}
@@ -1119,8 +944,6 @@ export default function ProductCatalog({
                             <em>the collection.</em>
 
                         </h2>
-
-
 
                         <p>
 
@@ -1134,8 +957,6 @@ export default function ProductCatalog({
 
                     </div>
 
-
-
                     <div className="catalog-header-side">
 
                         <div className="catalog-count">
@@ -1146,8 +967,6 @@ export default function ProductCatalog({
 
                         </div>
 
-
-
                         <div className="catalog-header-note">
 
                             PUBLISHED PRODUCTS
@@ -1157,8 +976,6 @@ export default function ProductCatalog({
                     </div>
 
                 </header>
-
-
 
                 <nav
 
@@ -1208,8 +1025,6 @@ export default function ProductCatalog({
 
                     </div>
 
-
-
                     <span className="catalog-navigation-label">
 
                         GEEKA CATALOGUE
@@ -1217,8 +1032,6 @@ export default function ProductCatalog({
                     </span>
 
                 </nav>
-
-
 
                 {loading ? (
 
@@ -1239,8 +1052,6 @@ export default function ProductCatalog({
                             >
 
                                 <div className="catalog-skeleton-image" />
-
-
 
                                 <div className="catalog-skeleton-info">
 
@@ -1268,8 +1079,6 @@ export default function ProductCatalog({
 
                         <p>{error}</p>
 
-
-
                         <button
 
                             type="button"
@@ -1294,8 +1103,6 @@ export default function ProductCatalog({
 
                         <h3>No products in this category.</h3>
 
-
-
                         <p>
 
                             The catalogue does not contain
@@ -1303,8 +1110,6 @@ export default function ProductCatalog({
                             published products in this selection.
 
                         </p>
-
-
 
                         <button
 
@@ -1330,7 +1135,7 @@ export default function ProductCatalog({
 
                             const id = getProductId(product);
 
-                            const wishlisted = wishlist.includes(id);
+                            const wishlisted = isWishlisted(id);
 
                             const images = getProductImages(product);
 
@@ -1341,8 +1146,6 @@ export default function ProductCatalog({
                                 product?.isPurchasable
 
                             );
-
-
 
                             return (
 
@@ -1378,8 +1181,6 @@ export default function ProductCatalog({
 
                                     />
 
-
-
                                     <div className="catalog-info">
 
                                         <div className="catalog-meta">
@@ -1392,8 +1193,6 @@ export default function ProductCatalog({
 
                                             </span>
 
-
-
                                             {!purchasable && (
 
                                                 <span>OUT OF STOCK</span>
@@ -1401,8 +1200,6 @@ export default function ProductCatalog({
                                             )}
 
                                         </div>
-
-
 
                                         <h3>
 
@@ -1417,8 +1214,6 @@ export default function ProductCatalog({
                                             </Link>
 
                                         </h3>
-
-
 
                                         <div className="catalog-bottom">
 
@@ -1446,8 +1241,6 @@ export default function ProductCatalog({
 
                                             </div>
 
-
-
                                             <button
 
                                                 type="button"
@@ -1467,8 +1260,6 @@ export default function ProductCatalog({
                                                     <BagCheckIcon />
 
                                                 )}
-
-
 
                                                 {purchasable
 
@@ -1492,15 +1283,11 @@ export default function ProductCatalog({
 
                 )}
 
-
-
                 <footer className="catalog-footer">
 
                     <div className="catalog-footer-left">
 
                         <span>{visibleProducts.length} SHOWN</span>
-
-
 
                         <p>
 
@@ -1512,8 +1299,6 @@ export default function ProductCatalog({
 
                     </div>
 
-
-
                     <div className="catalog-footer-center">
 
                         <div className="catalog-footer-line" />
@@ -1523,8 +1308,6 @@ export default function ProductCatalog({
                         <div className="catalog-footer-line" />
 
                     </div>
-
-
 
                     <Link to="/shop" className="catalog-footer-button">
 
@@ -1537,8 +1320,6 @@ export default function ProductCatalog({
                 </footer>
 
             </div>
-
-
 
             {toast && (
 
@@ -1558,8 +1339,6 @@ export default function ProductCatalog({
 
                     </div>
 
-
-
                     <div className="catalog-bag-toast-content">
 
                         <strong>GEEKA BAG</strong>
@@ -1567,8 +1346,6 @@ export default function ProductCatalog({
                         <span>{toast}</span>
 
                     </div>
-
-
 
                     <button
 

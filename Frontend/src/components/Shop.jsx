@@ -12,8 +12,6 @@ import {
 
 } from "react";
 
-
-
 import {
 
     Link,
@@ -24,19 +22,13 @@ import {
 
 } from "react-router-dom";
 
-
-
 import "../style/Shop.css";
-
-
 
 import Header from "./Header";
 
 import Footer from "./Footer";
 
 import shopBanner from "../assets/top-banner.jpg";
-
-
 
 import {
 
@@ -46,15 +38,9 @@ import {
 
 } from "../services/productService";
 
-
-
 import { useCart } from "../hooks/useCart";
 
 import { useWishlist } from "../hooks/useWishlist";
-
-
-
-
 
 /*
 
@@ -66,18 +52,6 @@ import { useWishlist } from "../hooks/useWishlist";
 
 */
 
-
-
-
-
-
-
-
-
-
-
-
-
 /*
 
 |--------------------------------------------------------------------------
@@ -87,8 +61,6 @@ import { useWishlist } from "../hooks/useWishlist";
 |--------------------------------------------------------------------------
 
 */
-
-
 
 function formatPrice(
 
@@ -100,15 +72,11 @@ function formatPrice(
 
     const amount = Number(value);
 
-
-
     if (!Number.isFinite(amount)) {
 
         return "PRICE ON REQUEST";
 
     }
-
-
 
     try {
 
@@ -136,10 +104,6 @@ function formatPrice(
 
 }
 
-
-
-
-
 /*
 
 |--------------------------------------------------------------------------
@@ -150,8 +114,6 @@ function formatPrice(
 
 */
 
-
-
 function productId(product) {
 
     return String(
@@ -161,10 +123,6 @@ function productId(product) {
     ).trim();
 
 }
-
-
-
-
 
 function categoryName(product) {
 
@@ -179,10 +137,6 @@ function categoryName(product) {
     ).trim();
 
 }
-
-
-
-
 
 function categorySlug(product) {
 
@@ -202,10 +156,6 @@ function categorySlug(product) {
 
 }
 
-
-
-
-
 function collectionMatches(
 
     product,
@@ -220,15 +170,11 @@ function collectionMatches(
 
     }
 
-
-
     const name = categoryName(product).toLowerCase();
 
     const slug = categorySlug(product);
 
     const collectionKey = collection.toLowerCase();
-
-
 
     if (collectionKey === "ethnic") {
 
@@ -241,8 +187,6 @@ function collectionMatches(
         );
 
     }
-
-
 
     if (collectionKey === "jewellery") {
 
@@ -259,8 +203,6 @@ function collectionMatches(
         );
 
     }
-
-
 
     if (collectionKey === "creative") {
 
@@ -282,15 +224,9 @@ function collectionMatches(
 
     }
 
-
-
     return true;
 
 }
-
-
-
-
 
 /*
 
@@ -302,8 +238,6 @@ function collectionMatches(
 
 */
 
-
-
 function hasAvailableStock(product) {
 
     const variants =
@@ -313,8 +247,6 @@ function hasAvailableStock(product) {
             ? product.detail.variants
 
             : [];
-
-
 
     return variants.some(
 
@@ -330,10 +262,6 @@ function hasAvailableStock(product) {
 
 }
 
-
-
-
-
 /*
 
 |--------------------------------------------------------------------------
@@ -344,8 +272,6 @@ function hasAvailableStock(product) {
 
 */
 
-
-
 function getPurchasableVariant(product) {
 
     const variants =
@@ -355,8 +281,6 @@ function getPurchasableVariant(product) {
             ? product.detail.variants
 
             : [];
-
-
 
     return (
 
@@ -376,10 +300,6 @@ function getPurchasableVariant(product) {
 
 }
 
-
-
-
-
 /*
 
 |--------------------------------------------------------------------------
@@ -390,13 +310,9 @@ function getPurchasableVariant(product) {
 
 */
 
-
-
 function getProductGalleryImages(product) {
 
     const images = [];
-
-
 
     const addImage = (value) => {
 
@@ -414,8 +330,6 @@ function getProductGalleryImages(product) {
 
         }
 
-
-
         if (
 
             !value ||
@@ -428,15 +342,11 @@ function getProductGalleryImages(product) {
 
         }
 
-
-
         if (value.is_active === false) {
 
             return;
 
         }
-
-
 
         const imageUrl =
 
@@ -454,8 +364,6 @@ function getProductGalleryImages(product) {
 
             value.image_file;
 
-
-
         if (
 
             typeof imageUrl === "string" &&
@@ -470,13 +378,9 @@ function getProductGalleryImages(product) {
 
     };
 
-
-
     // Main product image.
 
     addImage(product?.displayImage);
-
-
 
     // Detailed product images, sorted by display order.
 
@@ -488,8 +392,6 @@ function getProductGalleryImages(product) {
 
             : [];
 
-
-
     detailImages.sort(
 
         (a, b) =>
@@ -500,11 +402,7 @@ function getProductGalleryImages(product) {
 
     );
 
-
-
     detailImages.forEach(addImage);
-
-
 
     // Other possible product gallery formats.
 
@@ -514,15 +412,11 @@ function getProductGalleryImages(product) {
 
     }
 
-
-
     if (Array.isArray(product?.gallery)) {
 
         product.gallery.forEach(addImage);
 
     }
-
-
 
     // Remove duplicate image URLs.
 
@@ -530,17 +424,11 @@ function getProductGalleryImages(product) {
 
 }
 
-
-
-
-
 function ProductImageSlideshow({ product }) {
 
     const [isHovered, setIsHovered] = useState(false);
 
     const [currentIndex, setCurrentIndex] = useState(0);
-
-
 
     const images = useMemo(
 
@@ -550,13 +438,9 @@ function ProductImageSlideshow({ product }) {
 
     );
 
-
-
     const SLIDE_INTERVAL = 2200;
 
     const TRANSITION_DURATION = 520;
-
-
 
     useEffect(() => {
 
@@ -572,8 +456,6 @@ function ProductImageSlideshow({ product }) {
 
     }, [images]);
 
-
-
     useEffect(() => {
 
         if (!isHovered || images.length < 2) {
@@ -582,15 +464,11 @@ function ProductImageSlideshow({ product }) {
 
         }
 
-
-
         const interval = window.setInterval(() => {
 
             setCurrentIndex((index) => index + 1);
 
         }, SLIDE_INTERVAL);
-
-
 
         return () => {
 
@@ -599,8 +477,6 @@ function ProductImageSlideshow({ product }) {
         };
 
     }, [isHovered, images.length]);
-
-
 
     useEffect(() => {
 
@@ -620,15 +496,11 @@ function ProductImageSlideshow({ product }) {
 
         }
 
-
-
         const timeout = window.setTimeout(() => {
 
             setCurrentIndex(0);
 
         }, TRANSITION_DURATION);
-
-
 
         return () => {
 
@@ -637,8 +509,6 @@ function ProductImageSlideshow({ product }) {
         };
 
     }, [currentIndex, images.length]);
-
-
 
     const handleMouseEnter = () => {
 
@@ -650,8 +520,6 @@ function ProductImageSlideshow({ product }) {
 
     };
 
-
-
     const handleMouseLeave = () => {
 
         setIsHovered(false);
@@ -659,8 +527,6 @@ function ProductImageSlideshow({ product }) {
         setCurrentIndex(0);
 
     };
-
-
 
     if (images.length === 0) {
 
@@ -675,8 +541,6 @@ function ProductImageSlideshow({ product }) {
         );
 
     }
-
-
 
     if (images.length === 1) {
 
@@ -700,8 +564,6 @@ function ProductImageSlideshow({ product }) {
 
     }
 
-
-
     const displayedImages = [
 
         ...images,
@@ -710,13 +572,9 @@ function ProductImageSlideshow({ product }) {
 
     ];
 
-
-
     const atLoopBoundary =
 
         currentIndex === images.length;
-
-
 
     return (
 
@@ -780,10 +638,6 @@ function ProductImageSlideshow({ product }) {
 
 }
 
-
-
-
-
 /*
 
 |--------------------------------------------------------------------------
@@ -793,8 +647,6 @@ function ProductImageSlideshow({ product }) {
 |--------------------------------------------------------------------------
 
 */
-
-
 
 function ArrowIcon() {
 
@@ -822,8 +674,6 @@ function ArrowIcon() {
 
             />
 
-
-
             <path
 
                 d="m13 6 6 6-6 6"
@@ -843,10 +693,6 @@ function ArrowIcon() {
     );
 
 }
-
-
-
-
 
 function SearchIcon() {
 
@@ -870,8 +716,6 @@ function SearchIcon() {
 
             />
 
-
-
             <path d="m16 16 4.2 4.2" />
 
         </svg>
@@ -879,10 +723,6 @@ function SearchIcon() {
     );
 
 }
-
-
-
-
 
 function CloseIcon() {
 
@@ -910,8 +750,6 @@ function CloseIcon() {
 
             />
 
-
-
             <path
 
                 d="M18 6 6 18"
@@ -929,10 +767,6 @@ function CloseIcon() {
     );
 
 }
-
-
-
-
 
 function PlusIcon() {
 
@@ -966,10 +800,6 @@ function PlusIcon() {
 
 }
 
-
-
-
-
 function HeartIcon({ filled = false }) {
 
     return (
@@ -1002,10 +832,6 @@ function HeartIcon({ filled = false }) {
 
 }
 
-
-
-
-
 /*
 
 |--------------------------------------------------------------------------
@@ -1016,21 +842,13 @@ function HeartIcon({ filled = false }) {
 
 */
 
-
-
 export default function Shop() {
 
     const location = useLocation();
 
     const navigate = useNavigate();
 
-
-
     const { addItem } = useCart();
-
-
-
-
 
     /*
 
@@ -1041,8 +859,6 @@ export default function Shop() {
     |--------------------------------------------------------------------------
 
     */
-
-
 
     useLayoutEffect(() => {
 
@@ -1058,10 +874,6 @@ export default function Shop() {
 
     }, [location.pathname]);
 
-
-
-
-
     /*
 
     |--------------------------------------------------------------------------
@@ -1072,8 +884,6 @@ export default function Shop() {
 
     */
 
-
-
     const params = useMemo(
 
         () => new URLSearchParams(location.search),
@@ -1082,15 +892,11 @@ export default function Shop() {
 
     );
 
-
-
     const search = (
 
         params.get("search") || ""
 
     ).trim();
-
-
 
     const requestedCategory = (
 
@@ -1102,8 +908,6 @@ export default function Shop() {
 
         .toLowerCase();
 
-
-
     const collection = (
 
         params.get("collection") || ""
@@ -1113,10 +917,6 @@ export default function Shop() {
         .trim()
 
         .toLowerCase();
-
-
-
-
 
     /*
 
@@ -1128,15 +928,13 @@ export default function Shop() {
 
     */
 
-
-
     const [products, setProducts] = useState([]);
 
     const [loading, setLoading] = useState(true);
 
     const [error, setError] = useState("");
 
-    const { wishlist, toggleWishlist: updateWishlist } = useWishlist();
+    const { isWishlisted, toggleWishlist: updateWishlist } = useWishlist();
 
     const [sortBy, setSortBy] = useState("featured");
 
@@ -1152,10 +950,6 @@ export default function Shop() {
 
     const [mobileFilters, setMobileFilters] = useState(false);
 
-
-
-
-
     /*
 
     |--------------------------------------------------------------------------
@@ -1166,13 +960,9 @@ export default function Shop() {
 
     */
 
-
-
     useEffect(() => {
 
         let active = true;
-
-
 
         async function load() {
 
@@ -1180,21 +970,15 @@ export default function Shop() {
 
             setError("");
 
-
-
             try {
 
                 const baseProducts = await getAllProducts();
-
-
 
                 const cards = await getProductCards(
 
                     baseProducts
 
                 );
-
-
 
                 if (active) {
 
@@ -1215,8 +999,6 @@ export default function Shop() {
                 if (active) {
 
                     setProducts([]);
-
-
 
                     setError(
 
@@ -1240,11 +1022,7 @@ export default function Shop() {
 
         }
 
-
-
         load();
-
-
 
         return () => {
 
@@ -1253,10 +1031,6 @@ export default function Shop() {
         };
 
     }, []);
-
-
-
-
 
     /*
 
@@ -1268,21 +1042,15 @@ export default function Shop() {
 
     */
 
-
-
     const categoryOptions = useMemo(() => {
 
         const map = new Map();
-
-
 
         products.forEach((product) => {
 
             const name = categoryName(product);
 
             const slug = categorySlug(product);
-
-
 
             if (name && slug) {
 
@@ -1291,8 +1059,6 @@ export default function Shop() {
             }
 
         });
-
-
 
         return Array.from(map.entries()).map(
 
@@ -1308,10 +1074,6 @@ export default function Shop() {
 
     }, [products]);
 
-
-
-
-
     /*
 
     |--------------------------------------------------------------------------
@@ -1321,8 +1083,6 @@ export default function Shop() {
     |--------------------------------------------------------------------------
 
     */
-
-
 
     const prices = useMemo(
 
@@ -1338,8 +1098,6 @@ export default function Shop() {
 
     );
 
-
-
     const priceBounds = useMemo(() => {
 
         if (!prices.length) {
@@ -1354,8 +1112,6 @@ export default function Shop() {
 
         }
 
-
-
         return {
 
             min: Math.floor(Math.min(...prices)),
@@ -1366,10 +1122,6 @@ export default function Shop() {
 
     }, [prices]);
 
-
-
-
-
     useEffect(() => {
 
         if (!prices.length) {
@@ -1377,8 +1129,6 @@ export default function Shop() {
             return;
 
         }
-
-
 
         setMinPrice(priceBounds.min);
 
@@ -1394,10 +1144,6 @@ export default function Shop() {
 
     ]);
 
-
-
-
-
     /*
 
     |--------------------------------------------------------------------------
@@ -1408,13 +1154,7 @@ export default function Shop() {
 
     */
 
-
-
     const selectedCategory = requestedCategory || "all";
-
-
-
-
 
     /*
 
@@ -1426,13 +1166,9 @@ export default function Shop() {
 
     */
 
-
-
     const filteredProducts = useMemo(() => {
 
         const normalizedSearch = search.toLowerCase();
-
-
 
         const result = products.filter((product) => {
 
@@ -1450,8 +1186,6 @@ export default function Shop() {
 
             }
 
-
-
             // COLLECTION
 
             if (!collectionMatches(product, collection)) {
@@ -1459,8 +1193,6 @@ export default function Shop() {
                 return false;
 
             }
-
-
 
             // SEARCH
 
@@ -1480,8 +1212,6 @@ export default function Shop() {
 
                     .toLowerCase();
 
-
-
                 if (!haystack.includes(normalizedSearch)) {
 
                     return false;
@@ -1490,13 +1220,9 @@ export default function Shop() {
 
             }
 
-
-
             // PRICE
 
             const price = Number(product.price);
-
-
 
             if (Number.isFinite(price)) {
 
@@ -1508,8 +1234,6 @@ export default function Shop() {
 
             }
 
-
-
             // STOCK
 
             if (stockOnly && !hasAvailableStock(product)) {
@@ -1518,13 +1242,9 @@ export default function Shop() {
 
             }
 
-
-
             return true;
 
         });
-
-
 
         // SORTING
 
@@ -1564,8 +1284,6 @@ export default function Shop() {
 
         }
 
-
-
         return result;
 
     }, [
@@ -1588,10 +1306,6 @@ export default function Shop() {
 
     ]);
 
-
-
-
-
     /*
 
     |--------------------------------------------------------------------------
@@ -1602,13 +1316,9 @@ export default function Shop() {
 
     */
 
-
-
     const updateQuery = (key, value) => {
 
         const next = new URLSearchParams(location.search);
-
-
 
         if (value) {
 
@@ -1619,8 +1329,6 @@ export default function Shop() {
             next.delete(key);
 
         }
-
-
 
         navigate(
 
@@ -1646,10 +1354,6 @@ export default function Shop() {
 
     };
 
-
-
-
-
     /*
 
     |--------------------------------------------------------------------------
@@ -1660,8 +1364,6 @@ export default function Shop() {
 
     */
 
-
-
     const resetFilters = () => {
 
         setMinPrice(priceBounds.min);
@@ -1671,8 +1373,6 @@ export default function Shop() {
         setStockOnly(false);
 
         setSortBy("featured");
-
-
 
         navigate(
 
@@ -1688,10 +1388,6 @@ export default function Shop() {
 
     };
 
-
-
-
-
     /*
 
     |--------------------------------------------------------------------------
@@ -1702,12 +1398,10 @@ export default function Shop() {
 
     */
 
-
-
     const toggleWishlist = async (id) => {
         if (!id) return;
 
-        const wasWishlisted = wishlist.includes(String(id));
+        const wasWishlisted = isWishlisted(id);
 
         try {
             await updateWishlist(id);
@@ -1720,10 +1414,6 @@ export default function Shop() {
         }
     };
 
-
-
-
-
     /*
 
     |--------------------------------------------------------------------------
@@ -1734,13 +1424,9 @@ export default function Shop() {
 
     */
 
-
-
     const addToCart = async (product) => {
 
         const variant = getPurchasableVariant(product);
-
-
 
         if (!variant) {
 
@@ -1754,13 +1440,9 @@ export default function Shop() {
 
             );
 
-
-
             return;
 
         }
-
-
 
         try {
 
@@ -1774,15 +1456,11 @@ export default function Shop() {
 
             );
 
-
-
             setCartMessage(
 
                 `${product.name} ADDED TO BAG`
 
             );
-
-
 
             window.setTimeout(
 
@@ -1802,8 +1480,6 @@ export default function Shop() {
 
             );
 
-
-
             window.setTimeout(
 
                 () => setCartMessage(""),
@@ -1816,10 +1492,6 @@ export default function Shop() {
 
     };
 
-
-
-
-
     /*
 
     |--------------------------------------------------------------------------
@@ -1829,8 +1501,6 @@ export default function Shop() {
     |--------------------------------------------------------------------------
 
     */
-
-
 
     const activeFilterLabels = [
 
@@ -1844,23 +1514,17 @@ export default function Shop() {
 
             : "",
 
-
-
         collection
 
             ? collection.toUpperCase()
 
             : "",
 
-
-
         search
 
             ? `SEARCH: ${search}`
 
             : "",
-
-
 
         stockOnly
 
@@ -1869,10 +1533,6 @@ export default function Shop() {
             : "",
 
     ].filter(Boolean);
-
-
-
-
 
     /*
 
@@ -1884,27 +1544,17 @@ export default function Shop() {
 
     */
 
-
-
     return (
 
         <>
 
             <Header />
 
-
-
             <main className="shop-page">
-
-
 
                 {/* BANNER */}
 
-
-
                 <section className="shop-banner">
-
-
 
                     <img
 
@@ -1916,11 +1566,7 @@ export default function Shop() {
 
                     />
 
-
-
                     <div className="shop-banner-content">
-
-
 
                         <span className="shop-banner-eyebrow">
 
@@ -1928,15 +1574,11 @@ export default function Shop() {
 
                         </span>
 
-
-
                         <h1>
 
                             Shop the Geeka collection.
 
                         </h1>
-
-
 
                         <p>
 
@@ -1950,25 +1592,13 @@ export default function Shop() {
 
                         </p>
 
-
-
                     </div>
-
-
 
                 </section>
 
-
-
-
-
                 {/* SHOP CONTAINER */}
 
-
-
                 <div className="shop-container">
-
-
 
                     <div className="shop-catalog-heading">
 
@@ -1984,15 +1614,9 @@ export default function Shop() {
 
                     </div>
 
-
-
                     <div className="shop-toolbar">
 
-
-
                         <div className="shop-toolbar-right">
-
-
 
                             <span className="showing-count">
 
@@ -2006,19 +1630,13 @@ export default function Shop() {
 
                             </span>
 
-
-
                             <div className="sort-box">
-
-
 
                                 <label htmlFor="shop-sort">
 
                                     SORT BY
 
                                 </label>
-
-
 
                                 <select
 
@@ -2044,23 +1662,17 @@ export default function Shop() {
 
                                     </option>
 
-
-
                                     <option value="price-low">
 
                                         Price: Low to High
 
                                     </option>
 
-
-
                                     <option value="price-high">
 
                                         Price: High to Low
 
                                     </option>
-
-
 
                                     <option value="name">
 
@@ -2070,11 +1682,7 @@ export default function Shop() {
 
                                 </select>
 
-
-
                             </div>
-
-
 
                             <button
 
@@ -2094,35 +1702,21 @@ export default function Shop() {
 
                             </button>
 
-
-
                         </div>
-
-
 
                     </div>
 
-
-
-
-
                     {/* ACTIVE FILTERS */}
-
-
 
                     {activeFilterLabels.length > 0 && (
 
                         <div className="active-filter-row">
-
-
 
                             <span>
 
                                 ACTIVE FILTERS
 
                             </span>
-
-
 
                             {activeFilterLabels.map((label) => (
 
@@ -2182,31 +1776,17 @@ export default function Shop() {
 
                             ))}
 
-
-
                         </div>
 
                     )}
 
-
-
-
-
                     <div className="shop-main-layout">
-
-
 
                         {/* DESKTOP FILTERS */}
 
-
-
                         <aside className="shop-filters">
 
-
-
                             <div className="filter-block">
-
-
 
                                 <h2>
 
@@ -2214,11 +1794,7 @@ export default function Shop() {
 
                                 </h2>
 
-
-
                                 <div className="filter-category-list">
-
-
 
                                     <button
 
@@ -2248,8 +1824,6 @@ export default function Shop() {
 
                                         </span>
 
-
-
                                         <span>
 
                                             {products.length}
@@ -2257,8 +1831,6 @@ export default function Shop() {
                                         </span>
 
                                     </button>
-
-
 
                                     {categoryOptions.map((category) => {
 
@@ -2269,8 +1841,6 @@ export default function Shop() {
                                                 categorySlug(product) === category.slug
 
                                         ).length;
-
-
 
                                         return (
 
@@ -2310,8 +1880,6 @@ export default function Shop() {
 
                                                 </span>
 
-
-
                                                 <span>
 
                                                     {count}
@@ -2324,25 +1892,13 @@ export default function Shop() {
 
                                     })}
 
-
-
                                 </div>
-
-
 
                             </div>
 
-
-
-
-
                             {/* PRICE FILTER */}
 
-
-
                             <div className="filter-block">
-
-
 
                                 <h2>
 
@@ -2350,11 +1906,7 @@ export default function Shop() {
 
                                 </h2>
 
-
-
                                 <div className="range-container">
-
-
 
                                     <input
 
@@ -2396,8 +1948,6 @@ export default function Shop() {
 
                                     />
 
-
-
                                     <input
 
                                         type="range"
@@ -2438,15 +1988,9 @@ export default function Shop() {
 
                                     />
 
-
-
                                 </div>
 
-
-
                                 <div className="price-values">
-
-
 
                                     <span>
 
@@ -2454,33 +1998,19 @@ export default function Shop() {
 
                                     </span>
 
-
-
                                     <span>
 
                                         {formatPrice(maxPrice)}
 
                                     </span>
 
-
-
                                 </div>
-
-
 
                             </div>
 
-
-
-
-
                             {/* AVAILABILITY */}
 
-
-
                             <div className="filter-block">
-
-
 
                                 <h2>
 
@@ -2488,11 +2018,7 @@ export default function Shop() {
 
                                 </h2>
 
-
-
                                 <label className="filter-option">
-
-
 
                                     <input
 
@@ -2512,11 +2038,7 @@ export default function Shop() {
 
                                     />
 
-
-
                                     <span className="fake-checkbox" />
-
-
 
                                     <span>
 
@@ -2524,15 +2046,9 @@ export default function Shop() {
 
                                     </span>
 
-
-
                                 </label>
 
-
-
                             </div>
-
-
 
                             <button
 
@@ -2548,17 +2064,9 @@ export default function Shop() {
 
                             </button>
 
-
-
                         </aside>
 
-
-
-
-
                         {/* PRODUCTS */}
-
-
 
                         <section
 
@@ -2568,13 +2076,9 @@ export default function Shop() {
 
                         >
 
-
-
                             {loading ? (
 
                                 <div className="shop-empty">
-
-
 
                                     <div className="empty-search-icon">
 
@@ -2582,15 +2086,11 @@ export default function Shop() {
 
                                     </div>
 
-
-
                                     <h2>
 
                                         Loading the collection.
 
                                     </h2>
-
-
 
                                     <p>
 
@@ -2604,15 +2104,11 @@ export default function Shop() {
 
                                     </p>
 
-
-
                                 </div>
 
                             ) : error ? (
 
                                 <div className="shop-empty">
-
-
 
                                     <div className="empty-search-icon">
 
@@ -2620,23 +2116,17 @@ export default function Shop() {
 
                                     </div>
 
-
-
                                     <h2>
 
                                         Could not load products.
 
                                     </h2>
 
-
-
                                     <p>
 
                                         {error}
 
                                     </p>
-
-
 
                                     <button
 
@@ -2656,15 +2146,11 @@ export default function Shop() {
 
                                     </button>
 
-
-
                                 </div>
 
                             ) : filteredProducts.length === 0 ? (
 
                                 <div className="shop-empty">
-
-
 
                                     <div className="empty-search-icon">
 
@@ -2672,15 +2158,11 @@ export default function Shop() {
 
                                     </div>
 
-
-
                                     <h2>
 
                                         No products found.
 
                                     </h2>
-
-
 
                                     <p>
 
@@ -2691,8 +2173,6 @@ export default function Shop() {
                                             : "No published products match the current filters."}
 
                                     </p>
-
-
 
                                     <button
 
@@ -2708,43 +2188,29 @@ export default function Shop() {
 
                                     </button>
 
-
-
                                 </div>
 
                             ) : (
 
                                 <div className="shop-product-grid">
 
-
-
                                     {filteredProducts.map((product) => {
 
                                         const id = productId(product);
 
-
-
                                         const wishlisted =
 
-                                            wishlist.includes(id);
-
-
+                                            isWishlisted(id);
 
                                         const detail = product?.detail;
-
-
 
                                         const purchasable =
 
                                             detail?.is_purchasable === true;
 
-
-
                                         const available =
 
                                             hasAvailableStock(product);
-
-
 
                                         return (
 
@@ -2756,15 +2222,9 @@ export default function Shop() {
 
                                             >
 
-
-
                                                 {/* IMAGE */}
 
-
-
                                                 <div className="shop-product-image">
-
-
 
                                                     <Link
 
@@ -2784,8 +2244,6 @@ export default function Shop() {
 
                                                     </Link>
 
-
-
                                                     {available && (
 
                                                         <span className="shop-product-new">
@@ -2796,8 +2254,6 @@ export default function Shop() {
 
                                                     )}
 
-
-
                                                     <button
 
                                                         type="button"
@@ -2806,13 +2262,13 @@ export default function Shop() {
 
                                                             }`}
 
+                                                        style={{ color: wishlisted ? "#c62828" : undefined }}
+
                                                         onClick={(event) => {
 
                                                             event.preventDefault();
 
                                                             event.stopPropagation();
-
-
 
                                                             toggleWishlist(id);
 
@@ -2840,11 +2296,7 @@ export default function Shop() {
 
                                                     </button>
 
-
-
                                                     <div className="shop-image-actions">
-
-
 
                                                         <button
 
@@ -2856,8 +2308,6 @@ export default function Shop() {
 
                                                                 event.stopPropagation();
 
-
-
                                                                 setQuickView(product);
 
                                                             }}
@@ -2868,25 +2318,13 @@ export default function Shop() {
 
                                                         </button>
 
-
-
                                                     </div>
-
-
 
                                                 </div>
 
-
-
-
-
                                                 {/* PRODUCT INFO */}
 
-
-
                                                 <div className="shop-product-info">
-
-
 
                                                     <span className="shop-product-category">
 
@@ -2895,8 +2333,6 @@ export default function Shop() {
                                                             "COLLECTION"}
 
                                                     </span>
-
-
 
                                                     <h3>
 
@@ -2918,11 +2354,7 @@ export default function Shop() {
 
                                                     </h3>
 
-
-
                                                     <div className="shop-product-price">
-
-
 
                                                         <strong>
 
@@ -2940,11 +2372,7 @@ export default function Shop() {
 
                                                         </strong>
 
-
-
                                                     </div>
-
-
 
                                                     <button
 
@@ -2968,8 +2396,6 @@ export default function Shop() {
 
                                                             : "VIEW PRODUCT"}
 
-
-
                                                         {purchasable && available && (
 
                                                             <PlusIcon />
@@ -2978,11 +2404,7 @@ export default function Shop() {
 
                                                     </button>
 
-
-
                                                 </div>
-
-
 
                                             </article>
 
@@ -2990,35 +2412,19 @@ export default function Shop() {
 
                                     })}
 
-
-
                                 </div>
 
                             )}
 
-
-
                         </section>
-
-
 
                     </div>
 
-
-
                 </div>
-
-
 
             </main>
 
-
-
-
-
             {/* MOBILE FILTERS */}
-
-
 
             {mobileFilters && (
 
@@ -3032,23 +2438,15 @@ export default function Shop() {
 
                 >
 
-
-
                     <aside className="mobile-filter-panel">
 
-
-
                         <div className="mobile-filter-head">
-
-
 
                             <strong>
 
                                 FILTERS
 
                             </strong>
-
-
 
                             <button
 
@@ -3068,19 +2466,11 @@ export default function Shop() {
 
                             </button>
 
-
-
                         </div>
-
-
 
                         <div className="mobile-filter-body">
 
-
-
                             <div className="filter-block">
-
-
 
                                 <h2>
 
@@ -3088,11 +2478,7 @@ export default function Shop() {
 
                                 </h2>
 
-
-
                                 <div className="filter-category-list">
-
-
 
                                     <button
 
@@ -3122,8 +2508,6 @@ export default function Shop() {
 
                                         </span>
 
-
-
                                         <span>
 
                                             {products.length}
@@ -3131,8 +2515,6 @@ export default function Shop() {
                                         </span>
 
                                     </button>
-
-
 
                                     {categoryOptions.map((category) => (
 
@@ -3172,8 +2554,6 @@ export default function Shop() {
 
                                             </span>
 
-
-
                                             <span>
 
                                                 {products.filter(
@@ -3192,19 +2572,11 @@ export default function Shop() {
 
                                     ))}
 
-
-
                                 </div>
-
-
 
                             </div>
 
-
-
                             <div className="filter-block">
-
-
 
                                 <h2>
 
@@ -3212,11 +2584,7 @@ export default function Shop() {
 
                                 </h2>
 
-
-
                                 <label className="filter-option">
-
-
 
                                     <input
 
@@ -3236,11 +2604,7 @@ export default function Shop() {
 
                                     />
 
-
-
                                     <span className="fake-checkbox" />
-
-
 
                                     <span>
 
@@ -3248,23 +2612,13 @@ export default function Shop() {
 
                                     </span>
 
-
-
                                 </label>
-
-
 
                             </div>
 
-
-
                         </div>
 
-
-
                         <div className="mobile-filter-footer">
-
-
 
                             <button
 
@@ -3279,8 +2633,6 @@ export default function Shop() {
                                 RESET
 
                             </button>
-
-
 
                             <button
 
@@ -3302,27 +2654,15 @@ export default function Shop() {
 
                             </button>
 
-
-
                         </div>
 
-
-
                     </aside>
-
-
 
                 </div>
 
             )}
 
-
-
-
-
             {/* QUICK VIEW */}
-
-
 
             {quickView && (
 
@@ -3336,11 +2676,7 @@ export default function Shop() {
 
                 >
 
-
-
                     <div className="quick-view-modal">
-
-
 
                         <button
 
@@ -3362,11 +2698,7 @@ export default function Shop() {
 
                         </button>
 
-
-
                         <div className="quick-view-image">
-
-
 
                             {quickView.displayImage ? (
 
@@ -3388,15 +2720,9 @@ export default function Shop() {
 
                             )}
 
-
-
                         </div>
 
-
-
                         <div className="quick-view-content">
-
-
 
                             <span>
 
@@ -3406,15 +2732,11 @@ export default function Shop() {
 
                             </span>
 
-
-
                             <h2>
 
                                 {quickView.name}
 
                             </h2>
-
-
 
                             <div className="quick-view-price">
 
@@ -3432,8 +2754,6 @@ export default function Shop() {
 
                             </div>
 
-
-
                             <p>
 
                                 {quickView.detail?.description ||
@@ -3442,11 +2762,7 @@ export default function Shop() {
 
                             </p>
 
-
-
                             <div className="quick-view-actions">
-
-
 
                                 <button
 
@@ -3471,8 +2787,6 @@ export default function Shop() {
                                         : "VIEW PRODUCT"}
 
                                 </button>
-
-
 
                                 <button
 
@@ -3500,31 +2814,17 @@ export default function Shop() {
 
                                 </button>
 
-
-
                             </div>
-
-
 
                         </div>
 
-
-
                     </div>
-
-
 
                 </div>
 
             )}
 
-
-
-
-
             {/* CART MESSAGE */}
-
-
 
             {cartMessage && (
 

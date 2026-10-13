@@ -15,8 +15,8 @@ import "../style/Header.css";
 import geekaLogo from "../assets/logo.png";
 
 import { useCart } from "../hooks/useCart";
+import { useWishlist } from "../hooks/useWishlist";
 import { isAdminUser } from "../admin/services/adminAccess";
-
 
 /* =========================================================
    API CONFIGURATION
@@ -25,7 +25,6 @@ import { isAdminUser } from "../admin/services/adminAccess";
 const API_URL =
     import.meta.env.VITE_API_URL ||
     "https://geeka-backend.onrender.com";
-
 
 /* =========================================================
    LOGO
@@ -42,7 +41,6 @@ function Logo() {
         </div>
     );
 }
-
 
 /* =========================================================
    SEARCH ICON
@@ -65,7 +63,6 @@ function SearchIcon() {
     );
 }
 
-
 /* =========================================================
    CLOSE ICON
 ========================================================= */
@@ -81,7 +78,6 @@ function CloseIcon() {
         </svg>
     );
 }
-
 
 /* =========================================================
    ACCOUNT ICON
@@ -104,7 +100,6 @@ function AccountIcon() {
     );
 }
 
-
 /* =========================================================
    WISHLIST ICON
 ========================================================= */
@@ -119,7 +114,6 @@ function HeartIcon() {
         </svg>
     );
 }
-
 
 /* =========================================================
    BAG ICON
@@ -137,7 +131,6 @@ function BagIcon() {
         </svg>
     );
 }
-
 
 /* =========================================================
    USER INITIALS
@@ -166,7 +159,6 @@ function getUserInitials(fullName) {
     ).toUpperCase();
 }
 
-
 /* =========================================================
    HEADER
 ========================================================= */
@@ -182,7 +174,6 @@ export default function Header() {
     const searchInputRef =
         useRef(null);
 
-
     /*
     |--------------------------------------------------------------------------
     | SHARED CART
@@ -193,6 +184,9 @@ export default function Header() {
         cartCount,
     } = useCart();
 
+    // Use the same backend-backed wishlist state as product cards.
+    const { wishlist } = useWishlist();
+    const wishlistCount = Array.isArray(wishlist) ? wishlist.length : 0;
 
     /*
     |--------------------------------------------------------------------------
@@ -209,7 +203,6 @@ export default function Header() {
     const [logoutLoading, setLogoutLoading] =
         useState(false);
 
-
     /*
     |--------------------------------------------------------------------------
     | SEARCH STATE
@@ -223,19 +216,6 @@ export default function Header() {
         searchValue,
         setSearchValue,
     ] = useState("");
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | WISHLIST STATE
-    |--------------------------------------------------------------------------
-    */
-
-    const [
-        wishlistCount,
-        setWishlistCount,
-    ] = useState(0);
-
 
     /*
     |--------------------------------------------------------------------------
@@ -271,7 +251,6 @@ export default function Header() {
     const isProfile =
         location.pathname === "/profile";
 
-
     /*
     |--------------------------------------------------------------------------
     | ADMIN ACCESS
@@ -280,7 +259,6 @@ export default function Header() {
 
     const showManageStore =
         isAdminUser(user);
-
 
     /*
     |--------------------------------------------------------------------------
@@ -293,7 +271,6 @@ export default function Header() {
         new URLSearchParams(
             location.search
         ).get("section") === "wishlist";
-
 
     /*
     |--------------------------------------------------------------------------
@@ -339,7 +316,6 @@ export default function Header() {
                 return;
             }
 
-
             let data = {};
 
             try {
@@ -353,14 +329,12 @@ export default function Header() {
 
             }
 
-
             if (!response.ok) {
 
                 setUser(null);
 
                 return;
             }
-
 
             if (
                 data?.user
@@ -391,7 +365,6 @@ export default function Header() {
 
         }
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -425,78 +398,6 @@ export default function Header() {
 
     }, []);
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | READ WISHLIST
-    |--------------------------------------------------------------------------
-    */
-
-    function updateWishlistCount() {
-
-        try {
-
-            const saved =
-                localStorage.getItem(
-                    "geeka-wishlist"
-                );
-
-            const parsed =
-                saved
-                    ? JSON.parse(saved)
-                    : [];
-
-            setWishlistCount(
-                Array.isArray(parsed)
-                    ? parsed.length
-                    : 0
-            );
-
-        } catch {
-
-            setWishlistCount(0);
-
-        }
-    }
-
-
-    useEffect(() => {
-
-        updateWishlistCount();
-
-        function handleWishlistStorage() {
-
-            updateWishlistCount();
-
-        }
-
-        window.addEventListener(
-            "storage",
-            handleWishlistStorage
-        );
-
-        window.addEventListener(
-            "geeka-wishlist-updated",
-            handleWishlistStorage
-        );
-
-        return () => {
-
-            window.removeEventListener(
-                "storage",
-                handleWishlistStorage
-            );
-
-            window.removeEventListener(
-                "geeka-wishlist-updated",
-                handleWishlistStorage
-            );
-
-        };
-
-    }, []);
-
-
     /*
     |--------------------------------------------------------------------------
     | READ SEARCH FROM URL
@@ -516,7 +417,6 @@ export default function Header() {
         setSearchValue(
             query
         );
-
 
         if (isShop) {
 
@@ -540,7 +440,6 @@ export default function Header() {
         isShop,
     ]);
 
-
     /*
     |--------------------------------------------------------------------------
     | OPEN SEARCH
@@ -559,7 +458,6 @@ export default function Header() {
 
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | CLOSE SEARCH
@@ -573,7 +471,6 @@ export default function Header() {
         setSearchValue("");
 
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -594,10 +491,8 @@ export default function Header() {
 
         }
 
-
         const trimmedValue =
             value.trim();
-
 
         if (!trimmedValue) {
 
@@ -611,7 +506,6 @@ export default function Header() {
             return;
         }
 
-
         navigate(
             `/shop?search=${encodeURIComponent(
                 trimmedValue
@@ -622,7 +516,6 @@ export default function Header() {
         );
 
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -637,7 +530,6 @@ export default function Header() {
         const query =
             searchValue.trim();
 
-
         if (!query) {
 
             navigate(
@@ -650,7 +542,6 @@ export default function Header() {
             return;
         }
 
-
         navigate(
             `/shop?search=${encodeURIComponent(
                 query
@@ -660,7 +551,6 @@ export default function Header() {
         setSearchOpen(true);
 
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -692,7 +582,6 @@ export default function Header() {
             return;
         }
 
-
         if (
             event.key ===
             "Enter"
@@ -705,7 +594,6 @@ export default function Header() {
         }
 
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -722,7 +610,6 @@ export default function Header() {
 
             return undefined;
         }
-
 
         function handleOutsideClick(
             event
@@ -746,12 +633,10 @@ export default function Header() {
 
         }
 
-
         document.addEventListener(
             "mousedown",
             handleOutsideClick
         );
-
 
         return () => {
 
@@ -768,7 +653,6 @@ export default function Header() {
         isShop,
     ]);
 
-
     /*
     |--------------------------------------------------------------------------
     | WISHLIST NAVIGATION
@@ -782,7 +666,6 @@ export default function Header() {
         );
 
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -801,13 +684,11 @@ export default function Header() {
             return;
         }
 
-
         navigate(
             "/login"
         );
 
     }
-
 
     /*
     |--------------------------------------------------------------------------
@@ -833,11 +714,9 @@ export default function Header() {
             return;
         }
 
-
         setLogoutLoading(
             true
         );
-
 
         try {
 
@@ -863,9 +742,7 @@ export default function Header() {
                     }
                 );
 
-
             let csrfData = {};
-
 
             try {
 
@@ -877,7 +754,6 @@ export default function Header() {
                 csrfData = {};
 
             }
-
 
             if (
                 !csrfResponse.ok
@@ -891,10 +767,8 @@ export default function Header() {
 
             }
 
-
             const csrfToken =
                 csrfData?.csrfToken;
-
 
             if (!csrfToken) {
 
@@ -903,7 +777,6 @@ export default function Header() {
                 );
 
             }
-
 
             /*
             |--------------------------------------------------------------------------
@@ -933,9 +806,7 @@ export default function Header() {
                     }
                 );
 
-
             let logoutData = {};
-
 
             try {
 
@@ -947,7 +818,6 @@ export default function Header() {
                 logoutData = {};
 
             }
-
 
             /*
             |--------------------------------------------------------------------------
@@ -980,13 +850,11 @@ export default function Header() {
                     // Ignore storage errors.
                 }
 
-
                 window.dispatchEvent(
                     new Event(
                         "geeka-auth-updated"
                     )
                 );
-
 
                 navigate(
                     "/login",
@@ -997,7 +865,6 @@ export default function Header() {
 
                 return;
             }
-
 
             /*
             |--------------------------------------------------------------------------
@@ -1020,12 +887,10 @@ export default function Header() {
                     ) ||
                     `Logout failed with status ${logoutResponse.status}.`;
 
-
                 console.error(
                     "GEEKA logout failed:",
                     backendMessage
                 );
-
 
                 /*
                 | Keep the current session/user intact.
@@ -1035,7 +900,6 @@ export default function Header() {
 
                 return;
             }
-
 
             /*
             |--------------------------------------------------------------------------
@@ -1050,7 +914,6 @@ export default function Header() {
                 "refresh_token",
                 "token",
             ];
-
 
             authKeys.forEach(
                 (key) => {
@@ -1068,7 +931,6 @@ export default function Header() {
                 }
             );
 
-
             /*
             |--------------------------------------------------------------------------
             | CLEAR CURRENT USER
@@ -1076,7 +938,6 @@ export default function Header() {
             */
 
             setUser(null);
-
 
             /*
             |--------------------------------------------------------------------------
@@ -1089,7 +950,6 @@ export default function Header() {
                     "geeka-auth-updated"
                 )
             );
-
 
             /*
             |--------------------------------------------------------------------------
@@ -1120,7 +980,6 @@ export default function Header() {
         }
     }
 
-
     /*
     |--------------------------------------------------------------------------
     | RENDER
@@ -1144,7 +1003,6 @@ export default function Header() {
 
             </Link>
 
-
             {/* =================================================
                 NAVIGATION
             ================================================== */}
@@ -1161,7 +1019,6 @@ export default function Header() {
                 >
                     Home
                 </Link>
-
 
                 <Link
                     to="/shop"
@@ -1181,7 +1038,6 @@ export default function Header() {
 
                 </Link>
 
-
                 <Link
                     to="/about"
                     className={
@@ -1193,7 +1049,6 @@ export default function Header() {
                     About Us
                 </Link>
 
-
                 <Link
                     to="/contact"
                     className={
@@ -1204,7 +1059,6 @@ export default function Header() {
                 >
                     Contact
                 </Link>
-
 
                 {showManageStore && (
 
@@ -1223,13 +1077,11 @@ export default function Header() {
 
             </nav>
 
-
             {/* =================================================
                 ACTIONS
             ================================================== */}
 
             <div className="header-actions">
-
 
                 {/* =============================================
                     SEARCH
@@ -1256,7 +1108,6 @@ export default function Header() {
 
                             <SearchIcon />
 
-
                             <input
                                 ref={
                                     searchInputRef
@@ -1274,7 +1125,6 @@ export default function Header() {
                                 placeholder="Search products..."
                                 aria-label="Search products"
                             />
-
 
                             {searchValue && (
 
@@ -1331,7 +1181,6 @@ export default function Header() {
 
                 </div>
 
-
                 {/* =============================================
                     WISHLIST
                 ============================================== */}
@@ -1350,7 +1199,6 @@ export default function Header() {
 
                     <HeartIcon />
 
-
                     {wishlistCount > 0 && (
 
                         <span className="header-wishlist-count">
@@ -1360,7 +1208,6 @@ export default function Header() {
                     )}
 
                 </button>
-
 
                 {/* =============================================
                     PROFILE / ACCOUNT
@@ -1414,7 +1261,6 @@ export default function Header() {
 
                 </button>
 
-
                 {/* =============================================
                     CART
                 ============================================== */}
@@ -1437,7 +1283,6 @@ export default function Header() {
                 </Link>
 
             </div>
-
 
             {/* =================================================
                 MOBILE MENU
