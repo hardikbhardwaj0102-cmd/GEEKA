@@ -594,3 +594,123 @@ class OrderCancellationAPITests(APITestCase):
             response.status_code,
             status.HTTP_400_BAD_REQUEST,
         )
+
+
+    
+    def test_authenticated_customer_can_view_order_history(self):
+        order = self.create_order()
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get("/api/v1/orders/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(len(response.data["orders"]), 1)
+        self.assertEqual(
+            response.data["orders"][0]["id"],
+            str(order.id),
+        )
+        self.assertEqual(
+            response.data["orders"][0]["order_number"],
+            order.order_number,
+        )
+
+    def test_order_history_only_contains_current_customers_orders(self):
+        own_order = self.create_order()
+
+        # Create an order belonging to a different customer.
+        other_cart = Cart.objects.create(user=self.other_user)
+        CartItem.objects.create(
+            cart=other_cart,
+            product_variant=self.variant,
+            quantity=1,
+        )
+
+        from apps.orders.services import create_order_from_cart
+
+        other_order, created = create_order_from_cart(
+            customer=self.other_user,
+            cart=other_cart,
+            checkout_data={
+                **self.checkout_data,
+                "contact_name": "Other Cancellation User",
+                "contact_email": "other-cancel-api@example.com",
+                "recipient_name": "Other Cancellation User",
+            },
+        )
+        self.assertTrue(created)
+
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get("/api/v1/orders/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+        self.assertEqual(
+            response.data["orders"][0]["id"],
+            str(own_order.id),
+        )
+        self.assertNotEqual(
+            response.data["orders"][0]["id"],
+            str(other_order.id),
+        )
+
+    def test_unauthenticated_customer_cannot_view_order_history(self):
+        response = self.client.get("/api/v1/orders/")
+
+        self.assertIn(
+            response.status_code,
+            [
+                status.HTTP_401_UNAUTHORIZED,
+                status.HTTP_403_FORBIDDEN,
+            ],
+        )
+
+
+    
+    def test_customer_can_view_own_order_details(self):
+        order = self.create_order()
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            f"/api/v1/orders/{order.id}/"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["order"]["id"], str(order.id))
+        self.assertEqual(
+            response.data["order"]["order_number"],
+            order.order_number,
+        )
+        self.assertEqual(
+            response.data["order"]["status"],
+            Order.Status.PENDING,
+        )
+        self.assertEqual(len(response.data["order"]["items"]), 1)
+
+    def test_customer_cannot_view_another_customers_order_details(self):
+        order = self.create_order()
+        self.client.force_authenticate(user=self.other_user)
+
+        response = self.client.get(
+            f"/api/v1/orders/{order.id}/"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_404_NOT_FOUND,
+        )
+
+    def test_nonexistent_order_details_returns_404(self):
+        import uuid
+
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            f"/api/v1/orders/{uuid.uuid4()}/"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_404_NOT_FOUND,
+        )

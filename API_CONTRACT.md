@@ -4494,3 +4494,94 @@ The example above shows the principal fields only. The actual response includes 
 - `401 Unauthorized` or `403 Forbidden`: Request is unauthenticated, depending on the configured authentication behavior.
 
 **Important:** This endpoint does not process payment refunds or cancel shipments. Payment gateway integration and post-payment cancellation are not implemented.
+
+
+## 5.3 Order History
+### 5.3.1 Get Customer Order History
+
+**Endpoint:** `GET /api/v1/orders/`
+
+**Authentication:** Required — session authentication.
+
+**Purpose:** Retrieves the authenticated customer's order history, newest orders first.
+
+**Request body:** None.
+
+**Success response — `200 OK`:**
+
+Returns the total number of matching orders and an array of order objects.
+
+```json
+{
+  "count": 1,
+  "orders": [
+    {
+      "id": "order-uuid",
+      "order_number": "GK-XXXXXXXXXXXX",
+      "status": "PENDING",
+      "payment_status": "PENDING",
+      "subtotal": "500.00",
+      "shipping_fee": "0.00",
+      "discount_amount": "0.00",
+      "total": "500.00",
+      "currency": "INR",
+      "created_at": "2026-10-13T12:00:00+00:00"
+    }
+  ]
+}
+```
+
+The example shows representative fields only. Each order uses the shared order response structure, including contact information, delivery address, and item snapshots.
+
+**Behavior and rules:**
+- Returns only orders belonging to the authenticated customer.
+- Orders are sorted by creation time, newest first.
+- Includes the saved order and item snapshots rather than recalculating historical prices from the current catalog.
+- The current implementation returns the full history without pagination.
+
+**Error responses:**
+- `401 Unauthorized` or `403 Forbidden`: Request is unauthenticated, depending on authentication configuration.
+
+### 5.3.2 Get Order Details
+
+**Endpoint:** `GET /api/v1/orders/{order_id}/`
+
+**Authentication:** Required — session authentication.
+
+**Purpose:** Retrieves the full saved details of one order owned by the authenticated customer.
+
+**Request body:** None.
+
+**Success response — `200 OK`:**
+
+```json
+{
+  "order": {
+    "id": "order-uuid",
+    "order_number": "GK-XXXXXXXXXXXX",
+    "status": "PENDING",
+    "payment_status": "PENDING",
+    "contact": {},
+    "delivery_address": {},
+    "items": [],
+    "subtotal": "500.00",
+    "shipping_fee": "0.00",
+    "discount_amount": "0.00",
+    "total": "500.00",
+    "currency": "INR",
+    "created_at": "2026-10-13T12:00:00+00:00"
+  }
+}
+```
+
+The abbreviated nested objects above represent the response structure; consult the shared order response builder for their complete fields.
+
+**Behavior and rules:**
+- Customers can retrieve only their own orders.
+- The endpoint returns saved order, delivery-address, and item snapshots.
+- Deleted or changed catalog variants do not remove the historical item snapshot.
+- The endpoint is read-only.
+
+**Error responses:**
+- `404 Not Found`: The order does not exist or does not belong to the authenticated customer.
+- `401 Unauthorized` or `403 Forbidden`: Request is unauthenticated, depending on authentication configuration.

@@ -220,3 +220,56 @@ class CancelOrderView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+
+
+
+class OrderHistoryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        orders = (
+            Order.objects
+            .filter(customer=request.user)
+            .prefetch_related("items")
+            .order_by("-created_at")
+        )
+
+        return Response(
+            {
+                "count": orders.count(),
+                "orders": [
+                    build_order_response(order)
+                    for order in orders
+                ],
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+
+
+class OrderDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, order_id):
+        order = (
+            Order.objects
+            .filter(customer=request.user)
+            .prefetch_related("items")
+            .filter(pk=order_id)
+            .first()
+        )
+
+        if order is None:
+            return Response(
+                {"detail": "Order not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return Response(
+            {"order": build_order_response(order)},
+            status=status.HTTP_200_OK,
+        )
+
