@@ -1195,40 +1195,78 @@ export default function Profile() {
                     : [];
 
                 const mappedProducts = wishlistItems.map((item) => {
-                    const product = productList.find(
-                        (candidate) =>
-                            String(candidate?.id) === String(item.product_id)
-                    );
+                    const wishlistProductId =
+                        item?.product_id ?? item?.productId ?? item?.product?.id;
+                    const wishlistSlug = item?.product_slug ?? item?.slug ?? item?.product?.slug;
+
+                    // Match against common ID/slug shapes returned by the API.
+                    const product = productList.find((candidate) => {
+                        const candidateId =
+                            candidate?.id ?? candidate?.product_id ?? candidate?.productId;
+                        const sameId =
+                            wishlistProductId != null &&
+                            candidateId != null &&
+                            String(candidateId) === String(wishlistProductId);
+                        const sameSlug =
+                            wishlistSlug &&
+                            candidate?.slug &&
+                            String(candidate.slug) === String(wishlistSlug);
+                        return sameId || sameSlug;
+                    });
+
+                    // Different API endpoints may use different names for the price.
+                    const resolvedPrice =
+                        product?.price ??
+                        product?.selling_price ??
+                        product?.sale_price ??
+                        product?.discounted_price ??
+                        product?.unit_price ??
+                        product?.variant?.price ??
+                        item?.price ??
+                        item?.product_price ??
+                        item?.selling_price ??
+                        item?.sale_price ??
+                        item?.product?.price ??
+                        null;
 
                     if (product) {
                         return {
                             ...product,
                             wishlistItemId: item.id,
-                            productId: item.product_id,
+                            productId: wishlistProductId ?? product.id,
                             name: toDisplayText(
                                 product.name ??
                                 product.product_name ??
-                                item.product_name,
+                                item.product_name ??
+                                item?.product?.name,
                                 "Product"
                             ),
                             category: toDisplayText(
                                 product.category ??
                                 product.category_name ??
-                                item.category_name,
+                                item.category_name ??
+                                item?.product?.category,
                                 "Collection"
                             ),
+                            price: resolvedPrice,
                         };
                     }
 
                     return {
-                        id: item.product_id,
-                        productId: item.product_id,
+                        id: wishlistProductId,
+                        productId: wishlistProductId,
                         wishlistItemId: item.id,
-                        name: toDisplayText(item.product_name, "Product"),
-                        category: toDisplayText(item.category_name, "Collection"),
-                        image: "",
-                        price: 0,
-                        slug: item.product_slug || "",
+                        name: toDisplayText(
+                            item.product_name ?? item?.product?.name,
+                            "Product"
+                        ),
+                        category: toDisplayText(
+                            item.category_name ?? item?.product?.category,
+                            "Collection"
+                        ),
+                        image: item?.image ?? item?.product?.image ?? "",
+                        price: resolvedPrice,
+                        slug: wishlistSlug || "",
                     };
                 });
 
@@ -1369,16 +1407,23 @@ export default function Profile() {
         "Not added yet";
 
 
-    const formatPrice =
-        (value) => {
+    const formatPrice = (value) => {
+        if (value === null || value === undefined || value === "") {
+            return "Price unavailable";
+        }
 
-            return `₹${Number(
-                value || 0
-            ).toLocaleString(
-                "en-IN"
-            )}`;
+        // Accept numeric values and formatted API strings such as "₹1,299".
+        const numericPrice =
+            typeof value === "number"
+                ? value
+                : Number(String(value).replace(/[^0-9.-]/g, ""));
 
-        };
+        if (!Number.isFinite(numericPrice)) {
+            return "Price unavailable";
+        }
+
+        return `₹${numericPrice.toLocaleString("en-IN")}`;
+    };
 
 
     const formatDate =
