@@ -14,13 +14,19 @@ function getProductId(item) {
         item?.product_id ??
         item?.product?.id ??
         item?.product?.product_id ??
+        item?.productId ??
         null;
 
     return value == null ? null : String(value);
 }
 
 function getWishlistItemId(item) {
-    return item?.id ?? item?.wishlist_item_id ?? null;
+    return (
+        item?.id ??
+        item?.wishlist_item_id ??
+        item?.wishlistItemId ??
+        null
+    );
 }
 
 function notifyWishlistUpdated() {
@@ -40,12 +46,16 @@ export function useWishlist() {
             setWishlistError("");
 
             const items = await getWishlist();
+            const safeItems = Array.isArray(items) ? items : [];
 
-            setWishlist(Array.isArray(items) ? items : []);
+            setWishlist(safeItems);
 
-            return items;
+            return safeItems;
         } catch (error) {
-            setWishlistError(error.message || "Unable to load your wishlist.");
+            setWishlistError(
+                error?.message || "Unable to load your wishlist."
+            );
+
             throw error;
         } finally {
             setLoadingWishlist(false);
@@ -66,7 +76,8 @@ export function useWishlist() {
             } catch (error) {
                 if (active) {
                     setWishlistError(
-                        error.message || "Unable to load your wishlist."
+                        error?.message ||
+                        "Unable to load your wishlist."
                     );
                 }
             } finally {
@@ -82,11 +93,18 @@ export function useWishlist() {
 
         loadWishlist();
 
-        window.addEventListener(WISHLIST_EVENT, handleWishlistUpdated);
+        window.addEventListener(
+            WISHLIST_EVENT,
+            handleWishlistUpdated
+        );
 
         return () => {
             active = false;
-            window.removeEventListener(WISHLIST_EVENT, handleWishlistUpdated);
+
+            window.removeEventListener(
+                WISHLIST_EVENT,
+                handleWishlistUpdated
+            );
         };
     }, []);
 
@@ -108,7 +126,9 @@ export function useWishlist() {
                     : product;
 
             if (!productId) {
-                throw new Error("A valid product is required.");
+                throw new Error(
+                    "A valid product is required."
+                );
             }
 
             const normalizedId = String(productId);
@@ -117,16 +137,22 @@ export function useWishlist() {
                 return;
             }
 
-            setPendingWishlistIds((current) => [...current, normalizedId]);
+            setPendingWishlistIds((current) => [
+                ...current,
+                normalizedId,
+            ]);
+
             setWishlistError("");
 
             try {
                 const existingItem = wishlist.find(
-                    (item) => getProductId(item) === normalizedId
+                    (item) =>
+                        getProductId(item) === normalizedId
                 );
 
                 if (existingItem) {
-                    const wishlistItemId = getWishlistItemId(existingItem);
+                    const wishlistItemId =
+                        getWishlistItemId(existingItem);
 
                     if (!wishlistItemId) {
                         throw new Error(
@@ -138,7 +164,8 @@ export function useWishlist() {
 
                     setWishlist((current) =>
                         current.filter(
-                            (item) => getProductId(item) !== normalizedId
+                            (item) =>
+                                getProductId(item) !== normalizedId
                         )
                     );
                 } else {
@@ -151,13 +178,16 @@ export function useWishlist() {
                 return !existingItem;
             } catch (error) {
                 setWishlistError(
-                    error.message || "Unable to update your wishlist."
+                    error?.message ||
+                    "Unable to update your wishlist."
                 );
 
                 throw error;
             } finally {
                 setPendingWishlistIds((current) =>
-                    current.filter((id) => id !== normalizedId)
+                    current.filter(
+                        (id) => id !== normalizedId
+                    )
                 );
             }
         },
@@ -166,42 +196,60 @@ export function useWishlist() {
 
     const removeFromWishlist = useCallback(
         async (productId) => {
+            if (!productId) {
+                throw new Error(
+                    "A valid product ID is required."
+                );
+            }
+
             const normalizedId = String(productId);
 
             const existingItem = wishlist.find(
-                (item) => getProductId(item) === normalizedId
+                (item) =>
+                    getProductId(item) === normalizedId
             );
 
             if (!existingItem) {
                 return;
             }
 
-            const wishlistItemId = getWishlistItemId(existingItem);
+            const wishlistItemId =
+                getWishlistItemId(existingItem);
 
             if (!wishlistItemId) {
-                throw new Error("The wishlist item ID is missing.");
+                throw new Error(
+                    "The wishlist item ID is missing."
+                );
             }
 
-            setPendingWishlistIds((current) => [...current, normalizedId]);
+            setPendingWishlistIds((current) => [
+                ...current,
+                normalizedId,
+            ]);
 
             try {
                 await removeWishlistItem(wishlistItemId);
 
                 setWishlist((current) =>
                     current.filter(
-                        (item) => getProductId(item) !== normalizedId
+                        (item) =>
+                            getProductId(item) !== normalizedId
                     )
                 );
 
                 notifyWishlistUpdated();
             } catch (error) {
                 setWishlistError(
-                    error.message || "Unable to remove this product."
+                    error?.message ||
+                    "Unable to remove this product."
                 );
+
                 throw error;
             } finally {
                 setPendingWishlistIds((current) =>
-                    current.filter((id) => id !== normalizedId)
+                    current.filter(
+                        (id) => id !== normalizedId
+                    )
                 );
             }
         },
@@ -211,12 +259,17 @@ export function useWishlist() {
     const clearAllWishlist = useCallback(async () => {
         try {
             await clearWishlist();
+
             setWishlist([]);
+            setWishlistError("");
+
             notifyWishlistUpdated();
         } catch (error) {
             setWishlistError(
-                error.message || "Unable to clear your wishlist."
+                error?.message ||
+                "Unable to clear your wishlist."
             );
+
             throw error;
         }
     }, []);
