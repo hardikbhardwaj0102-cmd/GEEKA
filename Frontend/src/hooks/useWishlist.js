@@ -17,9 +17,13 @@ const WISHLIST_EVENT = "geeka-wishlist-updated";
 function getProductId(item) {
     const value =
         item?.product_id ??
+        item?.productId ??
         item?.product?.id ??
         item?.product?.product_id ??
-        item?.productId ??
+        item?.product?.productId ??
+        item?.product_details?.id ??
+        item?.product_details?.product_id ??
+        item?.product_detail?.id ??
         null;
 
     return value == null ? null : String(value);
@@ -58,9 +62,13 @@ function normalizeWishlist(items) {
         );
 }
 
-function notifyWishlistUpdated() {
+function notifyWishlistUpdated(items) {
     if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event(WISHLIST_EVENT));
+        window.dispatchEvent(
+            new CustomEvent(WISHLIST_EVENT, {
+                detail: { items: Array.isArray(items) ? items : [] },
+            })
+        );
     }
 }
 
@@ -123,7 +131,17 @@ export function useWishlist() {
             }
         }
 
-        function handleWishlistUpdated() {
+        function handleWishlistUpdated(event) {
+            const sharedItems = event?.detail?.items;
+
+            // Keep all mounted consumers (including the header) in sync
+            // immediately, without waiting for a second network request.
+            if (Array.isArray(sharedItems)) {
+                setWishlist(normalizeWishlist(sharedItems));
+                setLoadingWishlist(false);
+                return;
+            }
+
             loadWishlist();
         }
 
@@ -201,19 +219,35 @@ export function useWishlist() {
 
                 await removeWishlistItem(wishlistItemId);
 
-                setWishlist((current) =>
-                    normalizeWishlist(current).filter(
-                        (item) => getProductId(item) !== normalizedId
-                    )
+                const updatedItems = safeWishlist.filter(
+                    (item) => getProductId(item) !== normalizedId
                 );
-
-                notifyWishlistUpdated();
+                setWishlist(updatedItems);
+                notifyWishlistUpdated(updatedItems);
                 return false;
             }
 
-            await addWishlistItem(normalizedId);
-            await refreshWishlist();
-            notifyWishlistUpdated();
+            const addResponse = await addWishlistItem(normalizedId);
+            let updatedItems = await refreshWishlist();
+
+            // Some backends return a newly-created item before the list endpoint
+            // reflects it. Keep the UI responsive and preserve the returned item ID.
+            if (!updatedItems.some((item) => getProductId(item) === normalizedId)) {
+                const responseItem =
+                    addResponse?.item ??
+                    addResponse?.wishlist_item ??
+                    addResponse?.data?.item ??
+                    addResponse?.data ??
+                    addResponse;
+                const optimisticItem =
+                    responseItem && typeof responseItem === "object"
+                        ? { ...responseItem, product_id: responseItem.product_id ?? normalizedId }
+                        : { product_id: normalizedId };
+                updatedItems = [...updatedItems, optimisticItem];
+                setWishlist(updatedItems);
+            }
+
+            notifyWishlistUpdated(updatedItems);
             return true;
         } catch (error) {
             setWishlistError(
@@ -255,13 +289,11 @@ export function useWishlist() {
 
             await removeWishlistItem(wishlistItemId);
 
-            setWishlist((current) =>
-                normalizeWishlist(current).filter(
-                    (item) => getProductId(item) !== normalizedId
-                )
+            const updatedItems = safeWishlist.filter(
+                (item) => getProductId(item) !== normalizedId
             );
-
-            notifyWishlistUpdated();
+            setWishlist(updatedItems);
+            notifyWishlistUpdated(updatedItems);
         } catch (error) {
             setWishlistError(
                 error?.message || "Unable to remove this product."
@@ -278,7 +310,7 @@ export function useWishlist() {
         try {
             await clearWishlist();
             setWishlist([]);
-            notifyWishlistUpdated();
+            notifyWishlistUpdated([]);
         } catch (error) {
             setWishlistError(
                 error?.message || "Unable to clear your wishlist."
@@ -289,6 +321,10 @@ export function useWishlist() {
 
     return {
         wishlist: safeWishlist,
+        // Backwards-compatible names used by the profile page.
+        wishlistItems: safeWishlist,
+        loading: loadingWishlist,
+        error: wishlistError,
         wishlistProductIds,
         loadingWishlist,
         pendingWishlistIds,

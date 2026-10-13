@@ -437,18 +437,12 @@ function CloseIcon() {
 
 export default function Profile() {
     const {
-        wishlist,
+        wishlistItems,
         toggleWishlist,
         clearWishlist: clearRemoteWishlist,
-        loadingWishlist: wishlistRemoteLoading,
-        wishlistError: wishlistRemoteError,
+        loading: wishlistRemoteLoading,
+        error: wishlistRemoteError,
     } = useWishlist();
-
-    // Keep Profile compatible with the shared useWishlist hook.
-    // The hook exposes `wishlist`, not `wishlistItems`.
-    const wishlistItems = Array.isArray(wishlist)
-        ? wishlist
-        : [];
 
 
     const navigate =
@@ -1149,17 +1143,6 @@ export default function Profile() {
                 return;
             }
 
-            const safeWishlistItems = Array.isArray(wishlistItems)
-                ? wishlistItems
-                : [];
-
-            if (safeWishlistItems.length === 0) {
-                setWishlistProducts([]);
-                setWishlistProductsLoading(false);
-                setWishlistError(wishlistRemoteError || "");
-                return;
-            }
-
             setWishlistProductsLoading(true);
 
             try {
@@ -1170,83 +1153,110 @@ export default function Profile() {
                         ? productsResponse.results
                         : Array.isArray(productsResponse?.products)
                             ? productsResponse.products
-                            : Array.isArray(productsResponse?.items)
-                                ? productsResponse.items
+                            : Array.isArray(productsResponse?.data)
+                                ? productsResponse.data
                                 : [];
 
-                const mappedProducts = safeWishlistItems.map((item) => {
-                    const productId =
-                        item?.product_id ??
-                        item?.product?.id ??
-                        item?.product?.product_id ??
-                        item?.productId ??
-                        null;
+                const readProductId = (value) =>
+                    value?.product_id ??
+                    value?.productId ??
+                    value?.product?.id ??
+                    value?.product?.product_id ??
+                    value?.id ??
+                    null;
 
-                    const wishlistItemId =
-                        item?.id ??
-                        item?.wishlist_item_id ??
-                        item?.wishlistItemId ??
-                        null;
+                const readProductPrice = (...sources) => {
+                    const candidates = [];
+                    const add = (value) => {
+                        if (value === null || value === undefined || value === "") return;
+                        const number = Number(value);
+                        if (Number.isFinite(number) && number > 0) candidates.push(number);
+                    };
 
-                    const product = productList.find((candidate) => {
-                        const candidateId =
-                            candidate?.id ??
-                            candidate?.product_id ??
-                            candidate?.productId;
-
-                        return productId != null &&
-                            candidateId != null &&
-                            String(candidateId) === String(productId);
-                    }) || item?.product || null;
-
-                    const category =
-                        product?.category?.name ||
-                        product?.category ||
-                        product?.category_name ||
-                        item?.category_name ||
-                        item?.category?.name ||
-                        item?.category ||
-                        "Collection";
-
-                    const productName =
-                        product?.name ||
-                        product?.product_name ||
-                        item?.product_name ||
-                        item?.name ||
-                        "Product";
-
-                    if (product) {
-                        const primaryImage =
-                            product?.primary_image?.image_url ||
-                            product?.image ||
-                            product?.image_url ||
-                            item?.image ||
-                            item?.image_url ||
-                            "";
-
-                        return {
-                            ...product,
-                            id: product.id ?? productId ?? wishlistItemId,
-                            productId: productId ?? product.id ?? null,
-                            wishlistItemId,
-                            name: productName,
-                            category,
-                            image: primaryImage,
-                            displayImage: product.displayImage || primaryImage,
-                        };
+                    for (const source of sources) {
+                        if (!source || typeof source !== "object") continue;
+                        add(source.sale_price);
+                        add(source.selling_price);
+                        add(source.discount_price);
+                        add(source.final_price);
+                        add(source.price);
+                        add(source.unit_price);
+                        add(source.min_price);
+                        add(source.starting_price);
+                        add(source.regular_price);
+                        add(source.mrp);
+                        add(source.variant?.sale_price);
+                        add(source.variant?.price);
+                        add(source.default_variant?.sale_price);
+                        add(source.default_variant?.price);
+                        for (const variant of source.variants || source.product_variants || []) {
+                            add(variant?.sale_price);
+                            add(variant?.selling_price);
+                            add(variant?.price);
+                            add(variant?.final_price);
+                        }
                     }
 
+                    return candidates.length ? Math.min(...candidates) : null;
+                };
+
+                const mappedProducts = (Array.isArray(wishlistItems) ? wishlistItems : []).map((item) => {
+                    const productId =
+                        item?.product_id ??
+                        item?.productId ??
+                        item?.product?.id ??
+                        item?.product?.product_id ??
+                        item?.product_details?.id ??
+                        item?.product_detail?.id ??
+                        null;
+
+                    const embeddedProduct =
+                        item?.product && typeof item.product === "object"
+                            ? item.product
+                            : item?.product_details || item?.product_detail || null;
+
+                    const product = embeddedProduct || productList.find(
+                        (candidate) => String(readProductId(candidate)) === String(productId)
+                    );
+
+                    const image =
+                        product?.image ||
+                        product?.image_url ||
+                        product?.primary_image ||
+                        product?.thumbnail ||
+                        product?.main_image ||
+                        product?.images?.[0]?.url ||
+                        product?.images?.[0]?.image ||
+                        product?.images?.[0] ||
+                        item?.image ||
+                        item?.image_url ||
+                        item?.product_image ||
+                        "";
+
                     return {
-                        id: productId ?? wishlistItemId,
-                        productId,
-                        wishlistItemId,
-                        name: productName,
-                        category,
-                        image: item?.image || item?.image_url || "",
-                        displayImage: item?.image || item?.image_url || "",
-                        images: Array.isArray(item?.images) ? item.images : [],
-                        price: item?.price ?? 0,
-                        slug: item?.product_slug || item?.slug || "",
+                        ...(product && typeof product === "object" ? product : {}),
+                        id: productId ?? product?.id ?? item?.id,
+                        productId: productId ?? product?.id ?? item?.product_id,
+                        wishlistItemId: item?.id ?? item?.wishlist_item_id ?? item?.wishlistItemId,
+                        name:
+                            product?.name ||
+                            product?.product_name ||
+                            product?.title ||
+                            item?.product_name ||
+                            item?.name ||
+                            item?.product?.name ||
+                            "Product",
+                        category:
+                            product?.category?.name ||
+                            product?.category ||
+                            product?.category_name ||
+                            item?.category_name ||
+                            item?.category ||
+                            "Collection",
+                        image,
+                        price: readProductPrice(product, item),
+                        currency: product?.currency || item?.currency || "INR",
+                        slug: product?.slug || item?.product_slug || item?.slug || "",
                     };
                 });
 
@@ -1260,8 +1270,7 @@ export default function Profile() {
                 if (!cancelled) {
                     setWishlistProducts([]);
                     setWishlistError(
-                        error?.message ||
-                        "Unable to load wishlist products."
+                        error.message || "Unable to load wishlist products."
                     );
                 }
             } finally {
@@ -3298,15 +3307,15 @@ export default function Profile() {
 
                                                     <strong>
                                                         {
-                                                            formatPrice(
-                                                                product.price
-                                                            )
+                                                            product.price != null
+                                                                ? formatPrice(product.price, product.currency || "INR")
+                                                                : "PRICE ON REQUEST"
                                                         }
                                                     </strong>
 
 
                                                     <Link
-                                                        to="/shop"
+                                                        to={`/product/${encodeURIComponent(String(product.productId ?? product.id))}`}
                                                         className="account-text-button"
                                                     >
                                                         VIEW PRODUCT
