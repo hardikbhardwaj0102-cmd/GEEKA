@@ -3346,6 +3346,20 @@ export default function Profile() {
 
                                                 </div>
 
+                                                <div className="account-order-card-actions">
+                                                    <Link
+                                                        to={`/orders/${encodeURIComponent(
+                                                            order.id || order.orderId
+                                                        )}`}
+                                                        className="account-outline-button account-order-details-link"
+                                                        aria-label={`View details for order ${order.orderId || order.id || ""
+                                                            }`}
+                                                    >
+                                                        VIEW ORDER DETAILS
+                                                        <ArrowIcon />
+                                                    </Link>
+                                                </div>
+
                                             </article>
 
                                         )

@@ -21,6 +21,7 @@ import Shop from "./components/Shop";
 import About from "./components/About";
 import HandmadeBanner from "./components/HandmadeBanner";
 import Contact from "./components/Contact";
+import OrderDetails from "./components/OrderDetails";
 import Checkout from "./components/Checkout";
 import Cart from "./components/Cart";
 import ForgotPassword from "./components/ForgotPassword";
@@ -153,6 +154,10 @@ function App() {
                 <Route
                     path="/checkout"
                     element={<Checkout />}
+                />
+                <Route
+                    path="/orders/:orderId"
+                    element={<OrderDetails />}
                 />
                 <Route
                     path="/contact"

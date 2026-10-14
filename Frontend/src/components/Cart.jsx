@@ -966,10 +966,10 @@ function Cart() {
                                 </div>
 
 
-                                <button
-                                    type="button"
+                                <Link
+                                    to="/checkout"
                                     className="checkout-button"
-                                    disabled
+                                    aria-label="Proceed to checkout"
                                 >
                                     Proceed to Checkout
 
@@ -977,7 +977,7 @@ function Cart() {
                                         →
                                     </span>
 
-                                </button>
+                                </Link>
 
 
                                 <div className="secure-checkout">
