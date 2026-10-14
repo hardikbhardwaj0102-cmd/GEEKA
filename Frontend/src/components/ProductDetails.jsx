@@ -474,18 +474,7 @@ export default function ProductDetails() {
 
                 // Default to a real in-stock variant, not just the first active one.
                 const initialVariant =
-                    variants.find(
-                        (variant) =>
-                            variant?.is_active === true &&
-                            variant?.in_stock === true &&
-                            Number(variant?.stock) > 0
-                    ) ||
-                    variants.find(
-                        (variant) =>
-                            variant?.is_active === true &&
-                            Number(variant?.stock) > 0 &&
-                            variant?.in_stock !== false
-                    ) ||
+                    variants.find(isPurchasableVariant) ||
                     null;
 
 
@@ -688,8 +677,11 @@ export default function ProductDetails() {
     |--------------------------------------------------------------------------
     */
 
+    // Keep frontend availability aligned with backend inventory. A variant is
+    // selectable by default only when active and positively stocked.
     const isPurchasableVariant = (variant) =>
-        variant?.is_active === true &&
+        variant?.is_active !== false &&
+        variant?.is_active !== 0 &&
         Number(variant?.stock) > 0 &&
         variant?.in_stock !== false;
 
@@ -704,7 +696,9 @@ export default function ProductDetails() {
 
             const activeVariants =
                 product.variants.filter(
-                    (variant) => variant?.is_active === true
+                    (variant) =>
+                        variant?.is_active !== false &&
+                        variant?.is_active !== 0
                 );
 
             const purchasableVariants =
@@ -739,8 +733,13 @@ export default function ProductDetails() {
                     )
                 );
 
+            // Prefer the exact selected combination when it is purchasable.
+            // If the current combination is unavailable, fall back to the
+            // first in-stock variant so the page never starts in a dead-end
+            // state. The corresponding attribute values are synchronized below.
             return (
                 purchasableVariants.find(matchesSelection) ||
+                purchasableVariants[0] ||
                 activeVariants.find(matchesSelection) ||
                 null
             );
@@ -749,6 +748,26 @@ export default function ProductDetails() {
             product,
             selectedAttributes,
         ]);
+
+
+    useEffect(() => {
+        if (!selectedVariant || !attributeGroups.length) return;
+
+        const nextSelection = {};
+        selectedVariant.attributes?.forEach((attribute) => {
+            if (attribute?.attribute && attribute?.value) {
+                nextSelection[attribute.attribute] = attribute.value;
+            }
+        });
+
+        const isSameSelection = attributeGroups.every(
+            (group) => selectedAttributes[group.name] === nextSelection[group.name]
+        );
+
+        if (!isSameSelection) {
+            setSelectedAttributes(nextSelection);
+        }
+    }, [selectedVariant, attributeGroups, selectedAttributes]);
 
 
     /*
