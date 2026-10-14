@@ -21,6 +21,7 @@ import Shop from "./components/Shop";
 import About from "./components/About";
 import HandmadeBanner from "./components/HandmadeBanner";
 import Contact from "./components/Contact";
+import Checkout from "./pages/Checkout";
 import Cart from "./components/Cart";
 import ForgotPassword from "./components/ForgotPassword";
 import ProductDetails from "./components/ProductDetails";
@@ -149,7 +150,10 @@ function App() {
                     path="/about"
                     element={<About />}
                 />
-
+                <Route
+                    path="/checkout"
+                    element={<Checkout />}
+                />
                 <Route
                     path="/contact"
                     element={<Contact />}
