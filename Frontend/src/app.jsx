@@ -21,7 +21,7 @@ import Shop from "./components/Shop";
 import About from "./components/About";
 import HandmadeBanner from "./components/HandmadeBanner";
 import Contact from "./components/Contact";
-import Checkout from "./pages/Checkout";
+import Checkout from "./components/Checkout";
 import Cart from "./components/Cart";
 import ForgotPassword from "./components/ForgotPassword";
 import ProductDetails from "./components/ProductDetails";
