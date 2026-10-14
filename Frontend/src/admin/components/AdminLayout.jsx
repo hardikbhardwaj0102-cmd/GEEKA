@@ -14,28 +14,15 @@ import AdminSidebar from "./AdminSidebar";
 import AdminHeader from "./AdminHeader";
 
 import { getCurrentUser } from "../services/adminAuthService";
+import { canAccessAdmin } from "../services/adminAccess";
 
 import "../style/AdminLayout.css";
 
 
 /*
-|--------------------------------------------------------------------------
-| DEVELOPMENT ADMIN MODE
-|--------------------------------------------------------------------------
-|
-| Because the backend admin/staff API is not ready yet, local development
-| automatically uses a temporary admin user.
-|
-| To disable it manually:
-|
-| VITE_ADMIN_DEMO_MODE=false
-|
-|--------------------------------------------------------------------------
-*/
-
-const ADMIN_DEMO_MODE =
-    import.meta.env.DEV &&
-    import.meta.env.VITE_ADMIN_DEMO_MODE !== "false";
+ * Admin access is denied unless the authenticated backend user
+ * explicitly has `is_staff: true`. There is no demo-mode bypass.
+ */
 
 
 /* =========================================================
@@ -97,44 +84,6 @@ export default function AdminLayout() {
 
             /*
             |--------------------------------------------------------------------------
-            | DEMO ADMIN
-            |--------------------------------------------------------------------------
-            */
-
-            if (ADMIN_DEMO_MODE) {
-
-                setUser({
-
-                    id: "demo-admin",
-
-                    full_name:
-                        "Geeka Admin",
-
-                    email:
-                        "geekashop.official@gmail.com",
-
-                    email_verified:
-                        true,
-
-                    is_staff:
-                        true,
-
-                    is_admin:
-                        true,
-
-                    is_superuser:
-                        true,
-
-                });
-
-                setAuthLoading(false);
-
-                return;
-            }
-
-
-            /*
-            |--------------------------------------------------------------------------
             | REAL BACKEND SESSION
             |--------------------------------------------------------------------------
             */
@@ -167,6 +116,13 @@ export default function AdminLayout() {
                     return;
                 }
 
+
+                // Only an explicit backend staff permission grants access.
+                if (!canAccessAdmin(currentUser)) {
+                    setUser(null);
+                    navigate("/", { replace: true });
+                    return;
+                }
 
                 setUser(
                     currentUser
