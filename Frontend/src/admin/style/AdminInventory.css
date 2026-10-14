@@ -1,417 +1,765 @@
-.admin-inventory-page {
+/* =========================================================
+   GEEKA ADMIN INVENTORY
+   Clean • Professional • Responsive
+========================================================= */
+
+.admin-inventory {
+    --inventory-text: #26231f;
+    --inventory-muted: #77716a;
+    --inventory-border: #e9e5df;
+    --inventory-surface: #ffffff;
+    --inventory-background: #faf9f7;
+    --inventory-accent: #7c6047;
+    --inventory-accent-light: #f3eee8;
+    --inventory-success: #26734d;
+    --inventory-success-bg: #eaf5ee;
+    --inventory-warning: #98641a;
+    --inventory-warning-bg: #fff4df;
+    --inventory-danger: #b43e35;
+    --inventory-danger-bg: #fcecea;
+
+    width: 100%;
+    min-width: 0;
+    color: var(--inventory-text);
+    font-family: inherit;
+    padding: 28px;
+    box-sizing: border-box;
+}
+
+.admin-inventory *,
+.admin-inventory *::before,
+.admin-inventory *::after {
+    box-sizing: border-box;
+}
+
+.admin-inventory button,
+.admin-inventory input,
+.admin-inventory select {
+    font: inherit;
+}
+
+.admin-inventory button {
+    cursor: pointer;
+}
+
+.admin-inventory button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+
+/* =========================================================
+   PAGE HEADER
+========================================================= */
+
+.admin-inventory .inventory-header {
     display: flex;
-    flex-direction: column;
-    gap: 24px;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 26px;
+}
+
+.admin-inventory .inventory-heading {
     min-width: 0;
 }
 
-.inventory-summary-grid {
+.admin-inventory .inventory-title {
+    margin: 0;
+    color: var(--inventory-text);
+    font-size: 28px;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.7px;
+}
+
+.admin-inventory .inventory-description {
+    margin: 8px 0 0;
+    color: var(--inventory-muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.admin-inventory .inventory-header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.admin-inventory .inventory-button {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border: 1px solid var(--inventory-border);
+    border-radius: 7px;
+    background: var(--inventory-surface);
+    color: var(--inventory-text);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition:
+        background 160ms ease,
+        border-color 160ms ease,
+        color 160ms ease;
+}
+
+.admin-inventory .inventory-button:hover:not(:disabled) {
+    background: var(--inventory-background);
+    border-color: #cfc6bb;
+}
+
+.admin-inventory .inventory-button-primary {
+    background: var(--inventory-accent);
+    border-color: var(--inventory-accent);
+    color: #ffffff;
+}
+
+.admin-inventory .inventory-button-primary:hover:not(:disabled) {
+    background: #654c38;
+    border-color: #654c38;
+}
+
+.admin-inventory .inventory-button-danger {
+    color: var(--inventory-danger);
+    border-color: #efd0cd;
+}
+
+.admin-inventory .inventory-button-danger:hover:not(:disabled) {
+    background: var(--inventory-danger-bg);
+    border-color: #e4b6b1;
+}
+
+
+/* =========================================================
+   SUMMARY CARDS
+========================================================= */
+
+.admin-inventory .inventory-summary {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
+    margin-bottom: 24px;
 }
 
-.inventory-summary-card {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
+.admin-inventory .inventory-summary-card {
     min-width: 0;
-    padding: 22px;
-    background: #ffffff;
-    border: 1px solid #e9e5df;
-    border-radius: 14px;
+    padding: 20px;
+    border: 1px solid var(--inventory-border);
+    border-radius: 10px;
+    background: var(--inventory-surface);
 }
 
-.inventory-summary-label {
-    color: #77716a;
+.admin-inventory .inventory-summary-label {
+    margin: 0 0 12px;
+    color: var(--inventory-muted);
     font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.035em;
+    line-height: 1.5;
+    letter-spacing: 0.25px;
 }
 
-.inventory-summary-card>strong {
-    color: #24211e;
-    font-size: 30px;
-    font-weight: 650;
-    line-height: 1.15;
+.admin-inventory .inventory-summary-value {
+    margin: 0;
+    color: var(--inventory-text);
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.6px;
     overflow-wrap: anywhere;
 }
 
-.inventory-summary-footnote {
-    color: #918a81;
+.admin-inventory .inventory-summary-note {
+    margin: 8px 0 0;
+    color: var(--inventory-muted);
     font-size: 12px;
     line-height: 1.5;
 }
 
-.inventory-summary-low {
-    border-color: #eee0c6;
+.admin-inventory .inventory-summary-card.is-warning .inventory-summary-value {
+    color: var(--inventory-warning);
 }
 
-.inventory-summary-low>strong {
-    color: #9a681e;
+.admin-inventory .inventory-summary-card.is-danger .inventory-summary-value {
+    color: var(--inventory-danger);
 }
 
-.inventory-summary-out {
-    border-color: #eed7d4;
+.admin-inventory .inventory-summary-card.is-success .inventory-summary-value {
+    color: var(--inventory-success);
 }
 
-.inventory-summary-out>strong {
-    color: #a33d34;
-}
 
-.inventory-panel {
-    min-width: 0;
-    overflow: hidden;
-}
+/* =========================================================
+   TOOLBAR / SEARCH / FILTERS
+========================================================= */
 
-.inventory-panel-heading {
+.admin-inventory .inventory-toolbar {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: flex-start;
     gap: 16px;
-    padding-bottom: 20px;
-}
-
-.inventory-panel-heading h3 {
-    margin: 0;
-    color: #292521;
-    font-size: 17px;
-    font-weight: 650;
-}
-
-.inventory-panel-heading p {
-    margin: 7px 0 0;
-    color: #827b73;
-    font-size: 13px;
-    line-height: 1.6;
-}
-
-.inventory-result-count {
-    flex-shrink: 0;
-    padding: 7px 10px;
-    color: #62584c;
-    background: #f5f2ed;
-    border-radius: 7px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.inventory-filter-row {
     margin-bottom: 18px;
 }
 
-.inventory-filter-row .admin-search-input {
-    flex: 1;
-    min-width: 180px;
+.admin-inventory .inventory-toolbar-left,
+.admin-inventory .inventory-toolbar-right {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
-.inventory-filter-row .admin-select {
-    min-width: 190px;
+.admin-inventory .inventory-search {
+    position: relative;
+    width: min(360px, 100%);
 }
 
-.inventory-table-wrap {
+.admin-inventory .inventory-search input {
+    display: block;
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 13px;
+    border: 1px solid var(--inventory-border);
+    border-radius: 7px;
+    outline: none;
+    background: var(--inventory-surface);
+    color: var(--inventory-text);
+    font-size: 13px;
+    transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease;
+}
+
+.admin-inventory .inventory-search input::placeholder {
+    color: #a29b93;
+}
+
+.admin-inventory .inventory-search input:focus {
+    border-color: var(--inventory-accent);
+    box-shadow: 0 0 0 3px rgb(124 96 71 / 10%);
+}
+
+.admin-inventory .inventory-filter {
+    min-height: 42px;
+    max-width: 220px;
+    padding: 9px 32px 9px 12px;
+    border: 1px solid var(--inventory-border);
+    border-radius: 7px;
+    outline: none;
+    background-color: var(--inventory-surface);
+    color: var(--inventory-text);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.admin-inventory .inventory-filter:focus {
+    border-color: var(--inventory-accent);
+}
+
+
+/* =========================================================
+   TABLE CONTAINER
+========================================================= */
+
+.admin-inventory .inventory-table-container {
     width: 100%;
     overflow-x: auto;
-    overscroll-behavior-x: contain;
-    border: 1px solid #eeeae4;
+    border: 1px solid var(--inventory-border);
     border-radius: 10px;
+    background: var(--inventory-surface);
+    scrollbar-width: thin;
+    scrollbar-color: #d8d0c6 transparent;
 }
 
-.inventory-table {
+.admin-inventory .inventory-table {
     width: 100%;
-    min-width: 920px;
-    border-collapse: collapse;
+    min-width: 900px;
+    border-collapse: separate;
+    border-spacing: 0;
+    text-align: left;
 }
 
-.inventory-table thead th {
+.admin-inventory .inventory-table thead th {
     padding: 14px 16px;
-    color: #81796f;
-    background: #faf9f7;
-    border-bottom: 1px solid #eae6df;
+    border-bottom: 1px solid var(--inventory-border);
+    background: #f8f7f5;
+    color: #716b64;
     font-size: 11px;
-    font-weight: 650;
-    letter-spacing: 0.045em;
-    text-align: left;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0.55px;
     text-transform: uppercase;
     white-space: nowrap;
 }
 
-.inventory-table tbody td {
-    padding: 16px;
-    border-bottom: 1px solid #f0ede8;
-    color: #504a43;
+.admin-inventory .inventory-table tbody td {
+    padding: 15px 16px;
+    border-bottom: 1px solid #f0ede9;
+    color: var(--inventory-text);
     font-size: 13px;
+    line-height: 1.5;
     vertical-align: middle;
 }
 
-.inventory-table tbody tr:last-child td {
-    border-bottom: 0;
+.admin-inventory .inventory-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
-.inventory-table tbody tr:hover {
-    background: #fdfcfb;
+.admin-inventory .inventory-table tbody tr {
+    transition: background 140ms ease;
 }
 
-.inventory-product-cell,
-.inventory-variant-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 135px;
+.admin-inventory .inventory-table tbody tr:hover {
+    background: #fcfbfa;
 }
 
-.inventory-product-cell strong,
-.inventory-variant-cell strong {
-    color: #302b26;
+.admin-inventory .inventory-table th:first-child,
+.admin-inventory .inventory-table td:first-child {
+    padding-left: 20px;
+}
+
+.admin-inventory .inventory-table th:last-child,
+.admin-inventory .inventory-table td:last-child {
+    padding-right: 20px;
+}
+
+.admin-inventory .inventory-product-name {
+    display: block;
+    max-width: 240px;
+    color: var(--inventory-text);
     font-size: 13px;
     font-weight: 600;
     overflow-wrap: anywhere;
 }
 
-.inventory-product-cell span,
-.inventory-variant-cell span {
-    color: #8c847a;
-    font-size: 11px;
-    line-height: 1.5;
+.admin-inventory .inventory-product-meta {
+    display: block;
+    margin-top: 4px;
+    color: var(--inventory-muted);
+    font-size: 12px;
+}
+
+.admin-inventory .inventory-sku {
+    color: #6f675e;
+    font-size: 12px;
+    font-weight: 500;
     overflow-wrap: anywhere;
 }
 
-.inventory-price {
+.admin-inventory .inventory-variant {
+    color: #625b53;
+    font-size: 12px;
+}
+
+.admin-inventory .inventory-price {
     font-weight: 600;
     white-space: nowrap;
 }
 
-.inventory-stock-value {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-}
 
-.inventory-stock-value strong {
-    color: #302b26;
-    font-size: 17px;
-    font-weight: 650;
-}
+/* =========================================================
+   STOCK STATUS
+========================================================= */
 
-.inventory-stock-value span {
-    color: #928a80;
-    font-size: 11px;
-}
-
-.inventory-stock-badge {
+.admin-inventory .inventory-stock-status {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 9px;
-    border-radius: 6px;
+    min-height: 25px;
+    padding: 4px 9px;
+    border-radius: 5px;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
+    line-height: 1.3;
     white-space: nowrap;
 }
 
-.inventory-stock-in {
-    color: #386849;
-    background: #edf5ee;
+.admin-inventory .inventory-stock-status.is-in-stock {
+    background: var(--inventory-success-bg);
+    color: var(--inventory-success);
 }
 
-.inventory-stock-low {
-    color: #93641c;
-    background: #faf2e3;
+.admin-inventory .inventory-stock-status.is-low-stock {
+    background: var(--inventory-warning-bg);
+    color: var(--inventory-warning);
 }
 
-.inventory-stock-out {
-    color: #a23f37;
-    background: #f9eae8;
+.admin-inventory .inventory-stock-status.is-out-of-stock {
+    background: var(--inventory-danger-bg);
+    color: var(--inventory-danger);
 }
 
-.inventory-edit-button {
-    padding: 0;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-}
 
-.inventory-edit-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-}
+/* =========================================================
+   STOCK INPUTS / EDITING
+========================================================= */
 
-.inventory-edit-fields {
+.admin-inventory .inventory-edit-fields {
     display: flex;
-    flex-direction: column;
-    gap: 9px;
-    min-width: 145px;
-}
-
-.inventory-edit-fields label {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.inventory-edit-fields label>span {
-    color: #81796f;
-    font-size: 10px;
-    font-weight: 600;
-}
-
-.inventory-edit-fields input {
-    width: 100%;
-    min-width: 90px;
-    padding: 8px 9px;
-    color: #302b26;
-    background: #ffffff;
-    border: 1px solid #ded8ce;
-    border-radius: 7px;
-    outline: none;
-    font: inherit;
-    font-size: 13px;
-}
-
-.inventory-edit-fields input:focus {
-    border-color: #8d7962;
-    box-shadow: 0 0 0 2px rgb(141 121 98 / 10%);
-}
-
-.inventory-row-actions {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-    min-width: 85px;
-}
-
-.inventory-save-button,
-.inventory-cancel-button {
-    padding: 8px 12px;
-    border: 1px solid transparent;
-    border-radius: 7px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition:
-        background 0.15s ease,
-        border-color 0.15s ease;
-}
-
-.inventory-save-button {
-    color: #ffffff;
-    background: #302b26;
-    border-color: #302b26;
-}
-
-.inventory-save-button:hover:not(:disabled) {
-    background: #494037;
-}
-
-.inventory-cancel-button {
-    color: #625a51;
-    background: #ffffff;
-    border-color: #e3ded6;
-}
-
-.inventory-cancel-button:hover:not(:disabled) {
-    background: #f6f3ef;
-}
-
-.inventory-save-button:disabled,
-.inventory-cancel-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-.inventory-row-error {
-    display: block;
-    max-width: 190px;
-    color: #a33d34;
-    font-size: 11px;
-    line-height: 1.5;
-    overflow-wrap: anywhere;
-}
-
-.inventory-table-footer {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
-    padding-top: 16px;
-    color: #8b8379;
-    font-size: 11px;
-    line-height: 1.6;
+    gap: 8px;
 }
 
-.inventory-warning-banner,
-.inventory-success-banner {
-    padding: 13px 16px;
-    border: 1px solid;
-    border-radius: 9px;
+.admin-inventory .inventory-number-input {
+    width: 86px;
+    min-height: 37px;
+    padding: 8px 10px;
+    border: 1px solid var(--inventory-border);
+    border-radius: 6px;
+    outline: none;
+    background: #ffffff;
+    color: var(--inventory-text);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease;
+}
+
+.admin-inventory .inventory-number-input:focus {
+    border-color: var(--inventory-accent);
+    box-shadow: 0 0 0 3px rgb(124 96 71 / 10%);
+}
+
+.admin-inventory .inventory-number-input:disabled {
+    background: #f5f3f0;
+    color: #8d867e;
+    cursor: not-allowed;
+}
+
+.admin-inventory .inventory-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+}
+
+.admin-inventory .inventory-row-actions button {
+    min-height: 34px;
+    padding: 7px 10px;
+    border: 1px solid var(--inventory-border);
+    border-radius: 6px;
+    background: #ffffff;
+    color: var(--inventory-text);
+    font-size: 12px;
+    font-weight: 600;
+    transition:
+        background 160ms ease,
+        border-color 160ms ease;
+}
+
+.admin-inventory .inventory-row-actions button:hover:not(:disabled) {
+    background: var(--inventory-background);
+    border-color: #cfc6bb;
+}
+
+.admin-inventory .inventory-row-actions .inventory-save-button {
+    background: var(--inventory-accent);
+    border-color: var(--inventory-accent);
+    color: #ffffff;
+}
+
+.admin-inventory .inventory-row-actions .inventory-save-button:hover:not(:disabled) {
+    background: #654c38;
+    border-color: #654c38;
+}
+
+
+/* =========================================================
+   LOADING / EMPTY / ERROR STATES
+========================================================= */
+
+.admin-inventory .inventory-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 230px;
+    padding: 36px 24px;
+    text-align: center;
+}
+
+.admin-inventory .inventory-state-title {
+    margin: 0;
+    color: var(--inventory-text);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.admin-inventory .inventory-state-description {
+    max-width: 420px;
+    margin: 9px 0 0;
+    color: var(--inventory-muted);
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.admin-inventory .inventory-state .inventory-button {
+    margin-top: 18px;
+}
+
+.admin-inventory .inventory-loading-indicator {
+    width: 28px;
+    height: 28px;
+    margin-bottom: 16px;
+    border: 3px solid #e8e2db;
+    border-top-color: var(--inventory-accent);
+    border-radius: 50%;
+    animation: inventory-spin 700ms linear infinite;
+}
+
+@keyframes inventory-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.admin-inventory .inventory-error {
+    margin-bottom: 18px;
+    padding: 13px 15px;
+    border: 1px solid #efd0cd;
+    border-radius: 7px;
+    background: var(--inventory-danger-bg);
+    color: var(--inventory-danger);
     font-size: 13px;
     line-height: 1.6;
 }
 
-.inventory-warning-banner {
-    color: #865d20;
-    background: #fbf5e9;
-    border-color: #eddfc2;
+.admin-inventory .inventory-success-message {
+    margin-bottom: 18px;
+    padding: 12px 15px;
+    border: 1px solid #cfe5d6;
+    border-radius: 7px;
+    background: var(--inventory-success-bg);
+    color: var(--inventory-success);
+    font-size: 13px;
+    line-height: 1.6;
 }
 
-.inventory-success-banner {
-    color: #386849;
-    background: #edf5ee;
-    border-color: #d6e8d8;
+
+/* =========================================================
+   TABLE FOOTER / RESULTS
+========================================================= */
+
+.admin-inventory .inventory-table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 17px;
+    border-top: 1px solid var(--inventory-border);
+    background: #ffffff;
 }
+
+.admin-inventory .inventory-results-count {
+    margin: 0;
+    color: var(--inventory-muted);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.admin-inventory .inventory-pagination {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.admin-inventory .inventory-pagination button {
+    min-width: 34px;
+    min-height: 34px;
+    padding: 7px 10px;
+    border: 1px solid var(--inventory-border);
+    border-radius: 6px;
+    background: #ffffff;
+    color: var(--inventory-text);
+    font-size: 12px;
+}
+
+.admin-inventory .inventory-pagination button:hover:not(:disabled) {
+    background: var(--inventory-background);
+}
+
+.admin-inventory .inventory-pagination button.is-active {
+    background: var(--inventory-accent);
+    border-color: var(--inventory-accent);
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+========================================================= */
+
+.admin-inventory button:focus-visible,
+.admin-inventory input:focus-visible,
+.admin-inventory select:focus-visible {
+    outline: 2px solid var(--inventory-accent);
+    outline-offset: 2px;
+}
+
+
+/* =========================================================
+   RESPONSIVE: TABLET
+========================================================= */
 
 @media (max-width: 1100px) {
-    .inventory-summary-grid {
+    .admin-inventory {
+        padding: 24px;
+    }
+
+    .admin-inventory .inventory-summary {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-inventory .inventory-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-inventory .inventory-toolbar-left,
+    .admin-inventory .inventory-toolbar-right {
+        width: 100%;
+    }
+
+    .admin-inventory .inventory-search {
+        flex: 1;
+        width: auto;
+        min-width: 180px;
     }
 }
 
+
+/* =========================================================
+   RESPONSIVE: MOBILE
+========================================================= */
+
 @media (max-width: 640px) {
-    .admin-inventory-page {
-        gap: 18px;
+    .admin-inventory {
+        padding: 18px 14px;
     }
 
-    .inventory-summary-grid {
+    .admin-inventory .inventory-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        margin-bottom: 21px;
+    }
+
+    .admin-inventory .inventory-title {
+        font-size: 24px;
+    }
+
+    .admin-inventory .inventory-description {
+        font-size: 13px;
+    }
+
+    .admin-inventory .inventory-header-actions {
+        justify-content: flex-start;
+    }
+
+    .admin-inventory .inventory-summary {
         gap: 10px;
+        margin-bottom: 20px;
     }
 
-    .inventory-summary-card {
-        padding: 16px;
-        border-radius: 11px;
+    .admin-inventory .inventory-summary-card {
+        padding: 15px;
+        border-radius: 8px;
     }
 
-    .inventory-summary-card>strong {
-        font-size: 25px;
-    }
-
-    .inventory-summary-footnote {
+    .admin-inventory .inventory-summary-label {
+        margin-bottom: 10px;
         font-size: 11px;
     }
 
-    .inventory-panel-heading {
-        flex-direction: column;
-        gap: 10px;
+    .admin-inventory .inventory-summary-value {
+        font-size: 23px;
     }
 
-    .inventory-filter-row {
-        display: flex;
-        flex-direction: column;
+    .admin-inventory .inventory-summary-note {
+        font-size: 11px;
+    }
+
+    .admin-inventory .inventory-toolbar-left,
+    .admin-inventory .inventory-toolbar-right {
         align-items: stretch;
+        flex-direction: column;
     }
 
-    .inventory-filter-row .admin-search-input,
-    .inventory-filter-row .admin-select {
+    .admin-inventory .inventory-search {
         width: 100%;
         min-width: 0;
     }
 
-    .inventory-table-footer {
+    .admin-inventory .inventory-filter {
+        width: 100%;
+        max-width: none;
+    }
+
+    .admin-inventory .inventory-toolbar .inventory-button {
+        width: 100%;
+    }
+
+    .admin-inventory .inventory-table-container {
+        border-radius: 8px;
+    }
+
+    .admin-inventory .inventory-table thead th {
+        padding: 12px;
+    }
+
+    .admin-inventory .inventory-table tbody td {
+        padding: 13px 12px;
+    }
+
+    .admin-inventory .inventory-table th:first-child,
+    .admin-inventory .inventory-table td:first-child {
+        padding-left: 14px;
+    }
+
+    .admin-inventory .inventory-table th:last-child,
+    .admin-inventory .inventory-table td:last-child {
+        padding-right: 14px;
+    }
+
+    .admin-inventory .inventory-table-footer {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .admin-inventory .inventory-pagination {
+        flex-wrap: wrap;
+    }
+
+    .admin-inventory .inventory-state {
+        min-height: 200px;
+        padding: 28px 16px;
+    }
+}
+
+
+/* =========================================================
+   REDUCED MOTION
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .admin-inventory *,
+    .admin-inventory *::before,
+    .admin-inventory *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }
