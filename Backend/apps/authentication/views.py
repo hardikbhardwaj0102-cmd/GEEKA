@@ -159,15 +159,19 @@ class LoginView(APIView):
 
 
 
+
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         serializer = CustomerProfileSerializer(request.user)
 
+        user_data = dict(serializer.data)
+        user_data["is_staff"] = request.user.is_staff
+
         return Response(
             {
-                "user": serializer.data,
+                "user": user_data,
             },
             status=status.HTTP_200_OK,
         )
@@ -187,13 +191,17 @@ class MeView(APIView):
 
         serializer.save()
 
+        user_data = dict(serializer.data)
+        user_data["is_staff"] = request.user.is_staff
+
         return Response(
             {
                 "message": "Profile updated successfully.",
-                "user": serializer.data,
+                "user": user_data,
             },
             status=status.HTTP_200_OK,
         )
+
 
 
 

@@ -216,12 +216,13 @@ Returns information about the currently authenticated customer.
 ```json
 {
   "user": {
-    "id": "user-uuid",
-    "email": "customer@example.com",
-    "full_name": "Aarav Sharma",
-    "email_verified": true
+    "id": "...",
+    "email": "geekashop.official@gmail.com",
+    "full_name": "...",
+    "email_verified": true,
+    "is_staff": true
   }
-}  
+}
 ```
 ### Unauthenticated Response — `401 Unauthorized`
 The endpoint requires an authenticated Django session.
