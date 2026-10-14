@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "apps.cart",
     "apps.addresses",
     "apps.orders",
+    "apps.contact",
 
     "rest_framework",
     "corsheaders",

@@ -4638,3 +4638,80 @@ Order status and payment status are separate fields. Order status transitions ar
 - No public REST API endpoint for order-status transitions is currently documented or implemented.
 - Payment gateway verification, payment webhooks, refunds, and payment-failure handling remain outside the current implementation.
 - Automated tests for all valid and invalid lifecycle transitions must be completed before considering the workflow fully verified.
+
+
+
+## 5.5 Contact Messages
+
+### 1. Submit a Contact Message
+
+**Endpoint:** `POST /api/v1/contact/messages/`
+
+**Authentication:** Required — authenticated customer session.
+
+**Request body:**
+
+```json
+{
+  "name": "Test Customer",
+  "email": "customer@example.com",
+  "subject": "Order inquiry",
+  "message": "I would like to know more about my order."
+}
+```
+
+**Success response:** `201 Created`
+
+```json
+{
+  "name": "Test Customer",
+  "email": "customer@example.com",
+  "subject": "Order inquiry",
+  "message": "I would like to know more about my order."
+}
+```
+
+**Behavior:**
+- Only authenticated users can submit messages.
+- The message is associated with the authenticated user on the backend.
+- The client cannot supply the user association or creation timestamp.
+- Required fields are validated by the serializer.
+
+### 2. List Contact Messages (Management)
+
+**Endpoint:** `GET /api/v1/contact/messages/admin/`
+
+**Authentication:** Staff user required (`is_staff=True`).
+
+**Success response:** `200 OK`
+
+Returns a list of messages containing `id`, `name`, `email`, `subject`, `message`, and `created_at`.
+
+Messages are ordered newest first.
+
+### 3. Retrieve a Contact Message (Management)
+
+**Endpoint:** `GET /api/v1/contact/messages/admin/{uuid}/`
+
+**Authentication:** Staff user required (`is_staff=True`).
+
+**Success response:** `200 OK`
+
+Returns the selected message with its `id`, `name`, `email`, `subject`, `message`, and `created_at`.
+
+### 4. Delete a Contact Message (Management)
+
+**Endpoint:** `DELETE /api/v1/contact/messages/admin/{uuid}/`
+
+**Authentication:** Staff user required (`is_staff=True`).
+
+**Success response:** `204 No Content`
+
+Permanently deletes the selected message from the database.
+
+### Error Handling
+
+- `400 Bad Request`: Invalid or missing input fields.
+- `401 Unauthorized` or `403 Forbidden`: Authentication required, depending on the configured authentication classes.
+- `403 Forbidden`: Authenticated non-staff user attempts to access management endpoints.
+- `404 Not Found`: Requested message does not exist.
