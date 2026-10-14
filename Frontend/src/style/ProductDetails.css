@@ -1358,3 +1358,15 @@
         transition: none !important;
     }
 }
+
+/* FIX: When a product has only one gallery image, JSX omits the thumbnails.
+   Let the main image use the full gallery width instead of the thumbnail column. */
+.product-gallery-body:not(:has(.product-thumbnails)) {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.product-gallery-body:not(:has(.product-thumbnails)) .product-main-image,
+.product-gallery-body:not(:has(.product-thumbnails)) .product-main-image-inner {
+    width: 100%;
+    min-width: 0;
+}
