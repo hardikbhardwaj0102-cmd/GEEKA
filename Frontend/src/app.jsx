@@ -40,6 +40,7 @@ import AdminProductEditor from "./admin/pages/AdminProductEditor";
 import AdminSectionPage from "./admin/pages/AdminSectionPage";
 import AdminMessages from "./admin/pages/AdminMessages";
 import AdminSettings from "./admin/pages/AdminSettings";
+import AdminInventory from "./admin/pages/AdminInventory";
 
 import "./App.css";
 
@@ -250,7 +251,10 @@ function App() {
                             />
                         }
                     />
-
+                    <Route
+                        path="/admin/inventory"
+                        element={<AdminInventory />}
+                    />
 
                     {/* Orders */}
 
