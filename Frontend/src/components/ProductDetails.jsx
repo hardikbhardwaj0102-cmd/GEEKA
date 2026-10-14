@@ -472,26 +472,19 @@ export default function ProductDetails() {
                         ? detail.variants
                         : [];
 
+                // Default to a real in-stock variant, not just the first active one.
                 const initialVariant =
                     variants.find(
-                        (
-                            variant
-                        ) =>
-                            variant?.is_active ===
-                            true &&
-                            variant?.in_stock ===
-                            true &&
-                            Number(
-                                variant?.stock
-                            ) >
-                            0
+                        (variant) =>
+                            variant?.is_active === true &&
+                            variant?.in_stock === true &&
+                            Number(variant?.stock) > 0
                     ) ||
                     variants.find(
-                        (
-                            variant
-                        ) =>
-                            variant?.is_active ===
-                            true
+                        (variant) =>
+                            variant?.is_active === true &&
+                            Number(variant?.stock) > 0 &&
+                            variant?.in_stock !== false
                     ) ||
                     null;
 
@@ -695,6 +688,12 @@ export default function ProductDetails() {
     |--------------------------------------------------------------------------
     */
 
+    const isPurchasableVariant = (variant) =>
+        variant?.is_active === true &&
+        Number(variant?.stock) > 0 &&
+        variant?.in_stock !== false;
+
+
     const selectedVariant =
         useMemo(() => {
             if (
@@ -705,31 +704,14 @@ export default function ProductDetails() {
 
             const activeVariants =
                 product.variants.filter(
-                    (
-                        variant
-                    ) =>
-                        variant?.is_active ===
-                        true
+                    (variant) => variant?.is_active === true
                 );
 
-            if (
-                !attributeGroups.length
-            ) {
-                return (
-                    activeVariants.find(
-                        (
-                            variant
-                        ) =>
-                            variant?.in_stock ===
-                            true &&
-                            Number(
-                                variant?.stock
-                            ) >
-                            0
-                    ) ||
-                    activeVariants[0] ||
-                    null
-                );
+            const purchasableVariants =
+                activeVariants.filter(isPurchasableVariant);
+
+            if (!attributeGroups.length) {
+                return purchasableVariants[0] || null;
             }
 
             const completeSelection =
@@ -748,40 +730,18 @@ export default function ProductDetails() {
                 return null;
             }
 
+            const matchesSelection = (variant) =>
+                attributeGroups.every((group) =>
+                    variant.attributes?.some(
+                        (attribute) =>
+                            attribute.attribute === group.name &&
+                            attribute.value === selectedAttributes[group.name]
+                    )
+                );
+
             return (
-                activeVariants.find(
-                    (
-                        variant
-                    ) => {
-                        return (
-                            variant.attributes?.every(
-                                (
-                                    attribute
-                                ) =>
-                                    selectedAttributes[
-                                    attribute.attribute
-                                    ] ===
-                                    attribute.value
-                            ) &&
-                            attributeGroups.every(
-                                (
-                                    group
-                                ) =>
-                                    variant.attributes?.some(
-                                        (
-                                            attribute
-                                        ) =>
-                                            attribute.attribute ===
-                                            group.name &&
-                                            attribute.value ===
-                                            selectedAttributes[
-                                            group.name
-                                            ]
-                                    )
-                            )
-                        );
-                    }
-                ) ||
+                purchasableVariants.find(matchesSelection) ||
+                activeVariants.find(matchesSelection) ||
                 null
             );
         }, [
@@ -1361,8 +1321,8 @@ export default function ProductDetails() {
                                         product
                                     )
                                 )
-                                        ? "active"
-                                        : ""
+                                    ? "active"
+                                    : ""
                                     }`}
                                 onClick={
                                     toggleWishlist
@@ -1494,19 +1454,12 @@ export default function ProductDetails() {
 
                                                             const exists =
                                                                 product.variants.some(
-                                                                    (
-                                                                        variant
-                                                                    ) =>
-                                                                        variant?.is_active ===
-                                                                        true &&
-                                                                        variant?.attributes?.some(
-                                                                            (
-                                                                                attribute
-                                                                            ) =>
-                                                                                attribute?.attribute ===
-                                                                                group.name &&
-                                                                                attribute?.value ===
-                                                                                value
+                                                                    (variant) =>
+                                                                        isPurchasableVariant(variant) &&
+                                                                        variant.attributes?.some(
+                                                                            (attribute) =>
+                                                                                attribute?.attribute === group.name &&
+                                                                                attribute?.value === value
                                                                         )
                                                                 );
 
@@ -1525,17 +1478,49 @@ export default function ProductDetails() {
                                                                     disabled={
                                                                         !exists
                                                                     }
-                                                                    onClick={() =>
-                                                                        setSelectedAttributes(
-                                                                            (
-                                                                                current
-                                                                            ) => ({
-                                                                                ...current,
-                                                                                [group.name]:
-                                                                                    value,
-                                                                            })
-                                                                        )
-                                                                    }
+                                                                    onClick={() => {
+                                                                        const currentSelection = {
+                                                                            ...selectedAttributes,
+                                                                            [group.name]: value,
+                                                                        };
+
+                                                                        const purchasableMatches =
+                                                                            product.variants.filter(
+                                                                                (variant) =>
+                                                                                    isPurchasableVariant(variant) &&
+                                                                                    variant.attributes?.some(
+                                                                                        (attribute) =>
+                                                                                            attribute.attribute === group.name &&
+                                                                                            attribute.value === value
+                                                                                    )
+                                                                            );
+
+                                                                        const bestMatch =
+                                                                            purchasableMatches.find((variant) =>
+                                                                                attributeGroups.every((candidateGroup) =>
+                                                                                    candidateGroup.name === group.name ||
+                                                                                    !currentSelection[candidateGroup.name] ||
+                                                                                    variant.attributes?.some(
+                                                                                        (attribute) =>
+                                                                                            attribute.attribute === candidateGroup.name &&
+                                                                                            attribute.value === currentSelection[candidateGroup.name]
+                                                                                    )
+                                                                                )
+                                                                            ) ||
+                                                                            purchasableMatches[0];
+
+                                                                        if (bestMatch) {
+                                                                            const nextSelection = {};
+                                                                            bestMatch.attributes?.forEach((attribute) => {
+                                                                                if (attribute?.attribute && attribute?.value) {
+                                                                                    nextSelection[attribute.attribute] = attribute.value;
+                                                                                }
+                                                                            });
+                                                                            setSelectedAttributes(nextSelection);
+                                                                        } else {
+                                                                            setSelectedAttributes(currentSelection);
+                                                                        }
+                                                                    }}
                                                                 >
                                                                     {
                                                                         value
