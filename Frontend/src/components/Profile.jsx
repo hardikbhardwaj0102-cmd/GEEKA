@@ -53,9 +53,6 @@ const PAYMENT_STORAGE_KEY =
 const SETTINGS_STORAGE_KEY =
     "geeka-settings";
 
-const ORDERS_STORAGE_KEY =
-    "geeka-orders";
-
 const USER_STORAGE_KEY =
     "geeka-user";
 
@@ -1087,14 +1084,89 @@ export default function Profile() {
     |--------------------------------------------------------------------------
     */
 
-    const [
-        orders,
-    ] = useState(() =>
-        readStorage(
-            ORDERS_STORAGE_KEY,
-            []
-        )
-    );
+    const [orders, setOrders] = useState([]);
+    const [ordersLoading, setOrdersLoading] = useState(true);
+    const [ordersError, setOrdersError] = useState("");
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOAD ORDER HISTORY FROM THE BACKEND
+    |--------------------------------------------------------------------------
+    | The authenticated Django API is the source of truth. Do not use
+    | localStorage for order history because it can be stale or belong to
+    | a previous browser session.
+    */
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadOrders() {
+            setOrdersLoading(true);
+            setOrdersError("");
+
+            try {
+                const allOrders = [];
+                let nextUrl = `${API_URL}/api/v1/orders/?page=1&page_size=50`;
+                let pageCount = 0;
+
+                // Follow backend pagination, with a safety limit to avoid loops.
+                while (nextUrl && pageCount < 100) {
+                    const response = await fetch(nextUrl, {
+                        method: "GET",
+                        credentials: "include",
+                        cache: "no-store",
+                        headers: { Accept: "application/json" },
+                    });
+
+                    const data = await readResponseData(response);
+
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                            throw new Error("Your session has expired. Please log in again.");
+                        }
+
+                        throw new Error(
+                            data.detail || data.message || data.error ||
+                            `Unable to load your orders (${response.status}).`
+                        );
+                    }
+
+                    const pageOrders = Array.isArray(data)
+                        ? data
+                        : Array.isArray(data.orders)
+                            ? data.orders
+                            : Array.isArray(data.results)
+                                ? data.results
+                                : Array.isArray(data.data?.orders)
+                                    ? data.data.orders
+                                    : [];
+
+                    allOrders.push(...pageOrders);
+                    nextUrl = !Array.isArray(data) ? (data.next || null) : null;
+                    pageCount += 1;
+                }
+
+                if (!cancelled) {
+                    setOrders(allOrders.map((order) => ({
+                        ...order,
+                        orderId: order.order_number || order.orderId || order.id,
+                        createdAt: order.created_at || order.createdAt || order.date,
+                        itemCount: order.item_count ?? order.itemCount ?? order.items?.length ?? 0,
+                        total: order.total ?? order.total_amount ?? order.grand_total,
+                    })));
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setOrders([]);
+                    setOrdersError(error.message || "Unable to load your order history.");
+                }
+            } finally {
+                if (!cancelled) setOrdersLoading(false);
+            }
+        }
+
+        loadOrders();
+        return () => { cancelled = true; };
+    }, []);
 
 
     /*
@@ -3222,8 +3294,25 @@ export default function Profile() {
                             </div>
 
 
-                            {orders.length ===
-                                0 ? (
+                            {ordersLoading ? (
+                                <div className="account-empty-state" role="status">
+                                    <h3>Loading your orders...</h3>
+                                    <p>Fetching your latest order history.</p>
+                                </div>
+                            ) : ordersError ? (
+                                <div className="account-empty-state" role="alert">
+                                    <h3>Couldn't load your orders</h3>
+                                    <p>{ordersError}</p>
+                                    <button
+                                        type="button"
+                                        className="account-primary-button"
+                                        onClick={() => window.location.reload()}
+                                    >
+                                        RETRY
+                                        <ArrowIcon />
+                                    </button>
+                                </div>
+                            ) : orders.length === 0 ? (
 
                                 <div className="account-empty-state">
 
