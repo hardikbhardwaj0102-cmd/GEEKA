@@ -87,9 +87,7 @@ function HomePage() {
 ========================================================= */
 
 function App() {
-
     return (
-
         <BrowserRouter>
 
             <Routes>
@@ -152,14 +150,17 @@ function App() {
                     path="/about"
                     element={<About />}
                 />
+
                 <Route
                     path="/checkout"
                     element={<Checkout />}
                 />
+
                 <Route
                     path="/orders/:orderId"
                     element={<OrderDetails />}
                 />
+
                 <Route
                     path="/contact"
                     element={<Contact />}
@@ -173,8 +174,7 @@ function App() {
 
                 {/* =====================================================
                     OLD ADMIN LOGIN URL
-                    No separate admin login for Geeka.
-                    Redirect it to the normal customer login.
+                    Redirect to the customer login page
                 ===================================================== */}
 
                 <Route
@@ -245,16 +245,9 @@ function App() {
 
                     <Route
                         path="inventory"
-                        element={
-                            <AdminSectionPage
-                                section="inventory"
-                            />
-                        }
-                    />
-                    <Route
-                        path="/admin/inventory"
                         element={<AdminInventory />}
                     />
+
 
                     {/* Orders */}
 
@@ -309,12 +302,10 @@ function App() {
 
                 </Route>
 
-
             </Routes>
 
         </BrowserRouter>
     );
 }
-
 
 export default App;
