@@ -4,28 +4,26 @@ import { API_URL, getCsrfToken } from "./adminAuthService";
 /* =========================================================
    GEEKA ADMIN API SERVICE
 
-   Product + Category APIs are connected because their
-   endpoints and request/response structures are now
-   finalized in the backend contract.
+   Connected:
+   - Products
+   - Categories
+   - Product image uploads
+   - Product variants
+   - Variant stock and low-stock threshold updates
 
-   Product image upload is also finalized and connected.
-
-   Variant, inventory and the remaining image-management
-   mutations stay unconfigured until their APIs are finalized.
+   Other endpoints remain unconfigured until finalized.
 ========================================================= */
 
 
 const ENDPOINTS = {
-    products:
-        "/api/v1/catalog/admin/products/",
-
-    categories:
-        "/api/v1/catalog/admin/categories/",
+    products: "/api/v1/catalog/admin/products/",
+    categories: "/api/v1/catalog/admin/categories/",
 
     inventory: "",
     orders: "",
     customers: "",
     reviews: "",
+
     messages: "/api/v1/contact/messages/admin/",
 };
 
@@ -35,7 +33,6 @@ const ENDPOINTS = {
 ========================================================= */
 
 function resolveEndpoint(endpoint) {
-
     if (!endpoint) {
         return "";
     }
@@ -47,30 +44,18 @@ function resolveEndpoint(endpoint) {
         return endpoint;
     }
 
-    return `${API_URL}${endpoint.startsWith("/")
-        ? ""
-        : "/"
-        }${endpoint}`;
+    return `${API_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 }
 
 
-function getResourceEndpoint(
-    key,
-    resourceId = null
-) {
-
-    const endpoint =
-        getEndpoint(key);
+function getResourceEndpoint(key, resourceId = null) {
+    const endpoint = getEndpoint(key);
 
     if (!endpoint) {
         return "";
     }
 
-    const normalized =
-        endpoint.replace(
-            /\/$/,
-            ""
-        );
+    const normalized = endpoint.replace(/\/$/, "");
 
     return resourceId
         ? `${normalized}/${resourceId}/`
@@ -82,188 +67,77 @@ function getResourceEndpoint(
    RESPONSE HANDLING
 ========================================================= */
 
-async function parseResponse(
-    response
-) {
-
+async function parseResponse(response) {
     let data = {};
 
     try {
-
-        data =
-            await response.json();
-
+        data = await response.json();
     } catch {
-
         data = {};
-
     }
 
-
     if (!response.ok) {
+        let validationMessage = null;
 
-        let validationMessage =
-            null;
-
-
-        /*
-         * Backend may return:
-         *
-         * {
-         *   "errors": [
-         *       "Message 1",
-         *       "Message 2"
-         *   ]
-         * }
-         *
-         * OR:
-         *
-         * {
-         *   "errors": {
-         *       "field": [
-         *           "Message"
-         *       ]
-         *   }
-         * }
-         */
-
-        if (
-            Array.isArray(
-                data?.errors
-            )
-        ) {
-
-            validationMessage =
-                data.errors
-                    .filter(Boolean)
-                    .join(" ");
-
+        if (Array.isArray(data?.errors)) {
+            validationMessage = data.errors
+                .filter(Boolean)
+                .join(" ");
         } else if (
             data?.errors &&
-            typeof data.errors ===
-            "object"
+            typeof data.errors === "object"
         ) {
-
             const messages = [];
 
-            for (
-                const value of
-                Object.values(
-                    data.errors
-                )
-            ) {
-
-                if (
-                    Array.isArray(
-                        value
-                    )
-                ) {
-
-                    messages.push(
-                        ...value.filter(
-                            Boolean
-                        )
-                    );
-
-                } else if (
-                    value
-                ) {
-
-                    messages.push(
-                        value
-                    );
+            for (const value of Object.values(data.errors)) {
+                if (Array.isArray(value)) {
+                    messages.push(...value.filter(Boolean));
+                } else if (value) {
+                    messages.push(value);
                 }
             }
 
-            validationMessage =
-                messages.length > 0
-                    ? messages.join(" ")
-                    : null;
+            validationMessage = messages.length > 0
+                ? messages.join(" ")
+                : null;
         }
-
 
         const messageParts = [];
 
-
-        if (
-            data?.detail
-        ) {
-
-            messageParts.push(
-                data.detail
-            );
+        if (data?.detail) {
+            messageParts.push(data.detail);
         }
 
-
-        if (
-            Array.isArray(
-                data?.errors
-            )
-        ) {
-
-            messageParts.push(
-                ...data.errors.filter(
-                    Boolean
-                )
-            );
+        if (Array.isArray(data?.errors)) {
+            messageParts.push(...data.errors.filter(Boolean));
         }
 
-
-        if (
-            data?.error
-        ) {
-
-            messageParts.push(
-                data.error
-            );
+        if (data?.error) {
+            messageParts.push(data.error);
         }
 
-
-        if (
-            data?.message
-        ) {
-
-            messageParts.push(
-                data.message
-            );
+        if (data?.message) {
+            messageParts.push(data.message);
         }
-
 
         if (
             validationMessage &&
-            !messageParts.includes(
-                validationMessage
-            )
+            !messageParts.includes(validationMessage)
         ) {
-
-            messageParts.push(
-                validationMessage
-            );
+            messageParts.push(validationMessage);
         }
 
+        const message = messageParts.length > 0
+            ? messageParts.join(" ")
+            : `Request failed with status ${response.status}.`;
 
-        const message =
-            messageParts.length > 0
-                ? messageParts.join(" ")
-                : `Request failed with status ${response.status}.`;
+        const error = new Error(String(message));
 
-
-        const error =
-            new Error(
-                String(message)
-            );
-
-
-        error.status =
-            response.status;
-
-        error.data =
-            data;
-
+        error.status = response.status;
+        error.data = data;
 
         throw error;
     }
-
 
     return data;
 }
@@ -280,56 +154,33 @@ export async function adminRequest({
     headers = {},
     isFormData = false,
 }) {
-
-    const url =
-        resolveEndpoint(
-            endpoint
-        );
-
+    const url = resolveEndpoint(endpoint);
 
     if (!url) {
+        const error = new Error(
+            "This admin API endpoint has not been configured yet."
+        );
 
-        const error =
-            new Error(
-                "This admin API endpoint has not been configured yet."
-            );
-
-
-        error.code =
-            "ENDPOINT_NOT_CONFIGURED";
-
+        error.code = "ENDPOINT_NOT_CONFIGURED";
 
         throw error;
     }
 
-
     const requestHeaders = {
-        Accept:
-            "application/json",
-
+        Accept: "application/json",
         ...headers,
     };
 
-
-    let requestBody =
-        body;
-
+    let requestBody = body;
 
     /*
-     * Do NOT set Content-Type for FormData.
-     *
-     * The browser must generate the multipart
-     * boundary automatically.
+     * Do not manually set Content-Type for FormData.
+     * The browser must generate the multipart boundary.
      */
 
     if (!isFormData) {
-
-        requestHeaders[
-            "Content-Type"
-        ] =
-            "application/json";
+        requestHeaders["Content-Type"] = "application/json";
     }
-
 
     const stateChangingMethods = [
         "POST",
@@ -338,71 +189,34 @@ export async function adminRequest({
         "DELETE",
     ];
 
-
     /*
-     * Django CSRF
-     *
-     * Every state-changing admin request gets
-     * the current CSRF token.
+     * Django CSRF protection.
      */
 
-    if (
-        stateChangingMethods.includes(
-            method.toUpperCase()
-        )
-    ) {
-
-        const csrfToken =
-            await getCsrfToken();
-
+    if (stateChangingMethods.includes(method.toUpperCase())) {
+        const csrfToken = await getCsrfToken();
 
         if (csrfToken) {
-
-            requestHeaders[
-                "X-CSRFToken"
-            ] =
-                csrfToken;
+            requestHeaders["X-CSRFToken"] = csrfToken;
         }
     }
 
-
     /*
-     * JSON body
+     * JSON request body.
      */
 
-    if (
-        !isFormData &&
-        body !== undefined
-    ) {
-
-        requestBody =
-            JSON.stringify(
-                body
-            );
+    if (!isFormData && body !== undefined) {
+        requestBody = JSON.stringify(body);
     }
 
+    const response = await fetch(url, {
+        method,
+        credentials: "include",
+        headers: requestHeaders,
+        body: requestBody,
+    });
 
-    const response =
-        await fetch(
-            url,
-            {
-                method,
-
-                credentials:
-                    "include",
-
-                headers:
-                    requestHeaders,
-
-                body:
-                    requestBody,
-            }
-        );
-
-
-    return parseResponse(
-        response
-    );
+    return parseResponse(response);
 }
 
 
@@ -410,24 +224,13 @@ export async function adminRequest({
    ENDPOINT HELPERS
 ========================================================= */
 
-export function isEndpointConfigured(
-    key
-) {
-
-    return Boolean(
-        ENDPOINTS[key]
-    );
+export function isEndpointConfigured(key) {
+    return Boolean(ENDPOINTS[key]);
 }
 
 
-export function getEndpoint(
-    key
-) {
-
-    return (
-        ENDPOINTS[key] ||
-        ""
-    );
+export function getEndpoint(key) {
+    return ENDPOINTS[key] || "";
 }
 
 
@@ -435,38 +238,22 @@ export function getEndpoint(
    GENERIC COLLECTION GET
 ========================================================= */
 
-export async function getAdminCollection(
-    key,
-    options = {}
-) {
-
-    const endpoint =
-        getEndpoint(key);
-
+export async function getAdminCollection(key, options = {}) {
+    const endpoint = getEndpoint(key);
 
     if (!endpoint) {
+        const error = new Error(
+            `No API endpoint is configured for ${key}.`
+        );
 
-        const error =
-            new Error(
-                `No API endpoint is configured for ${key}.`
-            );
-
-
-        error.code =
-            "ENDPOINT_NOT_CONFIGURED";
-
+        error.code = "ENDPOINT_NOT_CONFIGURED";
 
         throw error;
     }
 
-
     return adminRequest({
-
         endpoint,
-
-        method:
-            "GET",
-
+        method: "GET",
         ...options,
     });
 }
@@ -476,48 +263,26 @@ export async function getAdminCollection(
    GENERIC RESOURCE GET
 ========================================================= */
 
-export async function getAdminResource(
-    key,
-    resourceId
-) {
-
+export async function getAdminResource(key, resourceId) {
     if (!resourceId) {
-
-        throw new Error(
-            "A resource ID is required."
-        );
+        throw new Error("A resource ID is required.");
     }
 
-
-    const endpoint =
-        getResourceEndpoint(
-            key,
-            resourceId
-        );
-
+    const endpoint = getResourceEndpoint(key, resourceId);
 
     if (!endpoint) {
+        const error = new Error(
+            `No API endpoint is configured for ${key}.`
+        );
 
-        const error =
-            new Error(
-                `No API endpoint is configured for ${key}.`
-            );
-
-
-        error.code =
-            "ENDPOINT_NOT_CONFIGURED";
-
+        error.code = "ENDPOINT_NOT_CONFIGURED";
 
         throw error;
     }
 
-
     return adminRequest({
-
         endpoint,
-
-        method:
-            "GET",
+        method: "GET",
     });
 }
 
@@ -526,40 +291,23 @@ export async function getAdminResource(
    GENERIC CREATE
 ========================================================= */
 
-export async function createAdminResource(
-    key,
-    payload
-) {
-
-    const endpoint =
-        getEndpoint(key);
-
+export async function createAdminResource(key, payload) {
+    const endpoint = getEndpoint(key);
 
     if (!endpoint) {
+        const error = new Error(
+            `No API endpoint is configured for ${key}.`
+        );
 
-        const error =
-            new Error(
-                `No API endpoint is configured for ${key}.`
-            );
-
-
-        error.code =
-            "ENDPOINT_NOT_CONFIGURED";
-
+        error.code = "ENDPOINT_NOT_CONFIGURED";
 
         throw error;
     }
 
-
     return adminRequest({
-
         endpoint,
-
-        method:
-            "POST",
-
-        body:
-            payload,
+        method: "POST",
+        body: payload,
     });
 }
 
@@ -573,47 +321,26 @@ export async function updateAdminResource(
     resourceId,
     payload
 ) {
-
     if (!resourceId) {
-
-        throw new Error(
-            "A resource ID is required."
-        );
+        throw new Error("A resource ID is required.");
     }
 
-
-    const endpoint =
-        getResourceEndpoint(
-            key,
-            resourceId
-        );
-
+    const endpoint = getResourceEndpoint(key, resourceId);
 
     if (!endpoint) {
+        const error = new Error(
+            `No API endpoint is configured for ${key}.`
+        );
 
-        const error =
-            new Error(
-                `No API endpoint is configured for ${key}.`
-            );
-
-
-        error.code =
-            "ENDPOINT_NOT_CONFIGURED";
-
+        error.code = "ENDPOINT_NOT_CONFIGURED";
 
         throw error;
     }
 
-
     return adminRequest({
-
         endpoint,
-
-        method:
-            "PATCH",
-
-        body:
-            payload,
+        method: "PATCH",
+        body: payload,
     });
 }
 
@@ -622,155 +349,70 @@ export async function updateAdminResource(
    GENERIC DELETE
 ========================================================= */
 
-export async function deleteAdminResource(
-    key,
-    resourceId
-) {
-
+export async function deleteAdminResource(key, resourceId) {
     if (!resourceId) {
-
-        throw new Error(
-            "A resource ID is required."
-        );
+        throw new Error("A resource ID is required.");
     }
 
-
-    const endpoint =
-        getResourceEndpoint(
-            key,
-            resourceId
-        );
-
+    const endpoint = getResourceEndpoint(key, resourceId);
 
     if (!endpoint) {
+        const error = new Error(
+            `No API endpoint is configured for ${key}.`
+        );
 
-        const error =
-            new Error(
-                `No API endpoint is configured for ${key}.`
-            );
-
-
-        error.code =
-            "ENDPOINT_NOT_CONFIGURED";
-
+        error.code = "ENDPOINT_NOT_CONFIGURED";
 
         throw error;
     }
 
-
     return adminRequest({
-
         endpoint,
-
-        method:
-            "DELETE",
+        method: "DELETE",
     });
 }
 
 
 /* =========================================================
    PRODUCTS — EXPLICIT HELPERS
-
-   Finalized endpoints:
-
-   GET
-   /api/v1/catalog/admin/products/
-
-   GET
-   /api/v1/catalog/admin/products/<id>/
-
-   POST
-   /api/v1/catalog/admin/products/
-
-   PATCH
-   /api/v1/catalog/admin/products/<id>/
 ========================================================= */
 
-export async function getAdminProducts(
-    options = {}
-) {
-
+export async function getAdminProducts(options = {}) {
     const {
         status,
         category,
         page,
     } = options;
 
+    const params = new URLSearchParams();
 
-    const params =
-        new URLSearchParams();
-
-
-    /*
-     * Optional status filter
-     *
-     * DRAFT
-     * PUBLISHED
-     * ARCHIVED
-     */
-
-    if (
-        status
-    ) {
-
-        params.set(
-            "status",
-            status
-        );
+    if (status) {
+        params.set("status", status);
     }
-
-
-    /*
-     * Optional category ID filter
-     *
-     * Category IDs are integers.
-     */
 
     if (
         category !== undefined &&
         category !== null &&
         String(category).trim() !== ""
     ) {
-
-        params.set(
-            "category",
-            String(category)
-        );
+        params.set("category", String(category));
     }
-
-
-    /*
-     * Optional page
-     */
 
     if (
         page !== undefined &&
         page !== null &&
         String(page).trim() !== ""
     ) {
-
-        params.set(
-            "page",
-            String(page)
-        );
+        params.set("page", String(page));
     }
 
-
-    const endpoint =
-        getEndpoint(
-            "products"
-        );
-
+    const endpoint = getEndpoint("products");
 
     return adminRequest({
-
-        endpoint:
-            params.toString()
-                ? `${endpoint}?${params.toString()}`
-                : endpoint,
-
-        method:
-            "GET",
+        endpoint: params.toString()
+            ? `${endpoint}?${params.toString()}`
+            : endpoint,
+        method: "GET",
     });
 }
 
@@ -779,14 +421,8 @@ export async function getAdminProducts(
    GET SINGLE PRODUCT
 ========================================================= */
 
-export async function getAdminProduct(
-    productId
-) {
-
-    return getAdminResource(
-        "products",
-        productId
-    );
+export async function getAdminProduct(productId) {
+    return getAdminResource("products", productId);
 }
 
 
@@ -794,14 +430,8 @@ export async function getAdminProduct(
    CREATE PRODUCT
 ========================================================= */
 
-export async function createAdminProduct(
-    payload
-) {
-
-    return createAdminResource(
-        "products",
-        payload
-    );
+export async function createAdminProduct(payload) {
+    return createAdminResource("products", payload);
 }
 
 
@@ -809,87 +439,31 @@ export async function createAdminProduct(
    UPDATE PRODUCT
 ========================================================= */
 
-export async function updateAdminProduct(
-    productId,
-    payload
-) {
-
-    return updateAdminResource(
-        "products",
-        productId,
-        payload
-    );
+export async function updateAdminProduct(productId, payload) {
+    return updateAdminResource("products", productId, payload);
 }
 
 
 /* =========================================================
-   CATEGORIES — FINALIZED
-
-   GET
-   /api/v1/catalog/admin/categories/
-
-   GET
-   /api/v1/catalog/admin/categories/<id>/
-
-   POST
-   /api/v1/catalog/admin/categories/
-
-   PATCH
-   /api/v1/catalog/admin/categories/<id>/
-========================================================= */
-
-
-/* =========================================================
-   GET ALL CATEGORIES
+   CATEGORIES
 ========================================================= */
 
 export async function getAdminCategories() {
-
-    return getAdminCollection(
-        "categories"
-    );
+    return getAdminCollection("categories");
 }
 
 
-/* =========================================================
-   GET SINGLE CATEGORY
-========================================================= */
-
-export async function getAdminCategory(
-    categoryId
-) {
-
-    return getAdminResource(
-        "categories",
-        categoryId
-    );
+export async function getAdminCategory(categoryId) {
+    return getAdminResource("categories", categoryId);
 }
 
 
-/* =========================================================
-   CREATE CATEGORY
-========================================================= */
-
-export async function createAdminCategory(
-    payload
-) {
-
-    return createAdminResource(
-        "categories",
-        payload
-    );
+export async function createAdminCategory(payload) {
+    return createAdminResource("categories", payload);
 }
 
 
-/* =========================================================
-   UPDATE CATEGORY
-========================================================= */
-
-export async function updateAdminCategory(
-    categoryId,
-    payload
-) {
-
+export async function updateAdminCategory(categoryId, payload) {
     return updateAdminResource(
         "categories",
         categoryId,
@@ -901,80 +475,103 @@ export async function updateAdminCategory(
 /* =========================================================
    PRODUCT STATUS
 
-   PATCH
-   /api/v1/catalog/admin/products/<id>/status/
+   PATCH /api/v1/catalog/admin/products/<id>/status/
 
-   Body:
-
-   {
-       "status": "PUBLISHED"
-   }
-
-   Allowed:
-
-   DRAFT
-   PUBLISHED
-   ARCHIVED
+   Body: { "status": "PUBLISHED" }
 ========================================================= */
 
 export async function updateAdminProductStatus(
     productId,
     status
 ) {
-
     if (!productId) {
-
-        throw new Error(
-            "A product ID is required."
-        );
+        throw new Error("A product ID is required.");
     }
-
 
     if (!status) {
-
-        throw new Error(
-            "A product status is required."
-        );
+        throw new Error("A product status is required.");
     }
 
-
-    const base =
-        getEndpoint(
-            "products"
-        ).replace(
-            /\/$/,
-            ""
-        );
-
+    const base = getEndpoint("products").replace(/\/$/, "");
 
     return adminRequest({
-
-        endpoint:
-            `${base}/${productId}/status/`,
-
-        method:
-            "PATCH",
-
-        body: {
-            status,
-        },
+        endpoint: `${base}/${productId}/status/`,
+        method: "PATCH",
+        body: { status },
     });
 }
 
 
 /* =========================================================
-   PRODUCT IMAGES — FINALIZED
+   PRODUCT VARIANTS — INVENTORY
+
+   GET
+   /api/v1/catalog/admin/products/<product_id>/variants/
+
+   Returns variants belonging to a product.
+========================================================= */
+
+export async function getAdminProductVariants(productId) {
+    if (!productId) {
+        throw new Error("A product ID is required.");
+    }
+
+    return adminRequest({
+        endpoint:
+            `/api/v1/catalog/admin/products/${productId}/variants/`,
+        method: "GET",
+    });
+}
+
+
+/* =========================================================
+   UPDATE VARIANT — INVENTORY
+
+   PATCH
+   /api/v1/catalog/admin/variants/<variant_id>/
+
+   Example body:
+   {
+       "stock": 25,
+       "low_stock_threshold": 5
+   }
+========================================================= */
+
+export async function updateAdminVariant(
+    variantId,
+    payload
+) {
+    if (!variantId) {
+        throw new Error("A variant ID is required.");
+    }
+
+    if (
+        !payload ||
+        typeof payload !== "object" ||
+        Array.isArray(payload)
+    ) {
+        throw new Error("Variant update data is required.");
+    }
+
+    return adminRequest({
+        endpoint:
+            `/api/v1/catalog/admin/variants/${variantId}/`,
+        method: "PATCH",
+        body: payload,
+    });
+}
+
+
+/* =========================================================
+   PRODUCT IMAGES
 
    POST
    /api/v1/catalog/admin/products/<id>/images/
 
-   multipart/form-data
-
-   Fields:
-
-   image_file
-   display_order
-   is_primary
+   multipart/form-data fields:
+   - image_file
+   - display_order
+   - is_primary
 ========================================================= */
 
 export async function uploadProductImage({
@@ -983,66 +580,29 @@ export async function uploadProductImage({
     displayOrder = 0,
     isPrimary = false,
 }) {
-
     if (!productId) {
-
-        throw new Error(
-            "A product ID is required."
-        );
+        throw new Error("A product ID is required.");
     }
-
 
     if (
+        typeof File === "undefined" ||
         !(file instanceof File)
     ) {
-
-        throw new Error(
-            "Please select a valid image file."
-        );
+        throw new Error("Please select a valid image file.");
     }
 
+    const formData = new FormData();
 
-    const formData =
-        new FormData();
-
-
-    formData.append(
-        "image_file",
-        file
-    );
-
-
-    formData.append(
-        "display_order",
-        String(
-            displayOrder
-        )
-    );
-
-
-    formData.append(
-        "is_primary",
-        String(
-            Boolean(
-                isPrimary
-            )
-        )
-    );
-
+    formData.append("image_file", file);
+    formData.append("display_order", String(displayOrder));
+    formData.append("is_primary", String(Boolean(isPrimary)));
 
     return adminRequest({
-
         endpoint:
             `/api/v1/catalog/admin/products/${productId}/images/`,
-
-        method:
-            "POST",
-
-        body:
-            formData,
-
-        isFormData:
-            true,
+        method: "POST",
+        body: formData,
+        isFormData: true,
     });
 }
 

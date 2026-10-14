@@ -1,4 +1,3 @@
-
 import {
     useCallback,
     useEffect,
@@ -8,7 +7,8 @@ import {
 
 import {
     getAdminProducts,
-    adminRequest,
+    getAdminProductVariants,
+    updateAdminVariant,
 } from "../services/adminApi";
 
 import "../style/AdminPages.css";
@@ -183,6 +183,14 @@ function getStockStatus(stock, threshold) {
 
 
 function formatCurrency(value) {
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+        return "—";
+    }
+
     const number = Number(value);
 
     if (!Number.isFinite(number)) {
@@ -227,11 +235,18 @@ function getErrorMessage(error) {
 
 async function fetchAllProducts() {
     const allProducts = [];
+    const seenPages = new Set();
+
     let page = 1;
 
     while (page <= 1000) {
-        const response = await getAdminProducts({ page });
+        if (seenPages.has(page)) {
+            break;
+        }
 
+        seenPages.add(page);
+
+        const response = await getAdminProducts({ page });
         const products = normalizeList(response);
 
         allProducts.push(...products);
@@ -252,11 +267,7 @@ async function fetchAllProducts() {
 
 
 async function fetchProductVariants(productId) {
-    const response = await adminRequest({
-        endpoint:
-            `/api/v1/catalog/admin/products/${productId}/variants/`,
-        method: "GET",
-    });
+    const response = await getAdminProductVariants(productId);
 
     return normalizeList(response);
 }
@@ -267,14 +278,9 @@ async function updateVariantStock(
     stock,
     lowStockThreshold
 ) {
-    return adminRequest({
-        endpoint:
-            `/api/v1/catalog/admin/variants/${variantId}/`,
-        method: "PATCH",
-        body: {
-            stock,
-            low_stock_threshold: lowStockThreshold,
-        },
+    return updateAdminVariant(variantId, {
+        stock,
+        low_stock_threshold: lowStockThreshold,
     });
 }
 
@@ -335,6 +341,7 @@ export default function AdminInventory() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [warning, setWarning] = useState("");
+
     const [query, setQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
 
@@ -345,6 +352,11 @@ export default function AdminInventory() {
     const [savingId, setSavingId] = useState(null);
     const [rowError, setRowError] = useState("");
     const [notice, setNotice] = useState("");
+
+
+    /* =====================================================
+       LOAD INVENTORY
+    ===================================================== */
 
     const loadInventory = useCallback(async () => {
         setLoading(true);
@@ -365,6 +377,7 @@ export default function AdminInventory() {
                 MAX_CONCURRENT_REQUESTS,
                 async (product) => {
                     const productId = getProductId(product);
+
                     const variants =
                         await fetchProductVariants(productId);
 
@@ -400,20 +413,25 @@ export default function AdminInventory() {
                         id: String(variantId),
                         variantId,
                         productId: getProductId(product),
+
                         productName:
                             product?.name ??
                             product?.title ??
                             "Unnamed product",
+
                         productSlug: product?.slug ?? "",
                         category: getCategoryName(product),
                         sku: variant?.sku ?? "",
                         variantLabel: getVariantLabel(variant),
+
                         stock,
                         lowStockThreshold: threshold,
+
                         price:
                             variant?.price ??
                             product?.price ??
                             null,
+
                         status: getStockStatus(
                             stock,
                             threshold
@@ -429,7 +447,6 @@ export default function AdminInventory() {
                     `Inventory loaded partially. Could not load variants for ${failedProducts} product(s). Verify that the backend variant endpoint is available.`
                 );
             }
-
         } catch (loadError) {
             setError(getErrorMessage(loadError));
             setInventory([]);
@@ -437,6 +454,7 @@ export default function AdminInventory() {
             setLoading(false);
         }
     }, []);
+
 
     useEffect(() => {
         loadInventory();
@@ -490,12 +508,11 @@ export default function AdminInventory() {
                     item.variantLabel,
                     String(item.productId),
                     String(item.variantId),
-                ]
-                    .some((value) =>
-                        String(value ?? "")
-                            .toLowerCase()
-                            .includes(normalizedQuery)
-                    );
+                ].some((value) =>
+                    String(value ?? "")
+                        .toLowerCase()
+                        .includes(normalizedQuery)
+                );
 
             const matchesStatus =
                 statusFilter === "ALL" ||
@@ -513,9 +530,11 @@ export default function AdminInventory() {
     function startEditing(item) {
         setEditingId(item.id);
         setDraftStock(String(item.stock));
+
         setDraftThreshold(
             String(item.lowStockThreshold)
         );
+
         setRowError("");
         setNotice("");
     }
@@ -576,6 +595,7 @@ export default function AdminInventory() {
                         ...row,
                         stock,
                         lowStockThreshold: threshold,
+
                         status: getStockStatus(
                             stock,
                             threshold
@@ -591,7 +611,6 @@ export default function AdminInventory() {
             setNotice(
                 `Stock updated for ${item.productName}.`
             );
-
         } catch (saveError) {
             setRowError(getErrorMessage(saveError));
         } finally {
@@ -623,11 +642,12 @@ export default function AdminInventory() {
                     type="button"
                     className="inventory-refresh-button"
                     onClick={loadInventory}
-                    disabled={loading}
+                    disabled={loading || savingId !== null}
                 >
                     {loading ? "Loading..." : "Refresh inventory"}
                 </button>
             </header>
+
 
             {error && (
                 <div
@@ -639,11 +659,13 @@ export default function AdminInventory() {
                     <button
                         type="button"
                         onClick={loadInventory}
+                        disabled={loading}
                     >
                         Retry
                     </button>
                 </div>
             )}
+
 
             {warning && !error && (
                 <div
@@ -654,6 +676,7 @@ export default function AdminInventory() {
                 </div>
             )}
 
+
             {notice && (
                 <div
                     className="inventory-message inventory-message-success"
@@ -663,12 +686,14 @@ export default function AdminInventory() {
                 </div>
             )}
 
+
             <section
                 className="inventory-summary-grid"
                 aria-label="Inventory summary"
             >
                 <article className="inventory-summary-card">
                     <span>Variants tracked</span>
+
                     <strong>
                         {summary.totalVariants}
                     </strong>
@@ -676,6 +701,7 @@ export default function AdminInventory() {
 
                 <article className="inventory-summary-card">
                     <span>Total units in stock</span>
+
                     <strong>
                         {summary.totalStock}
                     </strong>
@@ -683,6 +709,7 @@ export default function AdminInventory() {
 
                 <article className="inventory-summary-card">
                     <span>Low stock</span>
+
                     <strong className="inventory-summary-low">
                         {summary.lowStock}
                     </strong>
@@ -690,16 +717,19 @@ export default function AdminInventory() {
 
                 <article className="inventory-summary-card">
                     <span>Out of stock</span>
+
                     <strong className="inventory-summary-out">
                         {summary.outOfStock}
                     </strong>
                 </article>
             </section>
 
+
             <section className="inventory-panel">
                 <div className="inventory-panel-header">
                     <div>
                         <h2>Stock overview</h2>
+
                         <p>
                             Search products, check availability, and edit stock levels.
                         </p>
@@ -709,6 +739,7 @@ export default function AdminInventory() {
                         {filteredInventory.length} variants
                     </span>
                 </div>
+
 
                 <div className="inventory-toolbar">
                     <input
@@ -730,12 +761,24 @@ export default function AdminInventory() {
                         }
                         aria-label="Filter inventory by stock status"
                     >
-                        <option value="ALL">All stock statuses</option>
-                        <option value="IN">In stock</option>
-                        <option value="LOW">Low stock</option>
-                        <option value="OUT">Out of stock</option>
+                        <option value="ALL">
+                            All stock statuses
+                        </option>
+
+                        <option value="IN">
+                            In stock
+                        </option>
+
+                        <option value="LOW">
+                            Low stock
+                        </option>
+
+                        <option value="OUT">
+                            Out of stock
+                        </option>
                     </select>
                 </div>
+
 
                 {rowError && (
                     <div
@@ -745,6 +788,7 @@ export default function AdminInventory() {
                         {rowError}
                     </div>
                 )}
+
 
                 <div className="inventory-table-wrapper">
                     <table className="inventory-table">
@@ -771,6 +815,7 @@ export default function AdminInventory() {
                                     </td>
                                 </tr>
                             )}
+
 
                             {!loading &&
                                 !error &&
@@ -910,6 +955,7 @@ export default function AdminInventory() {
                                         </tr>
                                     );
                                 })}
+
 
                             {!loading &&
                                 !error &&
