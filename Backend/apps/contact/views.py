@@ -5,6 +5,7 @@ from .models import ContactMessage
 from .serializers import (
     ContactMessageAdminSerializer,
     ContactMessageCreateSerializer,
+    ContactMessageReadStatusSerializer,
 )
 
 
@@ -22,7 +23,13 @@ class ContactMessageListView(generics.ListAPIView):
     queryset = ContactMessage.objects.all()
 
 
-class ContactMessageDetailView(generics.RetrieveDestroyAPIView):
+class ContactMessageDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ContactMessageAdminSerializer
     permission_classes = [IsAdminUser]
     queryset = ContactMessage.objects.all()
+    http_method_names = ["get", "patch", "delete", "head", "options"]
+
+    def get_serializer_class(self):
+        if self.request.method == "PATCH":
+            return ContactMessageReadStatusSerializer
+        return ContactMessageAdminSerializer

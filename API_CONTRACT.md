@@ -4662,20 +4662,9 @@ Order status and payment status are separate fields. Order status transitions ar
 
 **Success response:** `201 Created`
 
-```json
-{
-  "name": "Test Customer",
-  "email": "customer@example.com",
-  "subject": "Order inquiry",
-  "message": "I would like to know more about my order."
-}
-```
+A successful response contains the submitted fields. The backend associates the message with the authenticated user and sets `is_read` to `false`.
 
-**Behavior:**
-- Only authenticated users can submit messages.
-- The message is associated with the authenticated user on the backend.
-- The client cannot supply the user association or creation timestamp.
-- Required fields are validated by the serializer.
+The client cannot set the associated user, creation timestamp, or read status during submission.
 
 ### 2. List Contact Messages (Management)
 
@@ -4685,9 +4674,17 @@ Order status and payment status are separate fields. Order status transitions ar
 
 **Success response:** `200 OK`
 
-Returns a list of messages containing `id`, `name`, `email`, `subject`, `message`, and `created_at`.
+Returns messages ordered newest first. Each message contains:
 
-Messages are ordered newest first.
+- `id`
+- `name`
+- `email`
+- `subject`
+- `message`
+- `is_read`
+- `created_at`
+
+`is_read` is a Boolean: `false` means unread; `true` means read.
 
 ### 3. Retrieve a Contact Message (Management)
 
@@ -4697,9 +4694,45 @@ Messages are ordered newest first.
 
 **Success response:** `200 OK`
 
-Returns the selected message with its `id`, `name`, `email`, `subject`, `message`, and `created_at`.
+Returns the selected message, including `is_read`.
 
-### 4. Delete a Contact Message (Management)
+### 4. Update Read/Unread Status (Management)
+
+**Endpoint:** `PATCH /api/v1/contact/messages/admin/{uuid}/`
+
+**Authentication:** Staff user required (`is_staff=True`).
+
+**Purpose:** Update only the message's read/unread status.
+
+**Request body — mark as read:**
+
+```json
+{
+  "is_read": true
+}
+```
+
+**Request body — mark as unread:**
+
+```json
+{
+  "is_read": false
+}
+```
+
+**Success response:** `200 OK`
+
+Returns the updated message, including the new `is_read` value.
+
+**Validation and restrictions:**
+
+- `is_read` is required for this operation.
+- The value must be a valid Boolean.
+- Requests containing other fields, such as `subject`, `email`, or `message`, must be rejected.
+- The update is persisted in the database.
+- Only staff users may perform this operation.
+
+### 5. Delete a Contact Message (Management)
 
 **Endpoint:** `DELETE /api/v1/contact/messages/admin/{uuid}/`
 
@@ -4711,7 +4744,7 @@ Permanently deletes the selected message from the database.
 
 ### Error Handling
 
-- `400 Bad Request`: Invalid or missing input fields.
+- `400 Bad Request`: Invalid input, missing `is_read`, or attempts to modify unsupported fields.
 - `401 Unauthorized` or `403 Forbidden`: Authentication required, depending on the configured authentication classes.
 - `403 Forbidden`: Authenticated non-staff user attempts to access management endpoints.
 - `404 Not Found`: Requested message does not exist.
