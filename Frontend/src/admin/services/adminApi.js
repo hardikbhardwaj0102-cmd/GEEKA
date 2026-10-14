@@ -26,7 +26,7 @@ const ENDPOINTS = {
     orders: "",
     customers: "",
     reviews: "",
-    messages: "",
+    messages: "/api/v1/contact/messages/admin/",
 };
 
 
