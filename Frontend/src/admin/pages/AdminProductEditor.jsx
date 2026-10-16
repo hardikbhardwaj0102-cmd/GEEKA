@@ -82,7 +82,11 @@ function normalizeImages(data) {
     const product = data?.product || data || {};
     return Array.isArray(product?.images)
         ? product.images
-        : [];
+        : Array.isArray(data?.results)
+            ? data.results
+            : Array.isArray(data)
+                ? data
+                : [];
 }
 
 function normalizeCategories(data) {
@@ -392,6 +396,22 @@ async function getAdminProductImages(
     );
 }
 
+async function updateAdminProductImage(imageId, payload) {
+    if (!imageId) throw new Error("An image ID is required.");
+    return catalogAdminRequest(
+        `/api/v1/catalog/admin/images/${imageId}/`,
+        { method: "PATCH", body: JSON.stringify(payload) }
+    );
+}
+
+async function deleteAdminProductImage(imageId) {
+    if (!imageId) throw new Error("An image ID is required.");
+    return catalogAdminRequest(
+        `/api/v1/catalog/admin/images/${imageId}/`,
+        { method: "DELETE" }
+    );
+}
+
 async function createAdminProductVariant(
     productId,
     payload
@@ -411,7 +431,7 @@ async function updateAdminProductVariant(
     payload
 ) {
     return catalogAdminRequest(
-        `/api/v1/catalog/admin/products/${productId}/variants/${variantId}/`,
+        `/api/v1/catalog/admin/variants/${variantId}/`,
         {
             method: "PATCH",
             body: JSON.stringify(payload),
@@ -576,6 +596,9 @@ export default function AdminProductEditor() {
 
     const [uploading, setUploading] =
         useState(false);
+
+    const [imageActionId, setImageActionId] =
+        useState("");
 
     const [creatingAttribute, setCreatingAttribute] =
         useState(false);
@@ -1534,6 +1557,80 @@ export default function AdminProductEditor() {
                     Number(item.id)
                 )
         ).length;
+    }
+
+    async function handleImageAction(image, action, index) {
+        if (!image?.id) {
+            setError("This image does not have a valid backend ID.");
+            return;
+        }
+
+        setError("");
+        setSuccess("");
+        setImageActionId(image.id);
+
+        try {
+            if (action === "delete") {
+                const confirmed = window.confirm(
+                    "Permanently delete this product image? This cannot be undone."
+                );
+                if (!confirmed) return;
+                await deleteAdminProductImage(image.id);
+                setImages((current) => current.filter((item) => item.id !== image.id));
+                setSuccess("Product image deleted.");
+                return;
+            }
+
+            let payload = {};
+            if (action === "primary") {
+                if (!image.is_active) {
+                    throw new Error("Activate this image before setting it as primary.");
+                }
+                payload = { is_primary: true };
+            } else if (action === "toggle-active") {
+                const isActive = !image.is_active;
+                if (!isActive && image.is_primary) {
+                    throw new Error("Choose another primary image before deactivating this one.");
+                }
+                payload = { is_active: isActive };
+            } else if (action === "move-up" || action === "move-down") {
+                const sorted = [...images].sort(
+                    (a, b) => Number(a.display_order || 0) - Number(b.display_order || 0)
+                );
+                const currentIndex = sorted.findIndex((item) => item.id === image.id);
+                const targetIndex = action === "move-up" ? currentIndex - 1 : currentIndex + 1;
+                if (targetIndex < 0 || targetIndex >= sorted.length) return;
+
+                const currentOrder = Number(sorted[currentIndex].display_order ?? currentIndex);
+                const targetOrder = Number(sorted[targetIndex].display_order ?? targetIndex);
+                await updateAdminProductImage(image.id, { display_order: targetOrder });
+                await updateAdminProductImage(sorted[targetIndex].id, { display_order: currentOrder });
+                setImages((current) => current.map((item) => {
+                    if (item.id === image.id) return { ...item, display_order: targetOrder };
+                    if (item.id === sorted[targetIndex].id) return { ...item, display_order: currentOrder };
+                    return item;
+                }).sort((a, b) => Number(a.display_order || 0) - Number(b.display_order || 0)));
+                setSuccess("Image order updated.");
+                return;
+            }
+
+            const response = await updateAdminProductImage(image.id, payload);
+            const savedImage = response?.image || response?.data || response || {};
+            setImages((current) => current.map((item) => {
+                if (item.id === image.id) return { ...item, ...savedImage };
+                if (action === "primary") return { ...item, is_primary: false };
+                return item;
+            }).sort((a, b) => Number(a.display_order || 0) - Number(b.display_order || 0)));
+
+            setSuccess(
+                action === "primary" ? "Primary image updated." :
+                payload.is_active ? "Image activated." : "Image deactivated."
+            );
+        } catch (requestError) {
+            setError(getApiErrorMessage(requestError));
+        } finally {
+            setImageActionId("");
+        }
     }
 
     async function handleImageSelection(
@@ -2731,14 +2828,33 @@ export default function AdminProductEditor() {
 
                                         <div className="admin-gallery-meta">
                                             {image.is_primary ? (
-                                                <span className="admin-gallery-primary-label">
-                                                    PRIMARY
-                                                </span>
+                                                <span className="admin-gallery-primary-label">PRIMARY</span>
                                             ) : (
-                                                <span>
-                                                    Image
-                                                </span>
+                                                <button type="button" className="admin-gallery-action"
+                                                    onClick={() => handleImageAction(image, "primary", index)}
+                                                    disabled={Boolean(imageActionId)}>
+                                                    Set primary
+                                                </button>
                                             )}
+                                            <span className={image.is_active ? "admin-image-status is-active" : "admin-image-status"}>
+                                                {image.is_active ? "Active" : "Hidden"}
+                                            </span>
+                                        </div>
+                                        <div className="admin-gallery-controls">
+                                            <button type="button" className="admin-gallery-action"
+                                                onClick={() => handleImageAction(image, "move-up", index)}
+                                                disabled={Boolean(imageActionId) || index === 0}>Move up</button>
+                                            <button type="button" className="admin-gallery-action"
+                                                onClick={() => handleImageAction(image, "move-down", index)}
+                                                disabled={Boolean(imageActionId) || index === images.length - 1}>Move down</button>
+                                            <button type="button" className="admin-gallery-action"
+                                                onClick={() => handleImageAction(image, "toggle-active", index)}
+                                                disabled={Boolean(imageActionId) || (image.is_primary && image.is_active)}>
+                                                {image.is_active ? "Hide" : "Activate"}
+                                            </button>
+                                            <button type="button" className="admin-gallery-action is-danger"
+                                                onClick={() => handleImageAction(image, "delete", index)}
+                                                disabled={Boolean(imageActionId)}>Delete</button>
                                         </div>
                                     </div>
                                 )
