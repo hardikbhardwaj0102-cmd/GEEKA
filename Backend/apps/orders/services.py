@@ -270,16 +270,17 @@ def create_order_from_cart(
 
 
 @transaction.atomic
-def cancel_order(*, order_id, customer):
+def cancel_order(*, order_id, customer=None):
     """
     Cancel an eligible unpaid order and restore its stock exactly once.
     """
     try:
-        order = (
-            Order.objects
-            .select_for_update()
-            .get(id=order_id, customer=customer)
-        )
+        orders = Order.objects.select_for_update()
+
+        if customer is not None:
+            orders = orders.filter(customer=customer)
+
+        order = orders.get(id=order_id)
     except Order.DoesNotExist:
         raise ValidationError("Order not found.")
 

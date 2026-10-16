@@ -4452,7 +4452,7 @@ The following limitations are important when integrating this endpoint:
 - The endpoint creates an order from the authenticated customer's account cart; it does not accept a guest cart.
 - Sequential idempotent retries are supported, but simultaneous duplicate requests need additional concurrency hardening.
 - Stock is deducted at order creation, not at payment confirmation.
-- No order cancellation, order history, order-detail, or payment-processing endpoints are documented here because those API capabilities have not yet been implemented and verified.
+- Customer order cancellation, order history, and order-detail endpoints are documented in Sections 5.2 and 5.3. Staff-only order management endpoints are documented in Section 5.5. Payment-processing endpoints have not yet been implemented.
 
 These limitations must be resolved or explicitly addressed in the remaining Phase 5 work before the complete checkout and order lifecycle can be considered production-ready.
 
@@ -4610,7 +4610,7 @@ The abbreviated nested objects above represent the response structure; consult t
 
 ## 5.4 Order Status Lifecycle
 
-Order status and payment status are separate fields. Order status transitions are validated by the backend service and can be initiated through the Django Admin action available to authorized staff.
+Order status transitions are validated by the backend service and can be initiated by authorized staff through the Django Admin action or the staff-only Admin Orders REST API documented in Section 5.5. Customers cannot directly update order status.
 
 ### Allowed Order Status Transitions
 
@@ -4635,13 +4635,242 @@ Order status and payment status are separate fields. Order status transitions ar
 
 ### Current Limitations
 
-- No public REST API endpoint for order-status transitions is currently documented or implemented.
+- No customer-facing REST API endpoint for modifying order status is implemented. Status updates through the REST API are restricted to authorized staff using the Admin Orders endpoint documented in Section 5.5.
 - Payment gateway verification, payment webhooks, refunds, and payment-failure handling remain outside the current implementation.
 - Automated tests for all valid and invalid lifecycle transitions must be completed before considering the workflow fully verified.
 
 
 
-## 5.5 Contact Messages
+## 5.5 Admin Order Management
+
+This section documents the staff-only REST endpoints for viewing and managing customer orders. These endpoints are intended for the GEEKA management dashboard and are separate from the customer-facing order APIs.
+
+All endpoints require an authenticated staff user. The backend validates order-status transitions and cancellation eligibility; the frontend must not bypass these business rules.
+
+### Authentication and Request Security
+
+Authentication: Required — Django session authentication.
+
+Authorization: Staff user required (`is_staff=True`), enforced through the admin API permission configuration.
+
+Content-Type: `application/json` for requests with a JSON body.
+
+CSRF: State-changing requests must include the appropriate CSRF token according to the project's session and CSRF configuration.
+
+The frontend must maintain the authorized staff session. An authenticated customer who is not a staff user must not be allowed to access these endpoints.
+
+### 5.5.1 List and Filter Orders
+
+**Endpoint:** `GET /api/v1/orders/admin/`
+
+**Purpose:** Retrieves a paginated list of customer orders for management purposes.
+
+**Request body:** None.
+
+**Query parameters:**
+
+| Parameter | Required | Default | Description |
+|---|---|---|---|
+| `page` | No | `1` | Page number, starting at 1. |
+| `page_size` | No | `10` | Number of orders per page; maximum 50. |
+| `search` | No | None | Searches by order number, contact name, contact email, order UUID, or customer UUID. |
+| `status` | No | None | Filters by order status. |
+| `payment_status` | No | None | Filters by payment status. |
+| `date_from` | No | None | Filters orders from the specified date. |
+| `date_to` | No | None | Filters orders through the specified date. |
+
+Use `YYYY-MM-DD` for date filter values.
+
+Order status values:
+
+- `PENDING`
+- `CONFIRMED`
+- `PROCESSING`
+- `SHIPPED`
+- `DELIVERED`
+- `CANCELLED`
+
+Payment status values:
+
+- `PENDING`
+- `PAID`
+- `FAILED`
+- `REFUNDED`
+
+Search and filters can be combined. For example:
+
+`GET /api/v1/orders/admin/?status=PENDING&payment_status=PENDING&page=1&page_size=10`
+
+**Success response — 200 OK**
+
+Returns a paginated response containing the total matching order count, pagination links, and the order records on the requested page.
+
+Example response structure:
+
+```json
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "order-uuid",
+      "order_number": "GK-XXXXXXXXXXXX",
+      "status": "PENDING",
+      "payment_status": "PENDING"
+    }
+  ]
+}
+```
+
+The example shows the principal fields only. The actual order records contain the fields returned by the implemented admin list view.
+
+**Behavior and rules:**
+
+- Results include orders across customers, subject to staff authorization.
+- Search and filters are applied by the backend.
+- Pagination defaults to 10 orders per page, with a maximum page size of 50.
+- Invalid filter values must not be treated as successful filter matches without validation.
+- The client must use the order UUID for detail, status-update, and cancellation endpoints. The human-readable `order_number` is not the URL identifier.
+
+### 5.5.2 Retrieve Order Details
+
+**Endpoint:** `GET /api/v1/orders/admin/{order_uuid}/`
+
+**Purpose:** Retrieves the saved details of a specific order, including its associated customer identifier.
+
+**Request body:** None.
+
+**Success response — 200 OK**
+
+```json
+{
+  "order": {
+    "id": "order-uuid",
+    "order_number": "GK-XXXXXXXXXXXX",
+    "status": "PROCESSING",
+    "payment_status": "PENDING",
+    "contact": {
+      "name": "Test Customer",
+      "email": "customer@example.com",
+      "phone": "9876543210"
+    },
+    "delivery_address": {},
+    "items": [],
+    "subtotal": "1000.00",
+    "shipping_fee": "0.00",
+    "discount_amount": "0.00",
+    "total": "1000.00",
+    "currency": "INR",
+    "created_at": "2026-10-13T10:42:25.891868+00:00",
+    "customer_id": "customer-uuid"
+  }
+}
+```
+
+The example is illustrative. The actual response contains the saved delivery-address fields and order-item snapshots, including product name, SKU, variant details, unit price, quantity, line total, and currency.
+
+**Error responses:**
+
+- `404 Not Found`: The requested order does not exist.
+- `403 Forbidden`: The requester is not authorized to access staff endpoints.
+
+### 5.5.3 Update Order Status
+
+**Endpoint:** `PATCH /api/v1/orders/admin/{order_uuid}/status/`
+
+**Purpose:** Updates the fulfillment status of an existing order through the backend transition service.
+
+**Request body:**
+
+```json
+{
+  "status": "CONFIRMED"
+}
+```
+
+The `status` field is required and must contain a supported next status.
+
+**Allowed fulfilment transitions:**
+
+| Current Status | Allowed Next Status |
+|---|---|
+| `PENDING` | `CONFIRMED` |
+| `CONFIRMED` | `PROCESSING` |
+| `PROCESSING` | `SHIPPED` |
+| `SHIPPED` | `DELIVERED` |
+
+Cancellation must use the dedicated cancellation endpoint documented in Section 5.5.4. It must not be performed through this status-update endpoint.
+
+**Success response — 200 OK**
+
+```json
+{
+  "id": "order-uuid",
+  "order_number": "GK-XXXXXXXXXXXX",
+  "status": "CONFIRMED",
+  "payment_status": "PENDING"
+}
+```
+
+**Behavior and rules:**
+
+- Only authorized staff can update order status through this endpoint.
+- The backend validates each transition using the existing order transition service.
+- Invalid, backward, and skipped transitions are rejected.
+- Updating fulfillment status does not automatically update payment status or inventory.
+- The frontend must display the status returned by the backend rather than assuming the requested transition succeeded.
+
+**Error responses:**
+
+- `400 Bad Request`: Invalid request data, unsupported status, or an invalid transition.
+- `404 Not Found`: The requested order does not exist.
+- `403 Forbidden`: The requester is not authorized to access staff endpoints.
+
+### 5.5.4 Cancel an Order
+
+**Endpoint:** `POST /api/v1/orders/admin/{order_uuid}/cancel/`
+
+**Purpose:** Allows authorized staff to cancel an eligible order.
+
+**Request body:** None.
+
+**Success response — 200 OK**
+
+```json
+{
+  "id": "order-uuid",
+  "order_number": "GK-XXXXXXXXXXXX",
+  "status": "CANCELLED",
+  "payment_status": "PENDING"
+}
+```
+
+**Cancellation rules:**
+
+- The order must have `PENDING` status.
+- The payment status must be `PENDING`.
+- Orders that have already progressed beyond `PENDING` cannot be cancelled through this endpoint.
+- Successful cancellation restores stock for existing product variants associated with the order.
+- Cancellation and stock restoration are performed within a database transaction.
+- Repeated cancellation is rejected so that stock is not restored twice.
+- The endpoint does not process refunds, cancel shipments, or update payment status.
+
+**Error responses:**
+
+- `400 Bad Request`: The order is not eligible for cancellation, has already been cancelled, or the cancellation service returns a validation error.
+- `403 Forbidden`: The requester is not authorized to access staff endpoints.
+
+The current cancellation service reports an unknown order as a validation error. Unless the view explicitly maps that error to a not-found response, the cancellation endpoint may return `400 Bad Request` for an unknown order UUID.
+
+### Admin Order Management Limitations
+
+The current implementation supports order listing, searching, filtering, order-detail retrieval, fulfillment-status transitions, and eligible unpaid-order cancellation.
+
+Payment gateway integration, payment verification, refunds, shipment integration, and payment-failure inventory handling are not implemented. Updating fulfillment status must not be treated as evidence that payment has succeeded.
+
+
+## 5.6 Contact Messages
 
 ### 1. Submit a Contact Message
 
