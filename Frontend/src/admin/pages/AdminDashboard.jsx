@@ -3,10 +3,13 @@ import { Link, useOutletContext } from "react-router-dom";
 
 import {
     getAdminCollection,
+    getAdminProducts,
+    getAdminProductVariants,
     isEndpointConfigured,
 } from "../services/adminApi";
 
 import "../style/AdminPages.css";
+import "../style/AdminDashboard.css";
 
 
 function MetricCard({ label, value, note, tone = "neutral" }) {
@@ -25,6 +28,8 @@ function extractList(data) {
     if (Array.isArray(data?.results)) return data.results;
     if (Array.isArray(data?.items)) return data.items;
     if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.variants)) return data.variants;
+    if (Array.isArray(data?.products)) return data.products;
     return [];
 }
 
@@ -41,8 +46,144 @@ function countValue(data) {
 }
 
 
+function getStockValue(variant) {
+    const value = variant?.stock ?? variant?.stock_quantity ?? variant?.quantity ?? variant?.inventory_quantity;
+    const number = Number(value);
+    return Number.isFinite(number) && value !== null && value !== "" ? Math.max(0, number) : null;
+}
+
+
+function getThreshold(variant) {
+    const value = variant?.low_stock_threshold ?? variant?.low_stock_alert ?? variant?.low_stock_limit ?? 5;
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, number) : 5;
+}
+
+
+function getProductName(product) {
+    return product?.name || product?.title || product?.product_name || "Unnamed product";
+}
+
+
+function getVariantLabel(variant) {
+    return (
+        variant?.name ||
+        variant?.variant_name ||
+        variant?.sku ||
+        variant?.label ||
+        "Product variant"
+    );
+}
+
+
+function getVariantId(variant, index) {
+    return variant?.id ?? variant?.uuid ?? variant?.sku ?? `${getVariantLabel(variant)}-${index}`;
+}
+
+
+function InventorySummary({ inventory, loading, error }) {
+    const metrics = inventory || {
+        variants: null,
+        units: null,
+        lowStock: null,
+        outOfStock: null,
+        rows: [],
+    };
+
+    return (
+        <section className="admin-inventory-overview">
+            <div className="admin-inventory-overview-heading">
+                <div>
+                    <div className="admin-eyebrow">STOCK CONTROL</div>
+                    <h3>Inventory overview</h3>
+                    <p>Keep track of available stock and variants that need attention.</p>
+                </div>
+                <Link to="/admin/inventory" className="admin-inventory-view-link">
+                    Manage inventory <span aria-hidden="true">→</span>
+                </Link>
+            </div>
+
+            {error && (
+                <div className="admin-inventory-inline-notice" role="status">
+                    {error}
+                </div>
+            )}
+
+            <div className="admin-inventory-metric-grid">
+                <article className="admin-inventory-metric">
+                    <span className="admin-inventory-metric-label">Variants tracked</span>
+                    <strong>{loading ? "…" : metrics.variants ?? "—"}</strong>
+                    <small>Product options in the catalogue</small>
+                </article>
+                <article className="admin-inventory-metric">
+                    <span className="admin-inventory-metric-label">Units in stock</span>
+                    <strong>{loading ? "…" : metrics.units ?? "—"}</strong>
+                    <small>Total available quantity</small>
+                </article>
+                <article className="admin-inventory-metric admin-inventory-metric-warning">
+                    <span className="admin-inventory-metric-label">Low stock</span>
+                    <strong>{loading ? "…" : metrics.lowStock ?? "—"}</strong>
+                    <small>At or below the alert threshold</small>
+                </article>
+                <article className="admin-inventory-metric admin-inventory-metric-danger">
+                    <span className="admin-inventory-metric-label">Out of stock</span>
+                    <strong>{loading ? "…" : metrics.outOfStock ?? "—"}</strong>
+                    <small>Variants with no available units</small>
+                </article>
+            </div>
+
+            <div className="admin-inventory-recent">
+                <div className="admin-inventory-recent-heading">
+                    <div>
+                        <h4>Stock needing attention</h4>
+                        <p>Low-stock and unavailable variants from your catalogue.</p>
+                    </div>
+                    <span className="admin-inventory-recent-count">
+                        {loading ? "Loading" : `${metrics.rows.length} shown`}
+                    </span>
+                </div>
+
+                {loading ? (
+                    <div className="admin-inventory-empty">Loading inventory data…</div>
+                ) : metrics.rows.length === 0 ? (
+                    <div className="admin-inventory-empty">
+                        {error
+                            ? "Inventory data could not be loaded. Use Manage inventory to check stock directly."
+                            : "Everything looks good. No low-stock or out-of-stock variants were found."}
+                    </div>
+                ) : (
+                    <div className="admin-inventory-attention-list">
+                        {metrics.rows.slice(0, 5).map((row) => (
+                            <div className="admin-inventory-attention-row" key={row.key}>
+                                <div className="admin-inventory-attention-product">
+                                    <strong>{row.productName}</strong>
+                                    <span>{row.variantLabel}</span>
+                                </div>
+                                <span
+                                    className={`admin-inventory-status ${row.stock === 0 ? "is-out" : "is-low"}`}
+                                >
+                                    {row.stock === 0 ? "Out of stock" : "Low stock"}
+                                </span>
+                                <strong className="admin-inventory-attention-quantity">
+                                    {row.stock} left
+                                </strong>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <div className="admin-inventory-recent-footer">
+                    <Link to="/admin/inventory">Open full inventory <span aria-hidden="true">→</span></Link>
+                </div>
+            </div>
+        </section>
+    );
+}
+
+
 export default function AdminDashboard() {
-    const { user } = useOutletContext();
+    const outletContext = useOutletContext() || {};
+    const user = outletContext.user;
 
     const [data, setData] = useState({
         products: null,
@@ -55,25 +196,90 @@ export default function AdminDashboard() {
     });
 
     const [loading, setLoading] = useState(false);
+    const [inventoryLoading, setInventoryLoading] = useState(false);
     const [errors, setErrors] = useState({});
+    const [inventoryError, setInventoryError] = useState("");
 
-    const loadDashboard = useCallback(async () => {
-        const keys = [
-            "products",
-            "categories",
-            "inventory",
-            "orders",
-            "customers",
-            "reviews",
-            "messages",
-        ];
-
-        const configured = keys.filter(isEndpointConfigured);
-
-        if (!configured.length) {
-            setLoading(false);
+    const loadInventory = useCallback(async () => {
+        if (!isEndpointConfigured("products")) {
+            setInventoryError("Product API is not configured, so inventory totals are unavailable.");
+            setData((current) => ({ ...current, inventory: null }));
             return;
         }
+
+        setInventoryLoading(true);
+        setInventoryError("");
+
+        try {
+            const productsResponse = await getAdminProducts();
+            const products = extractList(productsResponse);
+
+            const variantResponses = await Promise.allSettled(
+                products.map(async (product) => {
+                    const productId = product?.id ?? product?.uuid;
+                    if (!productId) return { product, variants: [] };
+                    const response = await getAdminProductVariants(productId);
+                    return { product, variants: extractList(response) };
+                })
+            );
+
+            const allVariants = [];
+            let failedProducts = 0;
+
+            variantResponses.forEach((result) => {
+                if (result.status !== "fulfilled") {
+                    failedProducts += 1;
+                    return;
+                }
+
+                const { product, variants } = result.value;
+                variants.forEach((variant, index) => {
+                    const stock = getStockValue(variant);
+                    const threshold = getThreshold(variant);
+                    allVariants.push({
+                        key: `${product?.id ?? product?.uuid ?? getProductName(product)}-${getVariantId(variant, index)}`,
+                        productName: getProductName(product),
+                        variantLabel: getVariantLabel(variant),
+                        stock,
+                        threshold,
+                    });
+                });
+            });
+
+            const knownStockVariants = allVariants.filter((variant) => variant.stock !== null);
+            const lowStockRows = knownStockVariants
+                .filter((variant) => variant.stock > 0 && variant.stock <= variant.threshold)
+                .sort((a, b) => a.stock - b.stock);
+            const outOfStockRows = knownStockVariants
+                .filter((variant) => variant.stock === 0);
+
+            const inventory = {
+                variants: allVariants.length,
+                units: knownStockVariants.reduce((total, variant) => total + variant.stock, 0),
+                lowStock: lowStockRows.length,
+                outOfStock: outOfStockRows.length,
+                rows: [...outOfStockRows, ...lowStockRows],
+            };
+
+            setData((current) => ({ ...current, inventory }));
+            if (failedProducts > 0) {
+                setInventoryError(
+                    `Some product variants could not be loaded (${failedProducts} product${failedProducts === 1 ? "" : "s"}). Counts may be incomplete.`
+                );
+            } else if (allVariants.length > 0 && knownStockVariants.length === 0) {
+                setInventoryError("Variants loaded, but no recognized stock quantity field was returned by the API.");
+            }
+        } catch (error) {
+            setData((current) => ({ ...current, inventory: null }));
+            setInventoryError(error?.message || "Unable to load inventory data.");
+        } finally {
+            setInventoryLoading(false);
+        }
+    }, []);
+
+    const loadDashboard = useCallback(async () => {
+        const keys = ["products", "categories", "orders", "customers", "reviews", "messages"];
+        const configured = keys.filter(isEndpointConfigured);
 
         setLoading(true);
         setErrors({});
@@ -99,7 +305,8 @@ export default function AdminDashboard() {
         setData((current) => ({ ...current, ...nextData }));
         setErrors(nextErrors);
         setLoading(false);
-    }, []);
+        await loadInventory();
+    }, [loadInventory]);
 
     useEffect(() => {
         loadDashboard();
@@ -114,7 +321,7 @@ export default function AdminDashboard() {
     const recentOrders = extractList(data.orders).slice(0, 5);
 
     return (
-        <div className="admin-page">
+        <div className="admin-page admin-dashboard-page">
             <section className="admin-hero-card">
                 <div>
                     <div className="admin-eyebrow">STORE CONTROL CENTER</div>
@@ -145,9 +352,9 @@ export default function AdminDashboard() {
                         type="button"
                         className="admin-text-button"
                         onClick={loadDashboard}
-                        disabled={loading}
+                        disabled={loading || inventoryLoading}
                     >
-                        {loading ? "Refreshing..." : "Refresh"}
+                        {loading || inventoryLoading ? "Refreshing..." : "Refresh"}
                     </button>
                 </div>
 
@@ -165,22 +372,23 @@ export default function AdminDashboard() {
                     <MetricCard
                         label="Orders"
                         value={countValue(data.orders)}
-                        note={errors.orders || "From order API"}
+                        note={errors.orders || (isEndpointConfigured("orders") ? "From order API" : "Orders API not configured")}
                     />
                     <MetricCard
                         label="Customers"
                         value={countValue(data.customers)}
-                        note={errors.customers || "From customer API"}
+                        note={errors.customers || (isEndpointConfigured("customers") ? "From customer API" : "Customers API not configured")}
                     />
                     <MetricCard
-                        label="Inventory"
-                        value={countValue(data.inventory)}
-                        note={errors.inventory || "Stock source of truth is Django"}
+                        label="Inventory variants"
+                        value={data.inventory?.variants ?? "—"}
+                        note={inventoryError || "Live product-variant stock data"}
+                        tone={inventoryError ? "soft" : "neutral"}
                     />
                     <MetricCard
                         label="Reviews"
                         value={countValue(data.reviews)}
-                        note={errors.reviews || "From moderation API"}
+                        note={errors.reviews || (isEndpointConfigured("reviews") ? "From moderation API" : "Reviews API not configured")}
                         tone="soft"
                     />
                     <MetricCard
@@ -191,6 +399,12 @@ export default function AdminDashboard() {
                     />
                 </div>
             </section>
+
+            <InventorySummary
+                inventory={data.inventory}
+                loading={inventoryLoading}
+                error={inventoryError}
+            />
 
             <section className="admin-dashboard-two-column">
                 <div className="admin-panel-card">
@@ -205,7 +419,7 @@ export default function AdminDashboard() {
                     {!isEndpointConfigured("messages") ? (
                         <EmptyState
                             title="Messages API not connected"
-                            text="Add the finalized contact-message endpoint when your Django API contract is ready."
+                            text="Configure the contact-message endpoint to show customer enquiries here."
                         />
                     ) : recentMessages.length === 0 ? (
                         <EmptyState
@@ -220,7 +434,7 @@ export default function AdminDashboard() {
                                         <strong>{item.name || item.email || "Customer"}</strong>
                                         <span>{item.subject || item.title || "Website enquiry"}</span>
                                     </div>
-                                    <small>{item.status || "NEW"}</small>
+                                    <small>{item.is_read ? "READ" : "UNREAD"}</small>
                                 </div>
                             ))}
                         </div>
@@ -239,7 +453,7 @@ export default function AdminDashboard() {
                     {!isEndpointConfigured("orders") ? (
                         <EmptyState
                             title="Orders API not connected"
-                            text="Connect the finalized Django order endpoint to populate this panel."
+                            text="Connect the order endpoint to populate this panel."
                         />
                     ) : recentOrders.length === 0 ? (
                         <EmptyState

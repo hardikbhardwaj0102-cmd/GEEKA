@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
@@ -6,10 +5,12 @@ import {
     getAdminResource,
     isEndpointConfigured,
     deleteAdminResource,
+    updateAdminMessageReadStatus,
 } from "../services/adminApi";
 
 import "../style/AdminPages.css";
 import "../style/AdminMessages.css";
+
 
 function listFromData(data) {
     if (Array.isArray(data)) return data;
@@ -17,6 +18,7 @@ function listFromData(data) {
     if (Array.isArray(data?.messages)) return data.messages;
     return null;
 }
+
 
 function normalizeMessage(message) {
     return {
@@ -26,8 +28,10 @@ function normalizeMessage(message) {
         subject: message?.subject || "Website enquiry",
         body: message?.message || "",
         createdAt: message?.created_at || null,
+        isRead: message?.is_read === true,
     };
 }
+
 
 function formatDate(value) {
     if (!value) return "Date unavailable";
@@ -45,6 +49,7 @@ function formatDate(value) {
     });
 }
 
+
 function formatDateTime(value) {
     if (!value) return "Date unavailable";
 
@@ -60,6 +65,7 @@ function formatDateTime(value) {
     });
 }
 
+
 function getErrorMessage(error) {
     if (error?.status === 401) {
         return "Your session has expired. Please sign in again.";
@@ -72,13 +78,16 @@ function getErrorMessage(error) {
     return error?.message || "Unable to complete the request.";
 }
 
+
 export default function AdminMessages() {
     const [messages, setMessages] = useState([]);
     const [selectedId, setSelectedId] = useState(null);
     const [query, setQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
     const [loading, setLoading] = useState(true);
     const [detailLoading, setDetailLoading] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [statusUpdatingId, setStatusUpdatingId] = useState(null);
     const [error, setError] = useState("");
     const [detailError, setDetailError] = useState("");
     const [success, setSuccess] = useState("");
@@ -128,6 +137,73 @@ export default function AdminMessages() {
         loadMessages();
     }, [loadMessages]);
 
+    const updateReadStatus = useCallback(async (message, isRead, options = {}) => {
+        if (!message?.id || statusUpdatingId != null) return;
+
+        const messageId = message.id;
+        const previousReadStatus = message.isRead;
+
+        setStatusUpdatingId(String(messageId));
+        setError("");
+        setDetailError("");
+        setSuccess("");
+
+        // Update the interface immediately; revert it if the server rejects the change.
+        setMessages((current) =>
+            current.map((item) =>
+                String(item.id) === String(messageId)
+                    ? { ...item, isRead }
+                    : item
+            )
+        );
+
+        try {
+            const response = await updateAdminMessageReadStatus(
+                messageId,
+                isRead
+            );
+
+            const returnedMessage = response?.message || response;
+            const serverHasReadStatus =
+                returnedMessage &&
+                typeof returnedMessage === "object" &&
+                typeof returnedMessage.is_read === "boolean";
+
+            setMessages((current) =>
+                current.map((item) =>
+                    String(item.id) === String(messageId)
+                        ? {
+                              ...item,
+                              isRead: serverHasReadStatus
+                                  ? returnedMessage.is_read
+                                  : isRead,
+                          }
+                        : item
+                )
+            );
+
+            if (options.notify !== false) {
+                setSuccess(
+                    isRead
+                        ? "Message marked as read."
+                        : "Message marked as unread."
+                );
+            }
+        } catch (requestError) {
+            setMessages((current) =>
+                current.map((item) =>
+                    String(item.id) === String(messageId)
+                        ? { ...item, isRead: previousReadStatus }
+                        : item
+                )
+            );
+
+            setDetailError(getErrorMessage(requestError));
+        } finally {
+            setStatusUpdatingId(null);
+        }
+    }, [statusUpdatingId]);
+
     useEffect(() => {
         if (selectedId == null) {
             setDetailError("");
@@ -148,14 +224,12 @@ export default function AdminMessages() {
                 );
 
                 if (!cancelled) {
-                    const message = normalizeMessage(
-                        data?.message || data
-                    );
+                    const message = normalizeMessage(data?.message || data);
 
                     setMessages((current) =>
                         current.map((item) =>
                             String(item.id) === String(message.id)
-                                ? { ...item, ...message }
+                                ? { ...item, ...message, isRead: item.isRead }
                                 : item
                         )
                     );
@@ -178,24 +252,36 @@ export default function AdminMessages() {
         };
     }, [selectedId]);
 
+    const unreadCount = useMemo(
+        () => messages.filter((message) => !message.isRead).length,
+        [messages]
+    );
+
     const filtered = useMemo(() => {
         const search = query.trim().toLowerCase();
 
-        if (!search) return messages;
+        return messages.filter((message) => {
+            const matchesStatus =
+                statusFilter === "all" ||
+                (statusFilter === "unread" && !message.isRead) ||
+                (statusFilter === "read" && message.isRead);
 
-        return messages.filter((message) =>
-            [
-                message.name,
-                message.email,
-                message.subject,
-                message.body,
-            ]
-                .filter(Boolean)
-                .join(" ")
-                .toLowerCase()
-                .includes(search)
-        );
-    }, [messages, query]);
+            const matchesSearch =
+                !search ||
+                [
+                    message.name,
+                    message.email,
+                    message.subject,
+                    message.body,
+                ]
+                    .filter(Boolean)
+                    .join(" ")
+                    .toLowerCase()
+                    .includes(search);
+
+            return matchesStatus && matchesSearch;
+        });
+    }, [messages, query, statusFilter]);
 
     const selected = useMemo(
         () =>
@@ -205,6 +291,17 @@ export default function AdminMessages() {
             ) || null,
         [messages, selectedId]
     );
+
+    function handleSelectMessage(message) {
+        setSelectedId(message.id);
+        setDetailError("");
+        setSuccess("");
+
+        // Opening an unread message marks it as read on the backend.
+        if (!message.isRead && statusUpdatingId == null) {
+            updateReadStatus(message, true, { notify: false });
+        }
+    }
 
     async function handleDelete() {
         if (!selected?.id || deleting) return;
@@ -264,7 +361,7 @@ export default function AdminMessages() {
     }
 
     return (
-        <div className="admin-page">
+        <div className="admin-page admin-messages-page">
             <section className="admin-page-toolbar">
                 <div>
                     <div className="admin-eyebrow">
@@ -286,6 +383,21 @@ export default function AdminMessages() {
                 </button>
             </section>
 
+            <section className="admin-message-stats" aria-label="Message summary">
+                <div className="admin-message-stat">
+                    <span>Total messages</span>
+                    <strong>{messages.length}</strong>
+                </div>
+                <div className="admin-message-stat">
+                    <span>Unread</span>
+                    <strong>{unreadCount}</strong>
+                </div>
+                <div className="admin-message-stat">
+                    <span>Read</span>
+                    <strong>{messages.length - unreadCount}</strong>
+                </div>
+            </section>
+
             {error && (
                 <div className="admin-error-banner" role="alert">
                     {error}
@@ -304,16 +416,37 @@ export default function AdminMessages() {
                         <input
                             className="admin-search-input"
                             value={query}
-                            onChange={(event) =>
-                                setQuery(event.target.value)
-                            }
+                            onChange={(event) => setQuery(event.target.value)}
                             placeholder="Search by name, email or subject..."
                             aria-label="Search customer messages"
                         />
 
                         <span className="admin-message-count">
-                            {filtered.length} messages
+                            {filtered.length} {filtered.length === 1 ? "message" : "messages"}
                         </span>
+                    </div>
+
+                    <div className="admin-message-status-filters" aria-label="Filter messages">
+                        {[
+                            { value: "all", label: "All", count: messages.length },
+                            { value: "unread", label: "Unread", count: unreadCount },
+                            { value: "read", label: "Read", count: messages.length - unreadCount },
+                        ].map((filter) => (
+                            <button
+                                type="button"
+                                key={filter.value}
+                                className={`admin-message-filter-chip ${
+                                    statusFilter === filter.value
+                                        ? "admin-message-filter-chip-active"
+                                        : ""
+                                }`}
+                                onClick={() => setStatusFilter(filter.value)}
+                                aria-pressed={statusFilter === filter.value}
+                            >
+                                {filter.label}
+                                <span>{filter.count}</span>
+                            </button>
+                        ))}
                     </div>
 
                     <div className="admin-message-list">
@@ -327,7 +460,11 @@ export default function AdminMessages() {
                                 <p>
                                     {query.trim()
                                         ? "Try a different search."
-                                        : "New customer enquiries will appear here."}
+                                        : statusFilter === "unread"
+                                          ? "You are all caught up."
+                                          : statusFilter === "read"
+                                            ? "No messages have been marked as read yet."
+                                            : "New customer enquiries will appear here."}
                                 </p>
                             </div>
                         ) : (
@@ -335,37 +472,31 @@ export default function AdminMessages() {
                                 <button
                                     type="button"
                                     key={message.id}
-                                    className={`admin-message-row ${String(message.id) ===
-                                            String(selectedId)
+                                    className={`admin-message-row ${
+                                        String(message.id) === String(selectedId)
                                             ? "admin-message-row-active"
                                             : ""
-                                        }`}
-                                    onClick={() => {
-                                        setSelectedId(message.id);
-                                        setDetailError("");
-                                        setSuccess("");
-                                    }}
+                                    } ${!message.isRead ? "admin-message-row-unread" : ""}`}
+                                    onClick={() => handleSelectMessage(message)}
                                 >
+                                    <span className="admin-message-unread-dot" aria-hidden="true" />
                                     <div className="admin-message-row-main">
                                         <strong>
-                                            {message.name ||
-                                                message.email ||
-                                                "Customer"}
+                                            {message.name || message.email || "Customer"}
                                         </strong>
-
                                         <span>{message.subject}</span>
-
                                         <small>
                                             {message.body.slice(0, 100)}
-                                            {message.body.length > 100
-                                                ? "..."
-                                                : ""}
+                                            {message.body.length > 100 ? "..." : ""}
                                         </small>
                                     </div>
 
-                                    <time>
-                                        {formatDate(message.createdAt)}
-                                    </time>
+                                    <div className="admin-message-row-meta">
+                                        <small className={message.isRead ? "admin-message-status-read" : "admin-message-status-unread"}>
+                                            {message.isRead ? "READ" : "UNREAD"}
+                                        </small>
+                                        <time>{formatDate(message.createdAt)}</time>
+                                    </div>
                                 </button>
                             ))
                         )}
@@ -375,11 +506,7 @@ export default function AdminMessages() {
                 <section className="admin-panel-card admin-message-detail-card">
                     {!selected ? (
                         <div className="admin-empty-state">
-                            <strong>
-                                {loading
-                                    ? "Loading inbox"
-                                    : "Select a message"}
-                            </strong>
+                            <strong>{loading ? "Loading inbox" : "Select a message"}</strong>
                             <p>
                                 {loading
                                     ? "Please wait while enquiries load."
@@ -394,35 +521,45 @@ export default function AdminMessages() {
                         <>
                             <div className="admin-message-detail-header">
                                 <div>
-                                    <div className="admin-eyebrow">
-                                        MESSAGE DETAILS
-                                    </div>
+                                    <div className="admin-eyebrow">MESSAGE DETAILS</div>
                                     <h3>{selected.subject}</h3>
+                                    <span className={`admin-message-detail-status ${selected.isRead ? "is-read" : "is-unread"}`}>
+                                        {selected.isRead ? "Read" : "Unread"}
+                                    </span>
                                 </div>
 
-                                <button
-                                    type="button"
-                                    className="admin-button admin-button-secondary"
-                                    onClick={handleDelete}
-                                    disabled={deleting}
-                                >
-                                    {deleting ? "Deleting..." : "Delete"}
-                                </button>
+                                <div className="admin-message-detail-controls">
+                                    <button
+                                        type="button"
+                                        className="admin-button admin-button-secondary"
+                                        onClick={() => updateReadStatus(selected, !selected.isRead)}
+                                        disabled={statusUpdatingId != null}
+                                    >
+                                        {statusUpdatingId === String(selected.id)
+                                            ? "Saving..."
+                                            : selected.isRead
+                                              ? "Mark as unread"
+                                              : "Mark as read"}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="admin-button admin-button-secondary admin-message-delete-button"
+                                        onClick={handleDelete}
+                                        disabled={deleting}
+                                    >
+                                        {deleting ? "Deleting..." : "Delete"}
+                                    </button>
+                                </div>
                             </div>
 
                             {detailError && (
-                                <div
-                                    className="admin-error-banner"
-                                    role="alert"
-                                >
+                                <div className="admin-error-banner" role="alert">
                                     {detailError}
                                 </div>
                             )}
 
                             <div className="admin-message-sender">
-                                <strong>
-                                    {selected.name || "Customer"}
-                                </strong>
+                                <strong>{selected.name || "Customer"}</strong>
 
                                 {selected.email ? (
                                     <a href={`mailto:${selected.email}`}>
@@ -432,14 +569,11 @@ export default function AdminMessages() {
                                     <span>No email provided</span>
                                 )}
 
-                                <time>
-                                    {formatDateTime(selected.createdAt)}
-                                </time>
+                                <time>{formatDateTime(selected.createdAt)}</time>
                             </div>
 
                             <div className="admin-message-body">
-                                {selected.body ||
-                                    "No message text was provided."}
+                                {selected.body || "No message text was provided."}
                             </div>
 
                             <div className="admin-message-actions">

@@ -607,6 +607,31 @@ export async function uploadProductImage({
 }
 
 
+
+/* =========================================================
+   CONTACT MESSAGES — READ / UNREAD STATUS
+
+   PATCH /api/v1/contact/messages/admin/<id>/
+   Body: { "is_read": true } or { "is_read": false }
+========================================================= */
+
+export async function updateAdminMessageReadStatus(messageId, isRead) {
+    if (!messageId) {
+        throw new Error("A message ID is required.");
+    }
+
+    if (typeof isRead !== "boolean") {
+        throw new Error("Message read status must be true or false.");
+    }
+
+    return adminRequest({
+        endpoint: getResourceEndpoint("messages", encodeURIComponent(messageId)),
+        method: "PATCH",
+        body: { is_read: isRead },
+    });
+}
+
+
 /* =========================================================
    EXPORT ENDPOINTS
 ========================================================= */
