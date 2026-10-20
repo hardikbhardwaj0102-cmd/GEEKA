@@ -21,7 +21,7 @@ const ENDPOINTS = {
 
     inventory: "",
     orders: "/api/v1/orders/admin/",
-    customers: "",
+    customers: "/api/v1/customers/admin/",
     reviews: "",
 
     messages: "/api/v1/contact/messages/admin/",
@@ -721,24 +721,60 @@ export async function cancelAdminOrder(orderUuid) {
 }
 
 /*
- * Customer management is intentionally left unconfigured. The supplied
- * API_CONTRACT.md does not document a staff-only customer directory endpoint.
- * Configure ENDPOINTS.customers only after the backend team confirms its route.
+ * ADMIN CUSTOMERS — documented in API_CONTRACT.md
+ *
+ * GET /api/v1/customers/admin/?page=1&page_size=10&search=...
+ * GET /api/v1/customers/admin/<customer_uuid>/
+ *
+ * Read-only endpoints. Backend authorization remains authoritative.
  */
 export async function getAdminCustomers(options = {}) {
     const endpoint = getEndpoint("customers");
+
     if (!endpoint) {
-        const error = new Error("Customer management endpoint is not documented/configured yet. Confirm the staff-only customer API route with the backend developer.");
+        const error = new Error("No API endpoint is configured for customers.");
         error.code = "ENDPOINT_NOT_CONFIGURED";
         throw error;
     }
 
-    const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(options)) {
-        if (value !== undefined && value !== null && String(value).trim() !== "") {
-            params.set(key, String(value).trim());
-        }
+    const {
+        page = 1,
+        page_size = 10,
+        search,
+    } = options;
+
+    const safePage = Math.max(1, Number.parseInt(page, 10) || 1);
+    const safePageSize = Math.min(50, Math.max(1, Number.parseInt(page_size, 10) || 10));
+    const params = new URLSearchParams({
+        page: String(safePage),
+        page_size: String(safePageSize),
+    });
+
+    if (search !== undefined && search !== null && String(search).trim()) {
+        params.set("search", String(search).trim());
     }
-    const query = params.toString();
-    return adminRequest({ endpoint: query ? `${endpoint}?${query}` : endpoint, method: "GET" });
+
+    return adminRequest({
+        endpoint: `${endpoint}?${params.toString()}`,
+        method: "GET",
+    });
+}
+
+export async function getAdminCustomer(customerId) {
+    if (!customerId) {
+        throw new Error("A customer UUID is required.");
+    }
+
+    const endpoint = getEndpoint("customers");
+    if (!endpoint) {
+        const error = new Error("No API endpoint is configured for customers.");
+        error.code = "ENDPOINT_NOT_CONFIGURED";
+        throw error;
+    }
+
+    const base = endpoint.replace(/\/$/, "");
+    return adminRequest({
+        endpoint: `${base}/${encodeURIComponent(customerId)}/`,
+        method: "GET",
+    });
 }
