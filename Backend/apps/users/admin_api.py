@@ -2,7 +2,6 @@
 import uuid
 
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
@@ -13,6 +12,10 @@ from rest_framework.views import APIView
 
 from apps.orders.models import Order
 from apps.orders.views import build_order_response
+from decimal import Decimal
+
+from django.db.models import Q, Count, Sum, Value, DecimalField
+from django.db.models.functions import Coalesce
 
 
 User = get_user_model()
@@ -32,6 +35,16 @@ class AdminCustomerListView(APIView):
         customers = User.objects.filter(
             is_staff=False,
             is_superuser=False,
+        ).annotate(
+            order_count=Count("orders", distinct=True),
+            total_order_value=Coalesce(
+                Sum("orders__total"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(
+                    max_digits=12,
+                    decimal_places=2,
+                ),
+            ),
         ).order_by("-date_joined")
 
         search = request.query_params.get("search", "").strip()
@@ -40,6 +53,7 @@ class AdminCustomerListView(APIView):
             search_query = (
                 Q(full_name__icontains=search)
                 | Q(email__icontains=search)
+                | Q(phone_number__icontains=search)
             )
 
             try:
@@ -61,8 +75,11 @@ class AdminCustomerListView(APIView):
                 "id": str(customer.id),
                 "full_name": customer.full_name,
                 "email": customer.email,
+                "phone_number": customer.phone_number,
                 "date_joined": customer.date_joined,
                 "is_active": customer.is_active,
+                "order_count": customer.order_count,
+                "total_order_value": str(customer.total_order_value),
             }
             for customer in page
         ]
@@ -87,6 +104,16 @@ class AdminCustomerDetailView(APIView):
             pk=customer_uuid,
             is_staff=False,
             is_superuser=False,
+        ).annotate(
+            order_count=Count("orders", distinct=True),
+            total_order_value=Coalesce(
+                Sum("orders__total"),
+                Value(Decimal("0.00")),
+                output_field=DecimalField(
+                    max_digits=12,
+                    decimal_places=2,
+                ),
+            ),
         ).first()
 
         if customer is None:
@@ -99,11 +126,13 @@ class AdminCustomerDetailView(APIView):
             "id": str(customer.id),
             "full_name": customer.full_name,
             "email": customer.email,
+            "phone_number": customer.phone_number,
             "email_verified": customer.email_verified,
             "date_joined": customer.date_joined,
             "is_active": customer.is_active,
+            "order_count": customer.order_count,
+            "total_order_value": str(customer.total_order_value),
         })
-
 
 
 

@@ -4640,6 +4640,80 @@ Order status transitions are validated by the backend service and can be initiat
 - Automated tests for all valid and invalid lifecycle transitions must be completed before considering the workflow fully verified.
 
 
+## Admin Customer Management
+
+These endpoints provide staff-only, read-only access to registered customer records for the management dashboard. They use Django session authentication and require `is_staff=True`. Requests must use the authorized staff session; normal customers cannot access these endpoints.
+
+### 1. List Registered Customers
+
+**Endpoint:** `GET /api/v1/customers/admin/`
+
+**Authentication:** Required — authenticated staff session.
+
+**Query parameters:**
+- `page` — page number; defaults to the first page.
+- `page_size` — results per page; defaults to `10`, maximum `50`.
+- `search` — optional case-insensitive search across customer name, email, and phone number. A valid customer UUID can also be searched.
+
+**Success response:** `200 OK`
+
+Returns a paginated response with `count`, `next`, `previous`, and `results`. Each customer result contains:
+
+- `id`
+- `full_name`
+- `email`
+- `phone_number`
+- `date_joined`
+- `is_active`
+- `order_count`
+- `total_order_value`
+
+Example response:
+
+```json
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "11111111-2222-3333-4444-555555555555",
+      "full_name": "Example Customer",
+      "email": "customer@example.com",
+      "phone_number": "9876543210",
+      "date_joined": "2026-01-15T10:30:00Z",
+      "is_active": true,
+      "order_count": 2,
+      "total_order_value": "2499.00"
+    }
+  ]
+}
+```
+
+`order_count` counts orders linked to the registered customer. `total_order_value` sums the stored totals of those linked orders and is returned as a decimal string. These values do not include guest orders that are not linked to the customer record. The total is not restricted to paid orders.
+
+### 2. Retrieve Customer Details
+
+**Endpoint:** `GET /api/v1/customers/admin/{customer_id}/`
+
+**Authentication:** Required — authenticated staff session.
+
+**Path parameter:** `customer_id` is the customer's UUID.
+
+**Success response:** `200 OK`
+
+Returns the selected customer's `id`, `full_name`, `email`, `phone_number`, `email_verified`, `date_joined`, `is_active`, `order_count`, and `total_order_value`, using the same field types and calculation rules as the list endpoint.
+
+**Error responses:**
+- `400 Bad Request` — invalid UUID.
+- `404 Not Found` — no registered customer exists for the supplied UUID.
+
+### Access and scope
+
+Both endpoints are read-only and expose real database records. Staff accounts and superuser accounts are excluded from the customer results. Existing customer status-update and customer-order endpoints remain separate and unchanged.
+
+
+
 
 ## 5.5 Admin Order Management
 
