@@ -20,7 +20,7 @@ const ENDPOINTS = {
     categories: "/api/v1/catalog/admin/categories/",
 
     inventory: "",
-    orders: "",
+    orders: "/api/v1/orders/admin/",
     customers: "",
     reviews: "",
 
@@ -639,3 +639,106 @@ export async function updateAdminMessageReadStatus(messageId, isRead) {
 export {
     ENDPOINTS,
 };
+
+
+/* =========================================================
+   ADMIN ORDERS — documented in API_CONTRACT.md section 5.5
+========================================================= */
+
+export async function getAdminOrders(options = {}) {
+    const {
+        page = 1,
+        page_size = 10,
+        search,
+        status,
+        payment_status,
+        date_from,
+        date_to,
+    } = options;
+
+    const endpoint = getEndpoint("orders");
+    if (!endpoint) {
+        const error = new Error("No API endpoint is configured for orders.");
+        error.code = "ENDPOINT_NOT_CONFIGURED";
+        throw error;
+    }
+
+    const params = new URLSearchParams();
+    params.set("page", String(page));
+    params.set("page_size", String(Math.min(50, Math.max(1, Number(page_size) || 10))));
+
+    for (const [key, value] of Object.entries({ search, status, payment_status, date_from, date_to })) {
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+            params.set(key, String(value).trim());
+        }
+    }
+
+    return adminRequest({ endpoint: `${endpoint}?${params.toString()}`, method: "GET" });
+}
+
+export async function getAdminOrder(orderUuid) {
+    if (!orderUuid) throw new Error("An order UUID is required.");
+    const base = getEndpoint("orders").replace(/\/$/, "");
+    if (!base) {
+        const error = new Error("No API endpoint is configured for orders.");
+        error.code = "ENDPOINT_NOT_CONFIGURED";
+        throw error;
+    }
+    return adminRequest({
+        endpoint: `${base}/${encodeURIComponent(orderUuid)}/`,
+        method: "GET",
+    });
+}
+
+export async function updateAdminOrderStatus(orderUuid, status) {
+    if (!orderUuid) throw new Error("An order UUID is required.");
+    if (!status) throw new Error("A new order status is required.");
+    const base = getEndpoint("orders").replace(/\/$/, "");
+    if (!base) {
+        const error = new Error("No API endpoint is configured for orders.");
+        error.code = "ENDPOINT_NOT_CONFIGURED";
+        throw error;
+    }
+    return adminRequest({
+        endpoint: `${base}/${encodeURIComponent(orderUuid)}/status/`,
+        method: "PATCH",
+        body: { status },
+    });
+}
+
+export async function cancelAdminOrder(orderUuid) {
+    if (!orderUuid) throw new Error("An order UUID is required.");
+    const base = getEndpoint("orders").replace(/\/$/, "");
+    if (!base) {
+        const error = new Error("No API endpoint is configured for orders.");
+        error.code = "ENDPOINT_NOT_CONFIGURED";
+        throw error;
+    }
+    return adminRequest({
+        endpoint: `${base}/${encodeURIComponent(orderUuid)}/cancel/`,
+        method: "POST",
+    });
+}
+
+/*
+ * Customer management is intentionally left unconfigured. The supplied
+ * API_CONTRACT.md does not document a staff-only customer directory endpoint.
+ * Configure ENDPOINTS.customers only after the backend team confirms its route.
+ */
+export async function getAdminCustomers(options = {}) {
+    const endpoint = getEndpoint("customers");
+    if (!endpoint) {
+        const error = new Error("Customer management endpoint is not documented/configured yet. Confirm the staff-only customer API route with the backend developer.");
+        error.code = "ENDPOINT_NOT_CONFIGURED";
+        throw error;
+    }
+
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(options)) {
+        if (value !== undefined && value !== null && String(value).trim() !== "") {
+            params.set(key, String(value).trim());
+        }
+    }
+    const query = params.toString();
+    return adminRequest({ endpoint: query ? `${endpoint}?${query}` : endpoint, method: "GET" });
+}

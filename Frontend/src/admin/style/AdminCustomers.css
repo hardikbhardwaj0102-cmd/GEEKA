@@ -1,0 +1,10 @@
+.admin-customers-placeholder{max-width:900px;padding:30px}
+.admin-customers-placeholder-icon{width:48px;height:48px;margin-bottom:20px;border:1px solid #ead6dd;border-radius:13px;display:grid;place-items:center;background:#fff7f9;color:#a4516d;font-family:Georgia,serif;font-size:23px}
+.admin-customers-placeholder h3{margin:0 0 12px}
+.admin-customers-placeholder>p:not(.admin-eyebrow){max-width:700px;color:#887970;font-size:12px;line-height:1.8}
+.admin-customers-lead{margin-bottom:20px}
+.admin-customers-requirements{margin-top:22px;padding:20px;border:1px solid #eee3df;border-radius:11px;background:#fdfbfa}
+.admin-customers-requirements h4{margin:0 0 12px;color:#4d4039;font-size:12px}
+.admin-customers-requirements ul{margin:0;padding-left:20px;color:#75665e;font-size:12px;line-height:1.9}
+.admin-customers-requirements p{margin:14px 0 0;color:#9c536a;font-size:11px;line-height:1.7}
+@media(max-width:650px){.admin-customers-placeholder{padding:20px}}
